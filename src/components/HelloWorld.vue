@@ -99,6 +99,10 @@ const handleSubmit = async () => {
         isSubmitting.value = false
         formData.value.name = ''
         formData.value.email = ''
+      }else{
+        isSubmitting.value = false
+        formData.value.name = ''
+        formData.value.email = ''
       }
 
     }
@@ -172,7 +176,7 @@ const handleSubmit = async () => {
         <div v-for="user in users" :key="user.id" class="user-item ">
           <div class="user-item-header">
             <h3>{{ user.name }}</h3>
-            <input type="checkbox" v-model="user.active" @change="handleActiveChange(user)" />
+            <input type="checkbox" :checked="Boolean(user.active)"   @change="handleActiveChange(user)" />
           </div>
           <p>Email: {{ user.email }}</p>
           <p>Created at: {{ new Date(user.created_at).toLocaleDateString() }}</p>
