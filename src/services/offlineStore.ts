@@ -28,7 +28,7 @@ class OfflineStore {
   private db: IDBPDatabase<MyDB> | null = null;
   private dbName = 'offlineStore';
   private version = 1;
-  private isSyncing = false;
+  // private isSyncing = false;
   public pendingRequestCountEmitter = mitt<pendingRequestCountEvent>();
   private constructor() {
     this.initDB();
