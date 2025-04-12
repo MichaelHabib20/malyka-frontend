@@ -32,7 +32,7 @@ export class DataService {
     this.isOnline = navigator.onLine;
     axios.defaults.baseURL = this.baseURL;
     axios.defaults.headers.common['Content-Type'] = 'application/json';
-    this.setAuthToken(token);
+    // this.setAuthToken(token);
 
     // Listen for online/offline events
     window.addEventListener('online', () => this.handleOnlineStatus(true));

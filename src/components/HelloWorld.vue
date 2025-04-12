@@ -6,38 +6,40 @@ import { offlineStore } from '../services/offlineStore';
 defineProps<{ msg: string }>()
 
 
-  const users = ref<any[]>([]);
+  // const users = ref<any[]>([]);
+  const kids = ref<any[]>([]);
   const isLoading = ref(false) // Added loading state
-  const error = ref<Error | null>(null) // Added error state
+  // const error = ref<Error | null>(null) // Added error state
   const isOnline = ref(statusService.isOnline())
   const pendingRequestCount = ref<number>(0);
   const updateStatus = (online: boolean) => {
     isOnline.value = online
   }
 
-  const formData = ref({
-    name: '',
-    email: '',
-    password: 'Nibo123@',
-    role_id : 20
-  })
-  const errors = ref({
-    name: '',
-    email: '',
-    password: '',
-    role_id: ''
-  })
-  const isSubmitting = ref(false)
+  // const formData = ref({
+  //   name: '',
+  //   email: '',
+  //   password: 'Nibo123@',
+  //   role_id : 20
+  // })
+  // const errors = ref({
+  //   name: '',
+  //   email: '',
+  //   password: '',
+  //   role_id: ''
+  // })
+  // const isSubmitting = ref(false)
  
 
 
   onMounted(async () => {
   isLoading.value = true
   try {
-    const response = await getUsers()
-    const roles = await getRoles()
-    users.value = response.data || response // Handle different response structures
-    roles.value = roles.data || roles // Handle different response structures
+    // const response = await getUsers()
+    await getKids()
+    // const roles = await getRoles()
+    // users.value = response.data || response // Handle different response structures
+    // roles.value = roles.data || roles // Handle different response structures
   } catch (err) {
     // Error is already handled in getUsers
   } finally {
@@ -51,72 +53,114 @@ defineProps<{ msg: string }>()
 const updateCount = (count: number) => {
   pendingRequestCount.value = count
 }
-const getUsers = async () => {
-  try {
-    const response = await dataService.get<any>('/api/admin/admins?page=1')
-    console.log(response)
-    return response.data
-  } catch (err) {
-    console.error('Error fetching users:', err)
-    error.value = err as Error // Store the error
-    throw err
-  }
+const getKids = async () => {
+  const response : any = await dataService.get<any>('http://forsa.runasp.net/api/TestKidsAtt/GetKidsData')
+  console.log(response)
+  kids.value = {...response.data}
+  console.log(kids)
 }
-const getRoles = async () => {
-  try {
-    const response = await dataService.get<any>('/api/admin/roles?page=1')
-    console.log(response)
-    return response.data
-  } catch (err) {
-    console.error('Error fetching users:', err)
-    error.value = err as Error // Store the error
-    throw err
+const submitAttendance = async (kid : any) => {
+  console.log(kid)
+  const modal = {
+    kidId : kid.id,
+    isAdded : true,
+    attendanceDate : new Date().toISOString()
   }
-} 
-const handleActiveChange = async (user: any) => {
-  // console.log(user)
-  // const plainData = { ...user };
-  // console.log(plainData)
-  if(user.active){
-    const response = await dataService.post(`/api/admin/admins/${user.id}/deactivate`, { deactivation_notes: 'msh 3uzo' })
-    console.log(response)
-  }else{
-    const response = await dataService.post(`/api/admin/admins/${user.id}/activate`, {  })
-    console.log(response)
-  }
+  console.log(modal)
+  const response : any = await dataService.post<any>('http://forsa.runasp.net/api/TestKidsAtt/PostKidAtt', modal)
+  console.log(response)
 }
-const handleSubmit = async () => {
-    if (formData.value.name == "" || formData.value.email == "") return
-    isSubmitting.value = true
-    try {
-      const response = await dataService.post('/api/admin/admins', formData.value)
-      if (response.status === 200) {
-        const res = await getUsers()
-        console.log(res)
-        console.log(res.length)
-        users.value = res.data || res 
-        console.log(users.value)
-        isSubmitting.value = false
-        formData.value.name = ''
-        formData.value.email = ''
-      }else{
-        isSubmitting.value = false
-        formData.value.name = ''
-        formData.value.email = ''
-      }
+// const getUsers = async () => {
+//   try {
+//     const response = await dataService.get<any>('/api/admin/admins?page=1')
+//     console.log(response)
+//     return response.data
+//   } catch (err) {
+//     console.error('Error fetching users:', err)
+//     error.value = err as Error // Store the error
+//     throw err
+//   }
+// }
+// const getRoles = async () => {
+//   try {
+//     const response = await dataService.get<any>('/api/admin/roles?page=1')
+//     console.log(response)
+//     return response.data
+//   } catch (err) {
+//     console.error('Error fetching users:', err)
+//     error.value = err as Error // Store the error
+//     throw err
+//   }
+// } 
+// const handleActiveChange = async (user: any) => {
+//   // console.log(user)
+//   // const plainData = { ...user };
+//   // console.log(plainData)
+//   if(user.active){
+//     const response = await dataService.post(`/api/admin/admins/${user.id}/deactivate`, { deactivation_notes: 'msh 3uzo' })
+//     console.log(response)
+//   }else{
+//     const response = await dataService.post(`/api/admin/admins/${user.id}/activate`, {  })
+//     console.log(response)
+//   }
+// }
+// const handleSubmit = async () => {
+//     if (formData.value.name == "" || formData.value.email == "") return
+//     isSubmitting.value = true
+//     try {
+//       const response = await dataService.post('/api/admin/admins', formData.value)
+//       if (response.status === 200) {
+//         const res = await getUsers()
+//         console.log(res)
+//         console.log(res.length)
+//         users.value = res.data || res 
+//         console.log(users.value)
+//         isSubmitting.value = false
+//         formData.value.name = ''
+//         formData.value.email = ''
+//       }else{
+//         isSubmitting.value = false
+//         formData.value.name = ''
+//         formData.value.email = ''
+//       }
 
-    }
-    catch (err) {
-      console.error('Error submitting form:', err)
-      error.value = err as Error // Store the error
-      throw err
-    }
-  }
+//     }
+//     catch (err) {
+//       console.error('Error submitting form:', err)
+//       error.value = err as Error // Store the error
+//       throw err
+//     }
+//   }
 </script>
 
 <template>
  <section>
   <section>
+    <div>
+    <span v-if="isOnline">🟢 Online Mode (API)</span>
+    <span v-else>🔴 Offline Mode (IndexedDB)</span>
+  </div>
+  <p>You have {{ pendingRequestCount }} pending requests.</p>
+  </section>
+  <div v-for="kid in kids" :key="kid.id">
+    <div class="kid-row">
+      <div class="kid-info">
+        <input 
+          type="checkbox"
+          :id="'kid-' + kid.id"
+          v-model="kid.isAdded"
+          class="kid-checkbox"
+          @change="submitAttendance(kid)"
+        >
+        <div class="kid-code">
+        <code>{{ kid.code }}</code>
+      </div>
+        <label :for="'kid-' + kid.id" class="kid-name">{{ kid.name }}</label>
+      </div>
+   
+    </div>
+  </div>
+  <!-- <section>
     <div>
     <span v-if="isOnline">🟢 Online Mode (API)</span>
     <span v-else>🔴 Offline Mode (IndexedDB)</span>
@@ -156,17 +200,14 @@ const handleSubmit = async () => {
     </form>
   </div>
   <div class="users-container">
-    <!-- Show loading state -->
     <div v-if="isLoading" class="loading">
       Loading users...
     </div>
 
-    <!-- Show error state -->
     <div v-else-if="error" class="error">
       {{ error.message }}
     </div>
 
-    <!-- Show users list -->
     <div v-else class="users-list">
       <div v-if="users.length === 0" class="no-users">
         No users found
@@ -183,11 +224,42 @@ const handleSubmit = async () => {
         </div>
       </div>
     </div>
-  </div>
+  </div> -->
  </section>
 </template>
 
 <style scoped>
+    .kid-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.5rem 1rem;
+      border-bottom: 1px solid #eee;
+    }
+
+    .kid-info {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .kid-checkbox {
+      cursor: pointer;
+    }
+
+    .kid-name {
+      font-size: 1rem;
+      cursor: pointer;
+    }
+
+    .kid-code {
+      font-family: monospace;
+      background: #f5f5f5;
+      padding: 0.25rem 0.5rem;
+      border-radius: 4px;
+      color: #666;
+    }
+
   .form-container {
     max-width: 500px;
     margin: 0 auto 2rem;
