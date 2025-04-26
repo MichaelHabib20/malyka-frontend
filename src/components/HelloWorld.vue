@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, onUnmounted } from 'vue'
 import { dataService } from '../services/dataContext';
 import statusService from '../services/statusService';
 import { offlineStore } from '../services/offlineStore';
@@ -9,11 +9,10 @@ defineProps<{ msg: string }>()
   const users = ref<any[]>([]);
   const isLoading = ref(false) // Added loading state
   const error = ref<Error | null>(null) // Added error state
-  const isOnline = ref(statusService.isOnline())
+  const isOnline = ref(statusService.isOnline());
+  let unsubscribe: () => void;
   const pendingRequestCount = ref<number>(0);
-  const updateStatus = (online: boolean) => {
-    isOnline.value = online
-  }
+
 
   const formData = ref({
     name: '',
@@ -43,18 +42,25 @@ defineProps<{ msg: string }>()
   } finally {
     isLoading.value = false
   }
-  statusService.onStatusChange(updateStatus)
   const count = await offlineStore.getPendingRequestCount()
   pendingRequestCount.value = count
   offlineStore.pendingRequestCountEmitter.on('pendingRequestCount', updateCount)
+  unsubscribe = statusService.subscribe((status) => {
+    isOnline.value = status;
+    console.log('Connection status changed:', status);
+  });
 })
+
+onUnmounted(() => {
+  if (unsubscribe) unsubscribe();
+});
+
 const updateCount = (count: number) => {
   pendingRequestCount.value = count
 }
 const getUsers = async () => {
   try {
     const response = await dataService.get<any>('/api/admin/admins?page=1')
-    console.log(response)
     return response.data
   } catch (err) {
     console.error('Error fetching users:', err)
@@ -65,7 +71,6 @@ const getUsers = async () => {
 const getRoles = async () => {
   try {
     const response = await dataService.get<any>('/api/admin/roles?page=1')
-    console.log(response)
     return response.data
   } catch (err) {
     console.error('Error fetching users:', err)
@@ -74,15 +79,10 @@ const getRoles = async () => {
   }
 } 
 const handleActiveChange = async (user: any) => {
-  // console.log(user)
-  // const plainData = { ...user };
-  // console.log(plainData)
   if(user.active){
     const response = await dataService.post(`/api/admin/admins/${user.id}/deactivate`, { deactivation_notes: 'msh 3uzo' })
-    console.log(response)
   }else{
     const response = await dataService.post(`/api/admin/admins/${user.id}/activate`, {  })
-    console.log(response)
   }
 }
 const handleSubmit = async () => {
@@ -92,10 +92,7 @@ const handleSubmit = async () => {
       const response = await dataService.post('/api/admin/admins', formData.value)
       if (response.status === 200) {
         const res = await getUsers()
-        console.log(res)
-        console.log(res.length)
         users.value = res.data || res 
-        console.log(users.value)
         isSubmitting.value = false
         formData.value.name = ''
         formData.value.email = ''

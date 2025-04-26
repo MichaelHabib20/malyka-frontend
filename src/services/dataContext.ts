@@ -1,6 +1,7 @@
 import axios from 'axios';
 import type { AxiosResponse, AxiosError } from 'axios';
 import { offlineStore } from './offlineStore';
+import { statusService } from './statusService';
 
 // Base API URL configuration
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://storeapi-tarshoubylab.el-dokan.com';
@@ -29,21 +30,18 @@ export class DataService {
 
   private constructor() {
     this.baseURL = API_BASE_URL;
-    this.isOnline = navigator.onLine;
+    this.isOnline = statusService.getStatus();
     axios.defaults.baseURL = this.baseURL;
     axios.defaults.headers.common['Content-Type'] = 'application/json';
     this.setAuthToken(token);
 
-    // Listen for online/offline events
-    window.addEventListener('online', () => this.handleOnlineStatus(true));
-    window.addEventListener('offline', () => this.handleOnlineStatus(false));
-  }
-
-  private handleOnlineStatus(online: boolean) {
-    this.isOnline = online;
-    if (online && !this.syncInProgress) {
-      this.syncPendingRequests();
-    }
+    // Subscribe to status changes
+    statusService.subscribe((isOnline) => {
+      this.isOnline = isOnline;
+      if (isOnline && !this.syncInProgress) {
+        this.syncPendingRequests();
+      }
+    });
   }
 
   private async syncPendingRequests() {
