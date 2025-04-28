@@ -118,7 +118,7 @@ const handleSubmit = async () => {
     <span v-if="isOnline">🟢 Online Mode (API)</span>
     <span v-else>🔴 Offline Mode (IndexedDB)</span>
   </div>
-  <p>You have {{ pendingRequestCount }} pending requests.</p>
+  <p>You have {{ pendingRequestCount }} pending requests.  </p>
   </section>
 
   <div class="form-container">

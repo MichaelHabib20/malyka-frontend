@@ -39,12 +39,12 @@ export class DataService {
     statusService.subscribe((isOnline) => {
       this.isOnline = isOnline;
       if (isOnline && !this.syncInProgress) {
-        this.syncPendingRequests();
+        this.processNextPendingRequest();
       }
     });
   }
 
-  private async syncPendingRequests() {
+  private async processNextPendingRequest() {
     if (this.syncInProgress) return;
     this.syncInProgress = true;
 
@@ -55,27 +55,34 @@ export class DataService {
         return;
       }
 
-      for (const request of pendingRequests) {
-        // Skip if this request was already processed
-        if (this.processedRequestIds.has(request.id)) {
-          continue;
-        }
+      // Get the next request to process
+      const nextRequest = pendingRequests[0];
+      
+      // Skip if this request was already processed
+      if (this.processedRequestIds.has(nextRequest.id)) {
+        this.syncInProgress = false;
+        return;
+      }
 
-        try {
-          await this.processRequest(request.method, request.endpoint, request.data);
-          await offlineStore.removePendingRequest(request.id);
-          this.processedRequestIds.add(request.id);
-        } catch (error) {
-          console.error('Error syncing request:', error);
-          // Don't remove failed requests, they'll be retried next time
-        }
+      try {
+        await this.processRequest(nextRequest.method, nextRequest.endpoint, nextRequest.data);
+        await offlineStore.removePendingRequest(nextRequest.id);
+        this.processedRequestIds.add(nextRequest.id);
+      } catch (error) {
+        console.error('Error processing request:', error);
+        // Don't remove failed requests, they'll be retried next time
       }
     } catch (error) {
-      console.error('Error during sync:', error);
+      console.error('Error during request processing:', error);
     } finally {
       this.syncInProgress = false;
-      // Clear processed IDs after sync is complete
+      // Clear processed IDs after processing is complete
       this.processedRequestIds.clear();
+      
+      // If we're still online, try to process the next request
+      if (this.isOnline && !this.syncInProgress) {
+        this.processNextPendingRequest();
+      }
     }
   }
 
@@ -145,19 +152,20 @@ export class DataService {
   // Modified POST request with offline support
   public async post<T>(endpoint: string, data: any): Promise<ApiResponse<T>> {
     try {
-      if (!this.isOnline) {
-        // Store the request for later sync
-        await offlineStore.storePendingRequest(endpoint, 'POST', data);
-        await offlineStore.getPendingRequestCount();
-        return {
-          data: null as any,
-          status: 202,
-          message: 'Request queued for sync'
-        };
-        
+      // Always store in queue, let sync process handle the actual API call
+      await offlineStore.storePendingRequest(endpoint, 'POST', data);
+      await offlineStore.getPendingRequestCount();
+      
+      // If online, try to process the next request
+      if (this.isOnline) {
+        this.processNextPendingRequest();
       }
-
-      return await this.processRequest<T>('post', endpoint, data);
+      
+      return {
+        data: null as any,
+        status: 202,
+        message: 'Request queued for processing'
+      };
     } catch (error) {
       return this.handleError(error as AxiosError);
     }
@@ -166,17 +174,20 @@ export class DataService {
   // Modified PUT request with offline support
   public async put<T>(endpoint: string, data: any): Promise<ApiResponse<T>> {
     try {
-      if (!this.isOnline) {
-        await offlineStore.storePendingRequest(endpoint, 'PUT', data);
-        await offlineStore.getPendingRequestCount();
-        return {
-          data: null as any,
-          status: 202,
-          message: 'Request queued for sync'
-        };
+      // Always store in queue, let sync process handle the actual API call
+      await offlineStore.storePendingRequest(endpoint, 'PUT', data);
+      await offlineStore.getPendingRequestCount();
+      
+      // If online, try to process the next request
+      if (this.isOnline) {
+        this.processNextPendingRequest();
       }
-
-      return await this.processRequest<T>('put', endpoint, data);
+      
+      return {
+        data: null as any,
+        status: 202,
+        message: 'Request queued for processing'
+      };
     } catch (error) {
       return this.handleError(error as AxiosError);
     }
@@ -185,17 +196,20 @@ export class DataService {
   // Modified DELETE request with offline support
   public async delete<T>(endpoint: string): Promise<ApiResponse<T>> {
     try {
-      if (!this.isOnline) {
-        await offlineStore.storePendingRequest(endpoint, 'DELETE', null);
-        await offlineStore.getPendingRequestCount();
-        return {
-          data: null as any,
-          status: 202,
-          message: 'Request queued for sync'
-        };
+      // Always store in queue, let sync process handle the actual API call
+      await offlineStore.storePendingRequest(endpoint, 'DELETE', null);
+      await offlineStore.getPendingRequestCount();
+      
+      // If online, try to process the next request
+      if (this.isOnline) {
+        this.processNextPendingRequest();
       }
-
-      return await this.processRequest<T>('delete', endpoint);
+      
+      return {
+        data: null as any,
+        status: 202,
+        message: 'Request queued for processing'
+      };
     } catch (error) {
       return this.handleError(error as AxiosError);
     }
@@ -225,33 +239,4 @@ export class DataService {
 // Export singleton instance
 export const dataService = DataService.getInstance();
 
-// Example usage with TypeScript interfaces:
-/*
-interface User {
-  id: number;
-  name: string;
-  email: string;
-}
 
-// GET example
-const getUser = async (id: number) => {
-  try {
-    const response = await dataService.get<User>(`/users/${id}`);
-    return response.data;
-  } catch (error) {
-    console.error('Error fetching user:', error);
-    throw error;
-  }
-};
-
-// POST example
-const createUser = async (userData: Omit<User, 'id'>) => {
-  try {
-    const response = await dataService.post<User>('/users', userData);
-    return response.data;
-  } catch (error) {
-    console.error('Error creating user:', error);
-    throw error;
-  }
-};
-*/
