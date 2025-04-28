@@ -27,6 +27,7 @@ export class DataService {
   private isOnline: boolean;
   private syncInProgress = false;
   private processedRequestIds = new Set<number>();
+  private isProcessingBatch = false;
 
   private constructor() {
     this.baseURL = API_BASE_URL;
@@ -37,8 +38,12 @@ export class DataService {
 
     // Subscribe to status changes
     statusService.subscribe((isOnline) => {
+      const wasOffline = !this.isOnline;
       this.isOnline = isOnline;
-      if (isOnline && !this.syncInProgress) {
+      
+      // Only trigger auto-sync when coming back online from offline state
+      if (isOnline && wasOffline && !this.syncInProgress && !this.isProcessingBatch) {
+        this.isProcessingBatch = true;
         this.processNextPendingRequest();
       }
     });
@@ -47,11 +52,14 @@ export class DataService {
   private async processNextPendingRequest() {
     if (this.syncInProgress) return;
     this.syncInProgress = true;
+    offlineStore.setIsCurrentlySyncing(true);
 
     try {
       const pendingRequests = await offlineStore.getPendingRequests();
       if (!pendingRequests.length) {
         this.syncInProgress = false;
+        this.isProcessingBatch = false;
+        offlineStore.setIsCurrentlySyncing(false);
         return;
       }
 
@@ -61,6 +69,8 @@ export class DataService {
       // Skip if this request was already processed
       if (this.processedRequestIds.has(nextRequest.id)) {
         this.syncInProgress = false;
+        this.isProcessingBatch = false;
+        offlineStore.setIsCurrentlySyncing(false);
         return;
       }
 
@@ -68,6 +78,9 @@ export class DataService {
         await this.processRequest(nextRequest.method, nextRequest.endpoint, nextRequest.data);
         await offlineStore.removePendingRequest(nextRequest.id);
         this.processedRequestIds.add(nextRequest.id);
+        
+        // Update last successful sync time
+        offlineStore.setLastSuccessfulSync(new Date());
       } catch (error) {
         console.error('Error processing request:', error);
         // Don't remove failed requests, they'll be retried next time
@@ -76,12 +89,15 @@ export class DataService {
       console.error('Error during request processing:', error);
     } finally {
       this.syncInProgress = false;
+      offlineStore.setIsCurrentlySyncing(false);
       // Clear processed IDs after processing is complete
       this.processedRequestIds.clear();
-      
-      // If we're still online, try to process the next request
-      if (this.isOnline && !this.syncInProgress) {
+
+      // If we're still online and processing a batch, continue with next request
+      if (this.isOnline && this.isProcessingBatch) {
         this.processNextPendingRequest();
+      } else {
+        this.isProcessingBatch = false;
       }
     }
   }
@@ -156,8 +172,9 @@ export class DataService {
       await offlineStore.storePendingRequest(endpoint, 'POST', data);
       await offlineStore.getPendingRequestCount();
       
-      // If online, try to process the next request
-      if (this.isOnline) {
+      // If online and not already processing a batch, start processing
+      if (this.isOnline && !this.isProcessingBatch) {
+        this.isProcessingBatch = true;
         this.processNextPendingRequest();
       }
       
@@ -178,8 +195,9 @@ export class DataService {
       await offlineStore.storePendingRequest(endpoint, 'PUT', data);
       await offlineStore.getPendingRequestCount();
       
-      // If online, try to process the next request
-      if (this.isOnline) {
+      // If online and not already processing a batch, start processing
+      if (this.isOnline && !this.isProcessingBatch) {
+        this.isProcessingBatch = true;
         this.processNextPendingRequest();
       }
       
@@ -200,8 +218,9 @@ export class DataService {
       await offlineStore.storePendingRequest(endpoint, 'DELETE', null);
       await offlineStore.getPendingRequestCount();
       
-      // If online, try to process the next request
-      if (this.isOnline) {
+      // If online and not already processing a batch, start processing
+      if (this.isOnline && !this.isProcessingBatch) {
+        this.isProcessingBatch = true;
         this.processNextPendingRequest();
       }
       

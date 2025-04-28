@@ -3,6 +3,10 @@ import { onMounted, ref, onUnmounted } from 'vue'
 import { dataService } from '../services/dataContext';
 import statusService from '../services/statusService';
 import { offlineStore } from '../services/offlineStore';
+interface SyncStatus {
+  isCurrentlySyncing: boolean;
+  lastSuccessfulSync: Date | null;
+}
 defineProps<{ msg: string }>()
 
 
@@ -12,8 +16,13 @@ defineProps<{ msg: string }>()
   const isOnline = ref(statusService.isOnline());
   let unsubscribe: () => void;
   const pendingRequestCount = ref<number>(0);
-
-
+  const syncStatus = ref<SyncStatus>({
+  isCurrentlySyncing: offlineStore.isCurrentlySyncing,
+  lastSuccessfulSync: offlineStore.lastSuccessfulSync
+  });
+  const handleSyncStatus = (status: SyncStatus) => {
+  syncStatus.value = status;
+};
   const formData = ref({
     name: '',
     email: '',
@@ -42,6 +51,7 @@ defineProps<{ msg: string }>()
   } finally {
     isLoading.value = false
   }
+  offlineStore.syncStatusEmitter.on('sync-status', handleSyncStatus);
   const count = await offlineStore.getPendingRequestCount()
   pendingRequestCount.value = count
   offlineStore.pendingRequestCountEmitter.on('pendingRequestCount', updateCount)
@@ -118,7 +128,8 @@ const handleSubmit = async () => {
     <span v-if="isOnline">🟢 Online Mode (API)</span>
     <span v-else>🔴 Offline Mode (IndexedDB)</span>
   </div>
-  <p>You have {{ pendingRequestCount }} pending requests.  </p>
+  <p>You have {{ pendingRequestCount }} pending requests. {{ syncStatus.isCurrentlySyncing ? 'Syncing...' : 'Not Syncing' }} </p>
+  <p>Last successful sync: {{ syncStatus.lastSuccessfulSync ? new Date(syncStatus.lastSuccessfulSync).toLocaleString() : 'Never' }}</p>
   </section>
 
   <div class="form-container">

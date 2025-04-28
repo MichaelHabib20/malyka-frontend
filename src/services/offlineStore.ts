@@ -4,6 +4,16 @@ import mitt from 'mitt';
 type pendingRequestCountEvent = {
   pendingRequestCount: number;
 };
+
+interface SyncStatus {
+  isCurrentlySyncing: boolean;
+  lastSuccessfulSync: Date | null;
+}
+
+type syncStatusEvent = {
+  'sync-status': SyncStatus;
+};
+
 interface PendingRequest {
   endpoint: string;
   method: string;
@@ -30,6 +40,10 @@ class OfflineStore {
   private version = 1;
   // private isSyncing = false;
   public pendingRequestCountEmitter = mitt<pendingRequestCountEvent>();
+  public syncStatusEmitter = mitt<syncStatusEvent>();
+  private _lastSuccessfulSync: Date | null = null;
+  private _isCurrentlySyncing: boolean = false;
+
   private constructor() {
     this.initDB();
   }
@@ -150,6 +164,30 @@ class OfflineStore {
       console.error('Error clearing pending requests:', error);
       throw error;
     }
+  }
+
+  get lastSuccessfulSync(): Date | null {
+    return this._lastSuccessfulSync;
+  }
+
+  get isCurrentlySyncing(): boolean {
+    return this._isCurrentlySyncing;
+  }
+
+  setLastSuccessfulSync(date: Date) {
+    this._lastSuccessfulSync = date;
+    this.syncStatusEmitter.emit('sync-status', {
+      isCurrentlySyncing: this._isCurrentlySyncing,
+      lastSuccessfulSync: this._lastSuccessfulSync
+    });
+  }
+
+  setIsCurrentlySyncing(isSyncing: boolean) {
+    this._isCurrentlySyncing = isSyncing;
+    this.syncStatusEmitter.emit('sync-status', {
+      isCurrentlySyncing: this._isCurrentlySyncing,
+      lastSuccessfulSync: this._lastSuccessfulSync
+    });
   }
 }
 
