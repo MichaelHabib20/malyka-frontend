@@ -90,9 +90,9 @@ const getRoles = async () => {
 } 
 const handleActiveChange = async (user: any) => {
   if(user.active){
-    const response = await dataService.post(`/api/admin/admins/${user.id}/deactivate`, { deactivation_notes: 'msh 3uzo' })
+    await dataService.post(`/api/admin/admins/${user.id}/deactivate`, { deactivation_notes: 'msh 3uzo' })
   }else{
-    const response = await dataService.post(`/api/admin/admins/${user.id}/activate`, {  })
+     await dataService.post(`/api/admin/admins/${user.id}/activate`, {  })
   }
 }
 const handleSubmit = async () => {
