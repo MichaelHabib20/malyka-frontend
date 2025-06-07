@@ -3,7 +3,8 @@ import { ref } from 'vue';
 import { signInWithPopup } from 'firebase/auth';
 import { auth, provider } from '../../../firebase';
 import { useRouter } from 'vue-router';
-import { dataService, DataService } from '../../../services/dataContext';
+import { dataService } from '../../../services/dataContext';
+import { authService } from '../../../services/authService';
 
 const router = useRouter();
 const email = ref('');
@@ -32,21 +33,39 @@ const loginWithEmail = async () => {
     error.value = 'Please fill in all fields';
     return;
   }
+
+  // Password validation
+  // const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/;
+  // if (!passwordRegex.test(password.value)) {
+  //   error.value = 'Password must be at least 8 characters long and contain both letters and numbers';
+  //   return;
+  // }
   
   try {
     loading.value = true;
     error.value = '';
     console.log(email.value, password.value)
-    const result = await dataService.post('/api/Auth/Login', {
+    const result : any = await dataService.createOnline('/api/Auth/Login', {
       email: email.value,
       password: password.value
     });
-    // const result = await signInWithEmailAndPassword(auth, email.value, password.value);
-    // const user = result.user;
-    console.log('Logged in user:', result);
+    
+    if (result.httpStatus === 200 && result.data?.token) {
+      try {
+        authService.setToken(result.data.token);
+        dataService.setAuthToken(result.data.token);
+        console.log(authService.getUser())
+        router.push('/');
+      } catch (tokenError: any) {
+        error.value = tokenError.message || 'Invalid authentication token';
+        console.error('Token error:', tokenError);
+      }
+    } else {
+      error.value = result.message || 'Login failed';
+    }
   } catch (err: any) {
-    error.value = err.message;
-    console.error('Email sign-in error:', err.message);
+    error.value = err.message || 'An error occurred during login';
+    console.error('Email sign-in error:', err);
   } finally {
     loading.value = false;
   }

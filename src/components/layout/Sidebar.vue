@@ -37,6 +37,23 @@ const navItems: NavItem[] = [
     icon: 'fa-solid fa-house',
     path: '/dashboard'
   },
+  {
+    title: 'Administration',
+    icon: 'fa-solid fa-user-tie',
+    children: [
+    {
+        title: 'Admins',
+        icon: 'fa-solid fa-user-gear',
+        path: '/administration/admins'
+      },
+      {
+        title: 'Roles',
+        icon: 'fa-solid fa-user-shield',
+        path: '/administration/roles'
+      }
+
+    ]
+  },
   // {
   //   title: 'Users',
   //   icon: 'fa-solid fa-users',
@@ -120,7 +137,7 @@ const navigateTo = (path?: string) => {
             v-if="item.children && !isCollapsed"
             :class="{ 'expanded': isItemExpanded(item.title) }"
           >
-            ▼
+            <i class="fa-solid fa-chevron-down"></i>
           </span>
         </div>
         
@@ -135,8 +152,6 @@ const navigateTo = (path?: string) => {
             :class="{ 'active': isActive(child.path) }"
             @click="navigateTo(child.path)"
           >
-            <span class="icon">{{ child.icon }}</span>
-            
             <span class="title">{{ child.title }}</span>
           </div>
         </div>

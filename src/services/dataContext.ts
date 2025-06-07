@@ -4,14 +4,13 @@ import { offlineStore } from './offlineStore';
 import { statusService } from './statusService';
 // Base API URL configuration
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://forsa.runasp.net';
-const token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwczovL3N0b3JlYXBpLXRhcnNob3VieWxhYi5lbC1kb2thbi5jb20vYXBpL2FkbWluL2F1dGgiLCJpYXQiOjE3NDQzNTU3ODUsImV4cCI6Mzc3NDQzNTU3ODUsIm5iZiI6MTc0NDM1NTc4NSwianRpIjoic2dyQTFacTA2U29JcTNPQyIsInN1YiI6MTExMTQzNiwicHJ2IjoiNGFjMDVjMGY4YWMwOGYzNjRjYjRkMDNmYjhlMWY2MzFmZWMzMjJlOCJ9.FlVPNqbpb19s-06GUuG1N87ScAAaSPkTKgCOPcO8G_Y"
+
 // Generic interface for API response
 interface ApiResponse<T> {
   data: T;
-  status: number;
+  status?: number;
   message: string;
   httpStatus?: number;
-
 }
 
 // Error interface
@@ -35,7 +34,12 @@ export class DataService {
     this.isOnline = statusService.getStatus();
     axios.defaults.baseURL = this.baseURL;
     axios.defaults.headers.common['Content-Type'] = 'application/json';
-    this.setAuthToken(token);
+    
+    // Get token from localStorage if it exists
+    const token = localStorage.getItem('authToken');
+    if (token) {
+      this.setAuthToken(token);
+    }
 
     // Subscribe to status changes
     statusService.subscribe((isOnline) => {
@@ -258,6 +262,78 @@ export class DataService {
   public clearAuthToken(): void {
     delete axios.defaults.headers.common['Authorization'];
   }
+    // New methods for online-only CRUD operations
+    public async fetchOnline<T>(endpoint: string, params?: Record<string, any>): Promise<ApiResponse<T>> {
+      try {
+        if (!this.isOnline) {
+          throw new Error('Online fetch is not available in offline mode');
+        }
+  
+        const response = await axios.get(endpoint, { params });
+        return {
+          data: response.data.data,
+          // status: response.status,
+          httpStatus: response.status,
+          message: response.data.message || 'Success'
+        };
+      } catch (error) {
+        return this.handleError(error as AxiosError);
+      }
+    }
+  
+    public async createOnline<T>(endpoint: string, data: any): Promise<ApiResponse<T>> {
+      try {
+        if (!this.isOnline) {
+          throw new Error('Online create is not available in offline mode');
+        }
+  
+        const response = await axios.post(endpoint, data);
+        return {
+          data: response.data.data,
+          // status: response.status,
+          httpStatus: response.status,
+          message: response.data.message || 'Success'
+        };
+      } catch (error) {
+        return this.handleError(error as AxiosError);
+      }
+    }
+  
+    public async updateOnline<T>(endpoint: string, data: any): Promise<ApiResponse<T>> {
+      try {
+        if (!this.isOnline) {
+          throw new Error('Online update is not available in offline mode');
+        }
+  
+        const response = await axios.put(endpoint, data);
+        return {
+          data: response.data.data,
+          // status: response.status,
+          httpStatus: response.status,
+          message: response.data.message || 'Success'
+        };
+      } catch (error) {
+        return this.handleError(error as AxiosError);
+      }
+    }
+  
+    public async removeOnline<T>(endpoint: string): Promise<ApiResponse<T>> {
+      try {
+        if (!this.isOnline) {
+          throw new Error('Online remove is not available in offline mode');
+        }
+  
+        const response = await axios.delete(endpoint);
+        return {
+          data: response.data.data,
+          // status: response.status,
+          httpStatus: response.status,
+          message: response.data.message || 'Success'
+        };
+      } catch (error) {
+        return this.handleError(error as AxiosError);
+      }
+    }
 }
 
 // Export singleton instance

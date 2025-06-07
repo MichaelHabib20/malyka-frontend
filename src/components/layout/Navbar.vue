@@ -4,19 +4,29 @@ import { useRoute, useRouter } from 'vue-router';
 import type { SyncStatus } from '../../interfaces/syncStatus';
 import statusService from '../../services/statusService';
 import { offlineStore } from '../../services/offlineStore';
+import { authService } from '../../services/authService';
+import { dataService } from '../../services/dataContext';
 
 const route = useRoute()
 const router = useRouter()
 const pageTitle = computed(() => route.meta.title)
 const isDropdownOpen = ref(false)
+const user = ref<any>({
+  name: '',
+  email: ''
+})
 const syncStatus = ref<SyncStatus>({
   isCurrentlySyncing: offlineStore.isCurrentlySyncing,
   lastSuccessfulSync: offlineStore.lastSuccessfulSync
-  });
-  const isOnline = ref(statusService.isOnline());
-  const isStatusDropdownOpen = ref(false);
-  const pendingRequestCount = ref<number>(0);
+});
+const isOnline = ref(statusService.isOnline());
+const isStatusDropdownOpen = ref(false);
+const pendingRequestCount = ref<number>(0);
 
+// const user = computed(() => {
+//   const currentUser = authService.getUser();
+
+// });
 
 onMounted(() => {
   statusService.subscribe((status) => {
@@ -24,6 +34,16 @@ onMounted(() => {
   });
   offlineStore.pendingRequestCountEmitter.on('pendingRequestCount', updateCount)
   offlineStore.syncStatusEmitter.on('sync-status', handleSyncStatus);
+
+  user.value = authService.getUser();
+  console.log(JSON.parse(JSON.stringify(user.value)))
+  // watch(user, (oldUser, newUser) => {
+  //   console.log(user)
+  //   user.value = newUser;
+  //   console.log(newUser)
+  //   console.log(oldUser, 'User changed or initialized:', newUser);
+  //   // your logic on init or update
+  // }); // 👈 this triggers it immediately on mount
 });
 const handleSyncStatus = (status: SyncStatus) => {
   syncStatus.value = status;
@@ -32,20 +52,15 @@ const updateCount = (count: number) => {
   pendingRequestCount.value = count
 }
 const handleLogout = () => {
-  // Add your logout logic here
-  console.log('Logging out...')
-  isDropdownOpen.value = false
-  router.push('/sign-in')
+  authService.clearUser();
+  dataService.clearAuthToken();
+  isDropdownOpen.value = false;
+  router.push('/sign-in');
 }
 
 defineEmits<{
   (e: 'toggle-sidebar'): void;
 }>();
-
-const user = {
-  name: 'John Doe',
-  avatar: '👤'
-};
 </script>
 
 <template>
@@ -75,14 +90,14 @@ const user = {
         </div>
       </div>
       <div class="dropdown">
-        <a class="btn  dropdown-toggle"  role="button" data-bs-toggle="dropdown" aria-expanded="false">
-          {{ user.name }}
+        <a class="btn dropdown-toggle" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+          {{ user.Name }}
         </a>
 
         <ul class="dropdown-menu">
+          <!-- <li><span class="dropdown-item">{{ user.email }}</span></li>
+          <li><hr class="dropdown-divider"></li> -->
           <li><a class="dropdown-item" @click="handleLogout">Logout</a></li>
-          <!-- <li><a class="dropdown-item" href="#">Another action</a></li>
-          <li><a class="dropdown-item" href="#">Something else here</a></li> -->
         </ul>
       </div>
  
@@ -183,7 +198,7 @@ const user = {
   color: #2c3e50;
 }
 .dropdown-menu {
-  left: -50px !important;
+  left: -14px !important;
 }
 
 
