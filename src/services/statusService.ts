@@ -9,45 +9,27 @@
 
 export class StatusService {
   private static instance: StatusService;
-  private _isOnline: boolean;
+  // private _isOnline: boolean;
   private isOnlineValue: boolean = true;
   private isConnectionStable : boolean = true;
   private subscribers: ((isOnline: boolean) => void)[] = [];
-  private connection: any; // For Network Information API
+  // private connection: any; // For Network Information API
 
   private constructor() {
-    this._isOnline = navigator.onLine;
-    this.connection = (navigator as any).connection || (navigator as any).mozConnection || (navigator as any).webkitConnection;
-    
+    // Initialize with current status
+    this.isOnlineValue = navigator.onLine;
+    // Online event handler
     window.addEventListener('online', () => {
-      this.isOnlineValue = true;
-      this.updateStatus();
+        this.isOnlineValue = true;
+        this.updateStatus();
     });
     
+    // Offline event handler
     window.addEventListener('offline', () => {
-      this.isOnlineValue = false;
-      this.updateStatus();
+        this.isOnlineValue = false;
+        this.updateStatus();
     });
-    
-    // Listen for connection changes if supported
-    if (this.connection) {
-      this.connection.addEventListener('change', () => this.handleConnectionChange());
-    }
-  }
-
-  private handleConnectionChange(): void {
-    if (this.connection) {
-      const isUnstable =
-        this.connection.effectiveType === 'slow-2g' ||
-        this.connection.effectiveType === '2g' ||
-        this.connection.downlink < 0.5 ||
-        this.connection.rtt > 1000;
-  
-      this.isConnectionStable = !isUnstable;
-      console.log('status',this.isConnectionStable)
-      this.updateStatus();
-    }
-  }
+}
 
   public static getInstance(): StatusService {
     if (!StatusService.instance) {
@@ -57,16 +39,16 @@ export class StatusService {
   }
 
   public getStatus(): boolean {
-    return this._isOnline;
+    return this.isOnlineValue;
   }
 
   public isOnline(): boolean {
-    return this._isOnline;
+    return this.isOnlineValue;
   }
 
   public subscribe(callback: (isOnline: boolean) => void): () => void {
     this.subscribers.push(callback);
-    callback(this._isOnline); // 👈 emits current value
+    callback(this.isOnlineValue); // 👈 emits current value
     // Return unsubscribe function
     return () => {
       this.subscribers = this.subscribers.filter(sub => sub !== callback);
@@ -75,8 +57,6 @@ export class StatusService {
 
   private updateStatus(): void {
     const fullyConnected = this.isOnlineValue && this.isConnectionStable;
-    console.log(fullyConnected)
-    // this._isOnline = this.isOnline;
     this.subscribers.forEach(callback => callback(fullyConnected));
   }
 }

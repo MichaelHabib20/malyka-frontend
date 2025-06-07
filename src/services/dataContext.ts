@@ -2,15 +2,16 @@ import axios from 'axios';
 import type { AxiosResponse, AxiosError } from 'axios';
 import { offlineStore } from './offlineStore';
 import { statusService } from './statusService';
-
 // Base API URL configuration
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://storeapi-tarshoubylab.el-dokan.com';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://forsa.runasp.net';
 const token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwczovL3N0b3JlYXBpLXRhcnNob3VieWxhYi5lbC1kb2thbi5jb20vYXBpL2FkbWluL2F1dGgiLCJpYXQiOjE3NDQzNTU3ODUsImV4cCI6Mzc3NDQzNTU3ODUsIm5iZiI6MTc0NDM1NTc4NSwianRpIjoic2dyQTFacTA2U29JcTNPQyIsInN1YiI6MTExMTQzNiwicHJ2IjoiNGFjMDVjMGY4YWMwOGYzNjRjYjRkMDNmYjhlMWY2MzFmZWMzMjJlOCJ9.FlVPNqbpb19s-06GUuG1N87ScAAaSPkTKgCOPcO8G_Y"
 // Generic interface for API response
 interface ApiResponse<T> {
   data: T;
   status: number;
   message: string;
+  httpStatus?: number;
+
 }
 
 // Error interface
@@ -65,7 +66,8 @@ export class DataService {
 
       // Get the next request to process
       const nextRequest = pendingRequests[0];
-      
+      console.log(nextRequest)
+      console.log(this.processedRequestIds)
       // Skip if this request was already processed
       if (this.processedRequestIds.has(nextRequest.id)) {
         this.syncInProgress = false;
@@ -104,12 +106,13 @@ export class DataService {
 
   private async processRequest<T>(method: string, endpoint: string, data?: any): Promise<ApiResponse<T>> {
     try {
-      let response: AxiosResponse<T>;
+      let response: any;
       switch (method.toLowerCase()) {
         case 'get':
           response = await axios.get(endpoint);
           break;
         case 'post':
+          console.log(data)
           response = await axios.post(endpoint, data);
           break;
         case 'put':
@@ -121,10 +124,12 @@ export class DataService {
         default:
           throw new Error(`Unsupported method: ${method}`);
       }
+      console.log(response)
       return {
-        data: response.data,
+        data: response.data.data,
         status: response.status,
-        message: 'Success'
+        httpStatus: response.status,
+        message: response.data.message || 'Success'
       };
     } catch (error) {
       return this.handleError(error as AxiosError);

@@ -57,7 +57,6 @@ defineProps<{ msg: string }>()
   offlineStore.pendingRequestCountEmitter.on('pendingRequestCount', updateCount)
   unsubscribe = statusService.subscribe((status) => {
     isOnline.value = status;
-    console.log('Connection status changed:', status);
   });
 })
 
