@@ -229,6 +229,21 @@ const hasActiveFilters = computed(() => {
                   ></i>
                 </template>
 
+                <template v-else-if="column.type === 'code'">
+                  <span class="code-badge">{{ row[column.key] }}</span>
+                </template>
+                <template v-else-if="column.type === 'attendance-status'">
+                  <span 
+                      :class="[
+                        'status-badge',
+                        row[column.key] ? 'status-present' : 'status-absent'
+                      ]"
+                    >
+                      <i :class="row[column.key] ? 'fa-solid fa-check' : 'fa-solid fa-times'"></i>
+                      {{ row[column.key] ? 'Present' : 'Absent' }}
+                    </span>
+                </template>
+
                 <!-- Checkbox -->
                 <template v-else-if="column.type === 'checkbox'">
                   <input 
@@ -484,5 +499,37 @@ const hasActiveFilters = computed(() => {
 }
 .checkbox-input{
   cursor: pointer !important;
+}
+.code-badge {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  background: #f3f4f6;
+  color: #374151;
+  border-radius: 6px;
+  font-family: 'Courier New', monospace;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+/* Status Badges */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.status-present {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.status-absent {
+  background: #fee2e2;
+  color: #991b1b;
 }
 </style> 

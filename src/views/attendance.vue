@@ -16,7 +16,7 @@ const columns: Column[] = [
   {     
     key: 'code', 
     label: 'code', 
-    type: 'number',
+    type: 'code',
     sortable: true 
   },
   { 
@@ -168,7 +168,6 @@ const handleUpdateCachedData = async (modal: any) => {
 
 }
 const handleDateChange = async (date: Date) => {
-
         selectedDate.value = date;
         await getKidsData();
     
@@ -228,7 +227,7 @@ onMounted(async () => {
         :sort-direction="sortDirection"
         :filters="filters"
         :search-query="searchQuery"
-        :search-placeholder="'Search with code or name'"
+        :search-placeholder="'Search by kid\'s name or code...'"
         @update:sort-by="handleSortBy"
         @update:sort-direction="handleSortDirection"
         @update:current-page="handlePageChange"

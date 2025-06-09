@@ -2,7 +2,7 @@ export interface Column {
     key: string;
     label: string;
     align?: 'left' | 'center' | 'right';
-    type: 'text' | 'number' | 'date' | 'icon' | 'checkbox' | 'select' | 'image' | 'actions';
+    type: 'text' | 'number' | 'date' | 'icon' | 'checkbox' | 'select' | 'image' | 'actions' | 'link'| 'attendance-status' | 'code';
     sortable?: boolean;
     filterable?: boolean;
     filterType?: 'text' | 'select' | 'date' | 'number';

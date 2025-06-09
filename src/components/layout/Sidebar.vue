@@ -43,6 +43,23 @@ const navItems: NavItem[] = [
     path: '/dashboard'
   },
   {
+    title: 'Attendance',
+    icon: 'fa-solid fa-clipboard-user',
+    children: [
+      {
+        title: 'Record',
+        path: '/attendance'
+      },
+      {
+        title: 'History',
+        path: '/view-attendance'
+      }
+    ]
+  //   isReady: () => {
+  //   return isOnline || isDataCached('attendance');
+  // }
+  },
+  {
     title: 'Administration',
     icon: 'fa-solid fa-user-tie',
     children: [
@@ -59,23 +76,7 @@ const navItems: NavItem[] = [
 
     ]
   },
-  {
-    title: 'Attendance',
-    icon: 'fa-solid fa-clipboard-user',
-    children: [
-      {
-        title: 'Record',
-        path: '/attendance'
-      },
-      {
-        title: 'History',
-        path: '/view-attendance'
-      }
-    ]
-  //   isReady: () => {
-  //   return isOnline || isDataCached('attendance');
-  // }
-  }
+
   // {
   //   title: 'Users',
   //   icon: 'fa-solid fa-users',

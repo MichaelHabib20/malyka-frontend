@@ -6,6 +6,7 @@ import Dashboard from './views/Dashboard.vue'
 import HelloWorld from './components/HelloWorld.vue'
 import { authService } from './services/authService'
 import Attendance from './views/attendance.vue'
+import AttendanceHistory from './views/attendanceHistory.vue'
 
 const routes = [
   { 
@@ -34,6 +35,12 @@ const routes = [
         name: 'Attendance',
         meta: { title: 'Record Attendance', requiresAuth: true },
         component: Attendance
+      },
+      {
+        path: 'view-attendance',
+        name: 'AttendanceHistory',
+        meta: { title: 'Attendance History', requiresAuth: true },
+        component: AttendanceHistory
       },
       {
         path: 'ziko',
