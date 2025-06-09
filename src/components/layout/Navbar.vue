@@ -23,12 +23,7 @@ const isOnline = ref(statusService.isOnline());
 const isStatusDropdownOpen = ref(false);
 const pendingRequestCount = ref<number>(0);
 
-// const user = computed(() => {
-//   const currentUser = authService.getUser();
-
-// });
-
-onMounted(() => {
+onMounted(async () => {
   statusService.subscribe((status) => {
     isOnline.value = status;
   });
@@ -36,14 +31,15 @@ onMounted(() => {
   offlineStore.syncStatusEmitter.on('sync-status', handleSyncStatus);
 
   user.value = authService.getUser();
-  console.log(JSON.parse(JSON.stringify(user.value)))
-  // watch(user, (oldUser, newUser) => {
-  //   console.log(user)
-  //   user.value = newUser;
-  //   console.log(newUser)
-  //   console.log(oldUser, 'User changed or initialized:', newUser);
-  //   // your logic on init or update
-  // }); // 👈 this triggers it immediately on mount
+  
+  // Load initial pending request count
+  try {
+    const initialCount = await offlineStore.getPendingRequestCount();
+    pendingRequestCount.value = initialCount;
+  } catch (error) {
+    console.error('Error loading initial pending request count:', error);
+    pendingRequestCount.value = 0;
+  }
 });
 const handleSyncStatus = (status: SyncStatus) => {
   syncStatus.value = status;

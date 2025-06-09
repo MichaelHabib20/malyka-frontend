@@ -2,34 +2,10 @@
 import { ref, computed, watch } from 'vue';
 import Input from './input.vue';
 import Select from './select.vue';
+import type { Column } from '../../interfaces/column';
+import type { Props } from '../../interfaces/props';
 
-interface Column {
-  key: string;
-  label: string;
-  type: 'text' | 'number' | 'date' | 'icon' | 'checkbox' | 'select' | 'image' | 'actions';
-  sortable?: boolean;
-  filterable?: boolean;
-  filterType?: 'text' | 'select' | 'date' | 'number';
-  filterOptions?: { label: string; value: any }[];
-  width?: string;
-  icon?: string;
-  iconColor?: string;
-  selectOptions?: { label: string; value: any }[];
-  actions?: { icon: string; label: string; color?: string }[];
-}
 
-interface Props {
-  columns: Column[];
-  data: any[];
-  loading?: boolean;
-  totalItems?: number;
-  itemsPerPage?: number;
-  currentPage?: number;
-  sortBy?: string;
-  sortDirection?: 'asc' | 'desc';
-  filters?: Record<string, any>;
-  searchQuery?: string;
-}
 
 const props = withDefaults(defineProps<Props>(), {
   loading: false,
@@ -39,7 +15,8 @@ const props = withDefaults(defineProps<Props>(), {
   sortBy: '',
   sortDirection: 'asc',
   filters: () => ({}),
-  searchQuery: ''
+  searchQuery: '',
+  searchPlaceholder: 'Search...'
 });
 
 const emit = defineEmits<{
@@ -48,6 +25,7 @@ const emit = defineEmits<{
   (e: 'update:currentPage', value: number): void;
   (e: 'update:filters', value: Record<string, any>): void;
   (e: 'update:searchQuery', value: string): void;
+  (e: 'update:enterKey', value: boolean): void;
   (e: 'action', payload: { action: string; row: any }): void;
   (e: 'iconClick', payload: { column: string; row: any }): void;
   (e: 'selectChange', payload: { column: string; value: any; row: any }): void;
@@ -85,6 +63,13 @@ const handleSearchChange = (value: string) => {
   emit('update:searchQuery', value);
 };
 
+const handleSearchKeydown = (event: KeyboardEvent) => {
+  if (event.key === 'Enter') {
+    // Trigger search on Enter key press
+    emit('update:enterKey', true);
+  }
+};
+
 const handlePageChange = (page: number) => {
   emit('update:currentPage', page);
 };
@@ -113,6 +98,14 @@ const resetFilters = () => {
 };
 
 const totalPages = computed(() => Math.ceil(props.totalItems / props.itemsPerPage));
+
+const hasActiveFilters = computed(() => {
+  // Check if there are any non-empty filters
+  const hasFilters = Object.values(localFilters.value).some(value => 
+    value !== null && value !== undefined && value !== ''
+  );
+  return hasFilters;
+});
 </script>
 
 <template>
@@ -121,9 +114,11 @@ const totalPages = computed(() => Math.ceil(props.totalItems / props.itemsPerPag
     <div class="table-controls">
       <div class="search-section">
         <Input
+          id="table-search"
           v-model="localSearchQuery"
-          placeholder="Search..."
+          :placeholder="searchPlaceholder"
           @update:modelValue="handleSearchChange"
+          @keydown="handleSearchKeydown"
           class="search-input"
         />
       </div>
@@ -141,6 +136,7 @@ const totalPages = computed(() => Math.ceil(props.totalItems / props.itemsPerPag
           </template>
           <template v-else-if="column.filterType === 'date'">
             <Input
+              :id="`filter-${column.key}-date`"
               v-model="localFilters[column.key]"
               type="date"
               :compact="true"
@@ -150,6 +146,7 @@ const totalPages = computed(() => Math.ceil(props.totalItems / props.itemsPerPag
           </template>
           <template v-else>
             <Input
+              :id="`filter-${column.key}`"
               v-model="localFilters[column.key]"
               :type="column.filterType || 'text'"
               :compact="true"
@@ -158,7 +155,7 @@ const totalPages = computed(() => Math.ceil(props.totalItems / props.itemsPerPag
             />
           </template>
         </div>
-        <button class="reset-filters" @click="resetFilters">
+        <button v-if="hasActiveFilters" class="reset-filters" @click="resetFilters">
           Reset Filters
         </button>
       </div>
@@ -204,7 +201,7 @@ const totalPages = computed(() => Math.ceil(props.totalItems / props.itemsPerPag
               v-for="column in columns" 
               :key="column.key"
               :style="{ width: column.width }"
-              :class="{ sortable: column.sortable }"
+              :class="{ sortable: column.sortable, 'text-left': column.align === 'left', 'text-right': column.align === 'right', 'text-center': column.align === 'center' }"
               @click="handleSort(column)"
             >
               {{ column.label }}
@@ -217,7 +214,7 @@ const totalPages = computed(() => Math.ceil(props.totalItems / props.itemsPerPag
         <tbody>
           <template v-if="!loading && data.length > 0">
             <tr v-for="(row, index) in data" :key="index">
-              <td v-for="column in columns" :key="column.key">
+              <td v-for="column in columns" :key="column.key" :class="{ 'text-left': column.align === 'left', 'text-right': column.align === 'right', 'text-center': column.align === 'center' }">
                 <!-- Text/Number/Date -->
                 <template v-if="['text', 'number', 'date'].includes(column.type)">
                   {{ row[column.key] }}
@@ -237,7 +234,8 @@ const totalPages = computed(() => Math.ceil(props.totalItems / props.itemsPerPag
                   <input 
                     type="checkbox"
                     :checked="row[column.key]"
-                    @change="handleCheckboxChange(column.key, $event?.target?.checked, row)"
+                    class="checkbox-input"
+                    @change="handleCheckboxChange(column.key, ($event.target as HTMLInputElement).checked, row)"
                   >
                 </template>
 
@@ -302,11 +300,9 @@ const totalPages = computed(() => Math.ceil(props.totalItems / props.itemsPerPag
 }
 
 .table-controls {
-  padding: 1rem;
-  border-bottom: 1px solid #eee;
+  margin-bottom: 1rem;
   display: flex;
   flex-direction: column;
-  gap: 1rem;
 }
 
 .search-section {
@@ -390,7 +386,6 @@ const totalPages = computed(() => Math.ceil(props.totalItems / props.itemsPerPag
 .data-table th,
 .data-table td {
   padding: 1rem;
-  text-align: left;
   border-bottom: 1px solid #eee;
 }
 
@@ -477,5 +472,17 @@ const totalPages = computed(() => Math.ceil(props.totalItems / props.itemsPerPag
     flex-wrap: wrap;
     justify-content: center;
   }
+}
+.text-left {
+  text-align: left;
+}
+.text-right {
+  text-align: right;
+}
+.text-center {
+  text-align: center;
+}
+.checkbox-input{
+  cursor: pointer !important;
 }
 </style> 

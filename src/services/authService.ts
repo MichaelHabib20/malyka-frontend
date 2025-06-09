@@ -63,12 +63,6 @@ class AuthService {
   public isAuthenticated(): boolean {
     if (!this.currentUser) return false;
     
-    // Check if token is expired
-    if (this.currentUser.exp && this.currentUser.exp * 1000 < Date.now()) {
-      this.clearUser();
-      return false;
-    }
-    
     return true;
   }
 

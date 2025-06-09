@@ -176,7 +176,7 @@ watch(() => props.modelValue, (newValue) => {
 <style scoped>
 .input-wrapper {
   position: relative;
-  margin-bottom: 1rem;
+  /* margin-bottom: 1rem; */
   width: 100%;
 }
 

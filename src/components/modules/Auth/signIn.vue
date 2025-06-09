@@ -60,6 +60,8 @@ const loginWithEmail = async () => {
         error.value = tokenError.message || 'Invalid authentication token';
         console.error('Token error:', tokenError);
       }
+    } else if(result.httpStatus === 503) {
+      error.value = ''
     } else {
       error.value = result.message || 'Login failed';
     }

@@ -5,6 +5,7 @@ import DashboardLayout from './components/layout/DashboardLayout.vue'
 import Dashboard from './views/Dashboard.vue'
 import HelloWorld from './components/HelloWorld.vue'
 import { authService } from './services/authService'
+import Attendance from './views/attendance.vue'
 
 const routes = [
   { 
@@ -27,6 +28,12 @@ const routes = [
         name: 'Dashboard',
         meta: { title: 'Dashboard', requiresAuth: true },
         component: Dashboard
+      },
+      {
+        path: 'attendance',
+        name: 'Attendance',
+        meta: { title: 'Record Attendance', requiresAuth: true },
+        component: Attendance
       },
       {
         path: 'ziko',

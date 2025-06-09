@@ -1,12 +1,13 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
-
+import statusService from '../../services/statusService';
 interface NavItem {
   title: string;
-  icon: string;
+  icon?: string;
   path?: string;
   children?: NavItem[];
+  isReady?: () => boolean;
 }
 
 const props = defineProps<{
@@ -15,9 +16,13 @@ const props = defineProps<{
 
 const router = useRouter();
 const expandedItems = ref<Set<string>>(new Set());
-
+  const isOnline = ref(statusService.isOnline());
 const currentRoute = computed(() => router.currentRoute.value.path);
-
+onMounted(() => {
+  statusService.subscribe((status) => {
+    isOnline.value = status;
+  });
+})
 const isActive = (path?: string) => {
   if (!path) return false;
   return currentRoute.value === path;
@@ -54,6 +59,23 @@ const navItems: NavItem[] = [
 
     ]
   },
+  {
+    title: 'Attendance',
+    icon: 'fa-solid fa-clipboard-user',
+    children: [
+      {
+        title: 'Record',
+        path: '/attendance'
+      },
+      {
+        title: 'History',
+        path: '/view-attendance'
+      }
+    ]
+  //   isReady: () => {
+  //   return isOnline || isDataCached('attendance');
+  // }
+  }
   // {
   //   title: 'Users',
   //   icon: 'fa-solid fa-users',
@@ -107,6 +129,9 @@ const navigateTo = (path?: string) => {
     router.push(path);
   }
 };
+const isDataCached = (title: string) => {
+  return false;
+}
 </script>
 
 <template>
@@ -243,17 +268,18 @@ const navigateTo = (path?: string) => {
 }
 
 .nav-children {
-  margin-left: 2.5rem;
+  /* padding-left: 2.5rem; */
   margin-top: 0.25rem;
 }
 
 .nav-child-item {
   display: flex;
   align-items: center;
-  padding: 0.5rem 1rem;
+  padding: 0.5rem 1rem 0.5rem 2.5rem;
   cursor: pointer;
   transition: background-color 0.2s ease;
   color: #2c3e50;
+  
 }
 
 .nav-child-item:hover {

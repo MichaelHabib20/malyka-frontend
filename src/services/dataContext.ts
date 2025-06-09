@@ -2,12 +2,13 @@ import axios from 'axios';
 import type { AxiosResponse, AxiosError } from 'axios';
 import { offlineStore } from './offlineStore';
 import { statusService } from './statusService';
+import { ElMessage } from 'element-plus'
 // Base API URL configuration
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://forsa.runasp.net';
 
 // Generic interface for API response
 interface ApiResponse<T> {
-  data: T;
+  data?: T;
   status?: number;
   message: string;
   httpStatus?: number;
@@ -70,8 +71,6 @@ export class DataService {
 
       // Get the next request to process
       const nextRequest = pendingRequests[0];
-      console.log(nextRequest)
-      console.log(this.processedRequestIds)
       // Skip if this request was already processed
       if (this.processedRequestIds.has(nextRequest.id)) {
         this.syncInProgress = false;
@@ -116,7 +115,6 @@ export class DataService {
           response = await axios.get(endpoint);
           break;
         case 'post':
-          console.log(data)
           response = await axios.post(endpoint, data);
           break;
         case 'put':
@@ -128,7 +126,6 @@ export class DataService {
         default:
           throw new Error(`Unsupported method: ${method}`);
       }
-      console.log(response)
       return {
         data: response.data.data,
         status: response.status,
@@ -263,10 +260,14 @@ export class DataService {
     delete axios.defaults.headers.common['Authorization'];
   }
     // New methods for online-only CRUD operations
-    public async fetchOnline<T>(endpoint: string, params?: Record<string, any>): Promise<ApiResponse<T>> {
+    public async fetchOnline<T>(endpoint: string, params?: Record<string, any>): Promise<ApiResponse<T> | undefined> {
       try {
         if (!this.isOnline) {
-          throw new Error('Online fetch is not available in offline mode');
+          this.createAlertMessage('You are currently offline. This action requires an internet connection.', 'warning');
+          return {
+          httpStatus: 503,
+          message: 'You are currently offline. This action requires an internet connection.'
+          }                 
         }
   
         const response = await axios.get(endpoint, { params });
@@ -281,10 +282,14 @@ export class DataService {
       }
     }
   
-    public async createOnline<T>(endpoint: string, data: any): Promise<ApiResponse<T>> {
+    public async createOnline<T>(endpoint: string, data: any): Promise<ApiResponse<T> | undefined> {
       try {
         if (!this.isOnline) {
-          throw new Error('Online create is not available in offline mode');
+          this.createAlertMessage('You are currently offline. This action requires an internet connection.', 'warning');
+          return {
+          httpStatus: 503,
+          message: 'You are currently offline. This action requires an internet connection.'
+          }
         }
   
         const response = await axios.post(endpoint, data);
@@ -299,10 +304,14 @@ export class DataService {
       }
     }
   
-    public async updateOnline<T>(endpoint: string, data: any): Promise<ApiResponse<T>> {
+    public async updateOnline<T>(endpoint: string, data: any): Promise<ApiResponse<T> | undefined>{
       try {
         if (!this.isOnline) {
-          throw new Error('Online update is not available in offline mode');
+          this.createAlertMessage('You are currently offline. This action requires an internet connection.', 'warning');
+          return {
+          httpStatus: 503,
+          message: 'You are currently offline. This action requires an internet connection.'
+          }
         }
   
         const response = await axios.put(endpoint, data);
@@ -317,10 +326,14 @@ export class DataService {
       }
     }
   
-    public async removeOnline<T>(endpoint: string): Promise<ApiResponse<T>> {
+    public async removeOnline<T>(endpoint: string): Promise<ApiResponse<T> | undefined> {
       try {
         if (!this.isOnline) {
-          throw new Error('Online remove is not available in offline mode');
+          this.createAlertMessage('You are currently offline. This action requires an internet connection.', 'warning');
+          return {
+          httpStatus: 503,
+          message: 'You are currently offline. This action requires an internet connection.'
+          }
         }
   
         const response = await axios.delete(endpoint);
@@ -334,7 +347,16 @@ export class DataService {
         return this.handleError(error as AxiosError);
       }
     }
+    createAlertMessage(message: string, type: 'success' | 'warning' | 'info' | 'error') {
+      ElMessage({
+        message,
+        type,
+        duration: 5000,
+        showClose: true,
+      });
+    }
 }
+
 
 // Export singleton instance
 export const dataService = DataService.getInstance();
