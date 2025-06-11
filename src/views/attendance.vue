@@ -85,10 +85,6 @@ const filteredData = computed(() => {
   return result;
 });
 
-const currentDate = computed(() => {
-  return new Date().toISOString()
-});
-
 const formattedDate = computed(() => {
   return selectedDate.value.toLocaleDateString('en-US', {
     weekday: 'long',
@@ -107,10 +103,6 @@ const handleSortDirection = (newSortDirection: 'asc' | 'desc') => {
   sortDirection.value = newSortDirection;
 };
 
-const handleFilter = (newFilters: any) => {
-  filters.value = newFilters;
-};
-
 const handleSearch = (query: string) => {
   searchQuery.value = query;
 };
@@ -124,18 +116,6 @@ const handleEnterKey = (value: boolean) => {
 //       row: filteredData.value[0]
 //     })
 //   }
-};
-
-const handlePageChange = (page: number) => {
-  currentPage.value = page;
-};
-
-const handleAction = (payload: { action: string; row: any }) => {
-  console.log('Action:', payload.action, 'Row:', payload.row);
-};
-
-const handleSelectChange = (payload: { column: string; value: any; row: any }) => {
-  console.log('Select change:', payload);
 };
 
 const handleCheckboxChange = async (payload: { column: string; value: boolean; row: any }) => {
@@ -160,10 +140,8 @@ const handleUpdateCachedData = async (modal: any) => {
         }
     })
   const cacheKey = endpointWithParams.value;
-  console.log(cacheKey)
   // Parse and stringify to ensure we have a clean copy
   const updatedData = JSON.parse(JSON.stringify(tableData.value));
-  console.log(updatedData)
   await offlineStore.saveData(cacheKey, updatedData);
 
 }
@@ -175,12 +153,9 @@ const handleDateChange = async (date: Date) => {
 
 const getKidsData = async () => {
     try { 
-        console.log(selectedDate.value)
         const formattedDate = selectedDate.value.toLocaleDateString('en-CA');
-        console.log(formattedDate)
         endpointWithParams.value = `/api/TestKidsAtt/GetKidsData?SpecificDate=${formattedDate}`;
         const result : any = await dataService.get(endpointWithParams.value)
-        console.log(result)
         if(result.httpStatus === 200 || result.status){
             tableData.value = result.data.kids ? result.data.kids : result.data
         }
@@ -230,12 +205,8 @@ onMounted(async () => {
         :search-placeholder="'Search by kid\'s name or code...'"
         @update:sort-by="handleSortBy"
         @update:sort-direction="handleSortDirection"
-        @update:current-page="handlePageChange"
-        @update:filters="handleFilter"
         @update:search-query="handleSearch"
         @update:enterKey="handleEnterKey"
-        @action="handleAction"
-        @select-change="handleSelectChange"
         @checkbox-change="handleCheckboxChange"
       />
     </div>

@@ -1,7 +1,5 @@
 import { ref } from 'vue'
 
-const errors = ref([])
-
 const validationRules = {
   required: (value) => ({
     isValid: value !== undefined && value !== null && value !== '',
@@ -44,34 +42,36 @@ const validationRules = {
   })
 }
 
-const validate = (value, rules = []) => {
-  errors.value = []
+export const useValidation = () => {
+  const errors = ref([])
   
-  if (!rules.length) return true
-  
-  for (const rule of rules) {
-    let validationResult
+  const validate = (value, rules = []) => {
+    errors.value = []
     
-    if (typeof rule === 'string' && validationRules[rule]) {
-      validationResult = validationRules[rule](value)
-    } else if (typeof rule === 'object') {
-      const { type, params, message } = rule
-      if (validationRules[type]) {
-        const validator = validationRules[type](...(Array.isArray(params) ? params : [params]))
-        validationResult = validator(value)
-        if (message) validationResult.message = message
+    if (!rules.length) return true
+    
+    for (const rule of rules) {
+      let validationResult
+      
+      if (typeof rule === 'string' && validationRules[rule]) {
+        validationResult = validationRules[rule](value)
+      } else if (typeof rule === 'object') {
+        const { type, params, message } = rule
+        if (validationRules[type]) {
+          const validator = validationRules[type](...(Array.isArray(params) ? params : [params]))
+          validationResult = validator(value)
+          if (message) validationResult.message = message
+        }
+      }
+      
+      if (validationResult && !validationResult.isValid) {
+        errors.value.push(validationResult.message)
       }
     }
     
-    if (validationResult && !validationResult.isValid) {
-      errors.value.push(validationResult.message)
-    }
+    return errors.value.length === 0
   }
-  
-  return errors.value.length === 0
-}
 
-export const useValidation = () => {
   return {
     validate,
     errors,

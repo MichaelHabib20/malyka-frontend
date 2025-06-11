@@ -4,10 +4,12 @@ import Input from './input.vue';
 import Select from './select.vue';
 import type { Column } from '../../interfaces/column';
 import type { Props } from '../../interfaces/props';
+import type { CustomButton } from '../../interfaces/customButtons';
 
 
-
-const props = withDefaults(defineProps<Props>(), {
+const props = withDefaults(defineProps<Props & {
+  customButtons?: CustomButton[];
+}>(), {
   loading: false,
   totalItems: 0,
   itemsPerPage: 10,
@@ -16,7 +18,8 @@ const props = withDefaults(defineProps<Props>(), {
   sortDirection: 'asc',
   filters: () => ({}),
   searchQuery: '',
-  searchPlaceholder: 'Search...'
+  searchPlaceholder: 'Search...',
+  customButtons: () => []
 });
 
 const emit = defineEmits<{
@@ -30,6 +33,7 @@ const emit = defineEmits<{
   (e: 'iconClick', payload: { column: string; row: any }): void;
   (e: 'selectChange', payload: { column: string; value: any; row: any }): void;
   (e: 'checkboxChange', payload: { column: string; value: boolean; row: any }): void;
+  (e: 'buttonClick', payload: { buttonId: string; button: CustomButton }): void;
 }>();
 
 const localFilters = ref<Record<string, any>>({ ...props.filters });
@@ -90,6 +94,10 @@ const handleCheckboxChange = (column: string, value: boolean, row: any) => {
   emit('checkboxChange', { column, value, row });
 };
 
+const handleButtonClick = (buttonId: string, button: CustomButton) => {
+  emit('buttonClick', { buttonId, button });
+};
+
 const resetFilters = () => {
   localFilters.value = {};
   localSearchQuery.value = '';
@@ -112,7 +120,8 @@ const hasActiveFilters = computed(() => {
   <div class="data-table-container">
     <!-- Search and Filters Section -->
     <div class="table-controls">
-      <div class="search-section">
+      <div class="d-flex justify-content-between">
+        <div class="search-section">
         <Input
           id="table-search"
           v-model="localSearchQuery"
@@ -121,6 +130,21 @@ const hasActiveFilters = computed(() => {
           @keydown="handleSearchKeydown"
           class="search-input"
         />
+      </div>
+
+      <div class="action-buttons">
+        <button 
+          v-for="button in customButtons"
+          :key="button.id"
+          :class="['btn', button.variant || 'btn-primary']"
+          @click="handleButtonClick(button.id, button)"
+          :disabled="button.disabled || button.loading"
+        >
+          <i :class="['fa-solid', button.icon]"></i>
+          {{ button.loading ? button.loadingText : button.label }}
+        </button>
+      </div>
+
       </div>
 
       <div class="filters-section">
@@ -232,6 +256,7 @@ const hasActiveFilters = computed(() => {
                 <template v-else-if="column.type === 'code'">
                   <span class="code-badge">{{ row[column.key] }}</span>
                 </template>
+
                 <template v-else-if="column.type === 'attendance-status'">
                   <span 
                       :class="[
@@ -274,6 +299,7 @@ const hasActiveFilters = computed(() => {
 
                 <!-- Actions -->
                 <template v-else-if="column.type === 'actions'">
+                  
                   <div class="actions-cell">
                     <button 
                       v-for="action in column.actions" 
@@ -531,5 +557,81 @@ const hasActiveFilters = computed(() => {
 .status-absent {
   background: #fee2e2;
   color: #991b1b;
+}
+
+/* Button Variants */
+.btn {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.2s;
+  text-decoration: none;
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-secondary {
+  background: #6c757d;
+  color: white;
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: #545b62;
+}
+
+.btn-success {
+  background: #28a745;
+  color: white;
+}
+
+.btn-success:hover:not(:disabled) {
+  background: #1e7e34;
+}
+
+.btn-danger {
+  background: #dc3545;
+  color: white;
+}
+
+.btn-danger:hover:not(:disabled) {
+  background: #c82333;
+}
+
+.btn-warning {
+  background: #ffc107;
+  color: #212529;
+}
+
+.btn-warning:hover:not(:disabled) {
+  background: #e0a800;
+}
+
+.btn-info {
+  background: #17a2b8;
+  color: white;
+}
+
+.btn-info:hover:not(:disabled) {
+  background: #138496;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+.btn-primary {
+  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+  color: white;
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
 }
 </style> 

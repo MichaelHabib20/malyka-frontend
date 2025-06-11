@@ -52,7 +52,7 @@ const navItems: NavItem[] = [
       },
       {
         title: 'History',
-        path: '/view-attendance'
+        path: '/attendance-history'
       }
     ]
   //   isReady: () => {
@@ -66,12 +66,12 @@ const navItems: NavItem[] = [
     {
         title: 'Admins',
         icon: 'fa-solid fa-user-gear',
-        path: '/administration/admins'
+        path: '/adminstrations/admins'
       },
       {
         title: 'Roles',
         icon: 'fa-solid fa-user-shield',
-        path: '/administration/roles'
+        path: '/adminstrations/roles'
       }
 
     ]

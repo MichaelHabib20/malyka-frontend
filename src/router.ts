@@ -7,7 +7,11 @@ import HelloWorld from './components/HelloWorld.vue'
 import { authService } from './services/authService'
 import Attendance from './views/attendance.vue'
 import AttendanceHistory from './views/attendanceHistory.vue'
-
+import Adminstrations from './views/adminstrations.vue'
+import Admins from './views/admins.vue'
+import Roles from './views/roles.vue'
+import roleForm from './views/roleForm.vue'
+import adminForm from './views/adminForm.vue'
 const routes = [
   { 
     path: '/sign-in', 
@@ -37,10 +41,54 @@ const routes = [
         component: Attendance
       },
       {
-        path: 'view-attendance',
+        path: 'attendance-history',
         name: 'AttendanceHistory',
         meta: { title: 'Attendance History', requiresAuth: true },
         component: AttendanceHistory
+      },
+      {
+        path : 'adminstrations',
+        name : 'Adminstrations',
+        meta : { title : 'Adminstrations', requiresAuth : true },
+        component : Adminstrations,
+        children : [
+          {
+            path : 'admins',
+            name : 'Admins',
+            meta : { title : 'Admins', requiresAuth : true },
+            component : Admins
+          },
+          {
+            path : 'roles',
+            name : 'Roles',
+            meta : { title : 'Roles', requiresAuth : true },
+            component : Roles
+          },
+          {
+            path : 'roles/create',
+            name : 'CreateRole',
+            meta : { title : 'New Role', requiresAuth : true },
+            component : roleForm
+          },
+          {
+            path : 'roles/edit/:id',
+            name : 'EditRole',
+            meta : { title : 'Edit Role', requiresAuth : true },
+            component : roleForm
+          },
+          {
+            path : 'admins/create',
+            name : 'CreateAdmin',
+            meta : { title : 'New Admin', requiresAuth : true },
+            component : adminForm
+          },
+          {
+            path : 'admins/edit/:id',
+            name : 'EditAdmin',
+            meta : { title : 'Edit Admin', requiresAuth : true },
+            component : adminForm
+          }
+        ]
       },
       {
         path: 'ziko',

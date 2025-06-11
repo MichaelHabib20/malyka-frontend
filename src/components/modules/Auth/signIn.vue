@@ -19,7 +19,6 @@ const loginWithGoogle = async () => {
     const result = await signInWithPopup(auth, provider);
     const user = result.user;
     router.push('/');
-    console.log('Logged in user:', user);
   } catch (err: any) {
     error.value = err.message;
     console.error('Google sign-in error:', err.message);
@@ -44,7 +43,6 @@ const loginWithEmail = async () => {
   try {
     loading.value = true;
     error.value = '';
-    console.log(email.value, password.value)
     const result : any = await dataService.createOnline('/api/Auth/Login', {
       email: email.value,
       password: password.value
@@ -54,7 +52,6 @@ const loginWithEmail = async () => {
       try {
         authService.setToken(result.data.token);
         dataService.setAuthToken(result.data.token);
-        console.log(authService.getUser())
         router.push('/');
       } catch (tokenError: any) {
         error.value = tokenError.message || 'Invalid authentication token';

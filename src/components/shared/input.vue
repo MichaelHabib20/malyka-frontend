@@ -3,6 +3,10 @@
     <label v-if="label" :for="id" class="input-label">{{ label }}</label>
     
     <div class="input-container">
+      <i 
+        v-if="leadingIcon" 
+        :class="['input-icon leading-icon', leadingIcon]"
+      ></i>
       <input
         :id="id"
         :type="type"
@@ -15,13 +19,24 @@
           'input-field',
           { 'is-disabled': disabled },
           { 'has-suggestions': showSuggestions },
-          { 'is-compact': compact }
+          { 'is-compact': compact },
+          { 'has-leading-icon': leadingIcon },
+          { 'has-trailing-icon': trailingIcon }
         ]"
         @input="handleInput"
         @focus="handleFocus"
         @blur="handleBlur"
         @keydown="handleKeydown"
       />
+      <i 
+        v-if="trailingIcon" 
+        :class="[
+          'input-icon trailing-icon', 
+          trailingIcon,
+          { 'clickable': isTrailingIconClickable }
+        ]"
+        @click="handleTrailingIconClick"
+      ></i>
       
       <div v-if="showSuggestions && suggestions.length" class="suggestions-list">
         <div
@@ -92,10 +107,22 @@ const props = defineProps({
   compact: {
     type: Boolean,
     default: false
+  },
+  leadingIcon: {
+    type: String,
+    default: null
+  },
+  trailingIcon: {
+    type: String,
+    default: null
+  },
+  isTrailingIconClickable: {
+    type: Boolean,
+    default: false
   }
 })
 
-const emit = defineEmits(['update:modelValue', 'validation-change', 'suggestion-selected'])
+const emit = defineEmits(['update:modelValue', 'validation-change', 'suggestion-selected', 'trailing-icon-click'])
 
 const { validate, errors } = useValidation()
 const showSuggestions = ref(false)
@@ -168,6 +195,12 @@ const validateInput = (value) => {
   })
 }
 
+const handleTrailingIconClick = (event) => {
+  if (props.isTrailingIconClickable) {
+    emit('trailing-icon-click', event)
+  }
+}
+
 watch(() => props.modelValue, (newValue) => {
   validateInput(newValue)
 })
@@ -190,6 +223,27 @@ watch(() => props.modelValue, (newValue) => {
 
 .input-container {
   position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-icon {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  color: #6b7280;
+  pointer-events: none;
+}
+
+.leading-icon {
+  left: 0.75rem;
+}
+
+.trailing-icon {
+  right: 0.75rem;
 }
 
 .input-field {
@@ -228,6 +282,14 @@ watch(() => props.modelValue, (newValue) => {
   padding: 0.5rem 0.75rem;
   height: 36px;
   font-size: 0.875rem;
+}
+
+.input-field.has-leading-icon {
+  padding-left: 2.5rem;
+}
+
+.input-field.has-trailing-icon {
+  padding-right: 2.5rem;
 }
 
 .error-message {
@@ -279,5 +341,14 @@ watch(() => props.modelValue, (newValue) => {
 
 .suggestions-list::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
+}
+
+.input-icon.clickable {
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.input-icon.clickable:hover {
+  color: #3b82f6;
 }
 </style>
