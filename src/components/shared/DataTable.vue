@@ -241,7 +241,12 @@ const hasActiveFilters = computed(() => {
               <td v-for="column in columns" :key="column.key" :class="{ 'text-left': column.align === 'left', 'text-right': column.align === 'right', 'text-center': column.align === 'center' }">
                 <!-- Text/Number/Date -->
                 <template v-if="['text', 'number', 'date'].includes(column.type)">
-                  {{ row[column.key] }}
+                  <span v-if="column.isMainColumn">
+                    <strong>{{ row[column.key] }}</strong>
+                  </span>
+                  <span v-else>
+                    {{ row[column.key] }}
+                  </span>
                 </template>
 
                 <!-- Icon -->
@@ -267,6 +272,14 @@ const hasActiveFilters = computed(() => {
                       <i :class="row[column.key] ? 'fa-solid fa-check' : 'fa-solid fa-times'"></i>
                       {{ row[column.key] ? 'Present' : 'Absent' }}
                     </span>
+                </template>
+                <template v-else-if="column.type === 'percentage'">
+                  <span :class="[
+                    'percentage-value',
+                    { 'percentage-low': row[column.key] < 50, 'percentage-high': row[column.key] >= 50 }
+                  ]">
+                    {{ row[column.key] }}%
+                  </span>
                 </template>
 
                 <!-- Checkbox -->
@@ -633,5 +646,40 @@ const hasActiveFilters = computed(() => {
   background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
   color: white;
   box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+}
+
+/* Percentage Column Styling */
+.percentage-value {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.25rem 0.75rem;
+  color: white;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  min-width: 60px;
+  text-align: center;
+  transition: all 0.2s ease;
+}
+
+.percentage-low {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  box-shadow: 0 2px 4px rgba(239, 68, 68, 0.2);
+}
+
+.percentage-low:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(239, 68, 68, 0.3);
+}
+
+.percentage-high {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2);
+}
+
+.percentage-high:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(16, 185, 129, 0.3);
 }
 </style> 

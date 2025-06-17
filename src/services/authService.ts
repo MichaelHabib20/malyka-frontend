@@ -4,7 +4,8 @@ interface User {
   id: number;
   email: string;
   name?: string;
-  role?: string;
+  RoleId?: number;
+  PermissionName?: string[];
   exp?: number;
   iat?: number;
 }
@@ -62,13 +63,27 @@ class AuthService {
 
   public isAuthenticated(): boolean {
     if (!this.currentUser) return false;
-    
     return true;
   }
 
   public clearUser(): void {
     localStorage.removeItem('authToken');
     this.currentUser = null;
+  }
+
+  public hasPermission(permission: string): boolean {
+    if (!this.currentUser || !this.currentUser.PermissionName) return false;
+    return this.currentUser.PermissionName.includes(permission);
+  }
+
+  public hasAnyPermission(permissions: string[]): boolean {
+    if (!this.currentUser || !this.currentUser.PermissionName) return false;
+    return permissions.some(permission => this.currentUser?.PermissionName?.includes(permission));
+  }
+
+  public hasRole(roleId: number): boolean {
+    if (!this.currentUser || !this.currentUser.RoleId) return false;
+    return Number(this.currentUser.RoleId) === roleId;
   }
 }
 

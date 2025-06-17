@@ -2,7 +2,7 @@ export interface Column {
     key: string;
     label: string;
     align?: 'left' | 'center' | 'right';
-    type: 'text' | 'number' | 'date' | 'icon' | 'checkbox' | 'select' | 'image' | 'actions' | 'link'| 'attendance-status' | 'code';
+    type: 'text' | 'number' | 'date' | 'icon' | 'checkbox' | 'select' | 'image' | 'actions' | 'link'| 'attendance-status' | 'code'| 'percentage';
     sortable?: boolean;
     filterable?: boolean;
     filterType?: 'text' | 'select' | 'date' | 'number';
@@ -12,4 +12,5 @@ export interface Column {
     iconColor?: string;
     selectOptions?: { label: string; value: any }[];
     actions?: { icon: string; label: string; color?: string }[];
+    isMainColumn?: boolean;
   }

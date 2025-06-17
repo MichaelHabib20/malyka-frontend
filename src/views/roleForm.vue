@@ -241,9 +241,9 @@ const fetchPermissions = async () => {
   permissionsError.value = ''
   
   try {
-    const response = await dataService.fetchOnline<Permission[]>('/api/Admin/GetPermissionsList')
+    const response : any = await dataService.fetchOnline<Permission[]>('/api/Admin/GetPermissionsList')
     if (response && response.data) {
-      permissions.value = response.data.roles
+      permissions.value = response.data.roles || response.data || []
     } else {
       throw new Error('Failed to load permissions')
     }
@@ -258,12 +258,12 @@ const fetchRole = async () => {
   if (!isEditMode.value || !roleId.value) return
   
   try {
-    const response = await dataService.fetchOnline<Role>(`/api/Admin/GetRole/${roleId.value}`)
+    const response : any = await dataService.fetchOnline<Role>(`/api/Admin/GetRoleById/${roleId.value}`)
     if (response && response.data) {
-      const role = response.data
+      const role = response.data.role
       formData.value = {
         name: role.name || '',
-        permissions: role.permissions || []
+        permissions: role.permissions ? role.permissions.map((p: any) => p.permissionId) : []
       }
     }
   } catch (error) {
@@ -278,14 +278,17 @@ const handleSubmit = async () => {
   submitMessage.value = ''
   
   try {
-    const payload = {
+    const payload : any= {
     RoleName: formData.value.name.trim(),
     PermissionId: formData.value.permissions
+    }
+    if(isEditMode.value){
+      payload.RoleId = roleId.value
     }
     
     let response : any
     if (isEditMode.value) {
-      response = await dataService.put(`/api/Admin/UpdateRole/${roleId.value}`, payload)
+      response = await dataService.createOnline(`/api/Admin/UpdateRole`, payload)
     } else {
       response = await dataService.createOnline('/api/Admin/AddRole', payload)
     }

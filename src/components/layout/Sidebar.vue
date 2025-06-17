@@ -2,13 +2,10 @@
 import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import statusService from '../../services/statusService';
-interface NavItem {
-  title: string;
-  icon?: string;
-  path?: string;
-  children?: NavItem[];
-  isReady?: () => boolean;
-}
+import { dataService } from '../../services/dataContext';
+import { authService } from '../../services/authService';
+import type { NavItem } from '../../interfaces/NavItem';
+
 
 const props = defineProps<{
   isCollapsed: boolean;
@@ -40,75 +37,92 @@ const navItems: NavItem[] = [
   {
     title: 'Dashboard',
     icon: 'fa-solid fa-house',
-    path: '/dashboard'
+    path: '/dashboard',
+    isReady: () => {
+      return isOnline.value;
+    },
+    permissions: ['dashboard'],
+    rolesId: [1]
+  },
+  {
+    title: 'Grade Levels',
+    icon: 'fa-solid fa-graduation-cap',
+    children: [
+      {
+        title: 'Grades',
+        icon: 'fa-solid fa-graduation-cap',
+        path: '/grades',
+        permissions: [''],
+        rolesId: [1]
+      },
+      {
+        title: 'Classes',
+        icon: 'fa-solid fa-graduation-cap',
+        path: '/classes',
+        permissions: [''],
+        rolesId: [1]
+      }
+    ]
   },
   {
     title: 'Attendance',
     icon: 'fa-solid fa-clipboard-user',
+    permissions :['View bc boys attendance','View bc girls attendance',
+    'View kg1 boys attendance', 'View Kg1 girls attendance',
+    'View Kg2 boys attendance', 'View kg2 girls attendance',
+    'View Prim1 boys attendance','Bc boys attendance','Bc girls attendance',
+    'kg1 boys attendance','kg1 girls attendance',
+    'kg2 boys attendance','kg2 girls attendance',
+    'Prim1 boys attendance'
+    ],
     children: [
       {
         title: 'Record',
-        path: '/attendance'
+        path: '/attendance',
+        permissions :['Bc boys attendance','Bc girls attendance', 'kg1 boys attendance', 'Kg1 girls attendance', 'kg2 boys attendance', 'kg2 girls attendance',  'Prim1 boys attendance'],
+        rolesId: [1]
       },
       {
         title: 'History',
-        path: '/attendance-history'
+        path: '/attendance-history',
+        permissions :['View bc boys attendance','View bc girls attendance', 'View kg1 boys attendance', 'View Kg1 girls attendance', 'View Kg2 boys attendance', 'View kg2 girls attendance',  'View Prim1 boys attendance'],
+        rolesId : [1],
+        isReady: () => {
+          return isOnline.value;
+        }
       }
     ]
-  //   isReady: () => {
-  //   return isOnline || isDataCached('attendance');
-  // }
+
   },
   {
     title: 'Administration',
     icon: 'fa-solid fa-user-tie',
+    permissions :['View admins','View roles'],
+    rolesId : [1],
     children: [
     {
         title: 'Admins',
         icon: 'fa-solid fa-user-gear',
-        path: '/adminstrations/admins'
+        path: '/adminstrations/admins',
+        permissions :['View admins'],
+        rolesId : [1],
+        isReady: () => {
+          return isOnline.value;
+        }
       },
       {
         title: 'Roles',
         icon: 'fa-solid fa-user-shield',
-        path: '/adminstrations/roles'
+        path: '/adminstrations/roles',
+        permissions :['View roles'],
+        rolesId : [1],
+        isReady: () => {
+          return isOnline.value;
+        }
       }
 
     ]
   },
-
-  // {
-  //   title: 'Users',
-  //   icon: 'fa-solid fa-users',
-  //   children: [
-  //     {
-  //       title: 'All Users',
-  //       icon: '👤',
-  //       path: '/users'
-  //     },
-  //     {
-  //       title: 'Add User',
-  //       icon: '➕',
-  //       path: '/users/add'
-  //     }
-  //   ]
-  // },
-  // {
-  //   title: 'Settings',
-  //   icon: '⚙️',
-  //   children: [
-  //     {
-  //       title: 'Profile',
-  //       icon: '👤',
-  //       path: '/settings/profile'
-  //     },
-  //     {
-  //       title: 'Security',
-  //       icon: '🔒',
-  //       path: '/settings/security'
-  //     }
-  //   ]
-  // }
 ];
 
 const toggleItem = (title: string) => {
@@ -125,14 +139,87 @@ const isItemExpanded = (title: string) => {
 
 const sidebarWidth = computed(() => props.isCollapsed ? '80px' : '220px');
 
-const navigateTo = (path?: string) => {
-  if (path) {
-    router.push(path);
+const navigateTo = (item: NavItem) => {
+  console.log(item);
+  if (!item.isReady || (item.isReady && item.isReady())) {
+    if (item.path) {
+      router.push(item.path);
+    }
+  } else {
+    dataService.createAlertMessage('You are offline, please check your internet connection', 'warning');
   }
 };
+
 const isDataCached = (title: string) => {
   return false;
 }
+
+// Filter navigation items based on user permissions and roles
+const filteredNavItems = computed(() => {
+  return navItems.filter(item => {
+    // If user has role ID 1, they have full access (super admin)
+    if (authService.hasRole(1)) {
+      return true;
+    }
+    
+    // For non-role-1 users, only check permissions, ignore roles
+    if (item.permissions && item.permissions.length > 0) {
+      if (!authService.hasAnyPermission(item.permissions)) {
+        return false;
+      }
+    }
+    
+    // Filter children if they exist
+    if (item.children) {
+      const filteredChildren = item.children.filter(child => {
+        // If user has role ID 1, they have full access to children too
+        if (authService.hasRole(1)) {
+          return true;
+        }
+        
+        // For non-role-1 users, only check child permissions, ignore roles
+        if (child.permissions && child.permissions.length > 0) {
+          if (!authService.hasAnyPermission(child.permissions)) {
+            return false;
+          }
+        }
+        
+        return true;
+      });
+      
+      // Only show parent if it has visible children
+      return filteredChildren.length > 0;
+    }
+    
+    return true;
+  }).map(item => {
+    // Create a new object with filtered children
+    if (item.children) {
+      const filteredChildren = item.children.filter(child => {
+        // If user has role ID 1, they have full access to children too
+        if (authService.hasRole(1)) {
+          return true;
+        }
+        
+        // For non-role-1 users, only check child permissions, ignore roles
+        if (child.permissions && child.permissions.length > 0) {
+          if (!authService.hasAnyPermission(child.permissions)) {
+            return false;
+          }
+        }
+        
+        return true;
+      });
+      
+      return {
+        ...item,
+        children: filteredChildren
+      };
+    }
+    
+    return item;
+  });
+});
 </script>
 
 <template>
@@ -145,10 +232,10 @@ const isDataCached = (title: string) => {
     </div>
     
     <nav class="sidebar-nav">
-      <div v-for="item in navItems" :key="item.title" class="nav-item">
+      <div v-for="item in filteredNavItems" :key="item.title" class="nav-item">
         <div 
           class="nav-item-header"
-          @click="item.children ? toggleItem(item.title) : navigateTo(item.path)"
+          @click="item.children ? toggleItem(item.title) : navigateTo(item)"
           :class="{ 
             'has-children': item.children,
             'active': isParentActive(item)
@@ -176,7 +263,7 @@ const isDataCached = (title: string) => {
             :key="child.title"
             class="nav-child-item"
             :class="{ 'active': isActive(child.path) }"
-            @click="navigateTo(child.path)"
+            @click="navigateTo(child)"
           >
             <span class="title">{{ child.title }}</span>
           </div>
@@ -276,7 +363,7 @@ const isDataCached = (title: string) => {
 .nav-child-item {
   display: flex;
   align-items: center;
-  padding: 0.5rem 1rem 0.5rem 2.5rem;
+  padding: 0.5rem 1rem 0.5rem 3.5rem;
   cursor: pointer;
   transition: background-color 0.2s ease;
   color: #2c3e50;

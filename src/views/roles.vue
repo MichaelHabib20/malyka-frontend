@@ -23,6 +23,9 @@ import type { CustomButton } from '../interfaces/customButtons';
 import { dataService } from '../services/dataContext';
 import { useRouter } from 'vue-router';
 import type { Role } from '../interfaces/roles';
+import { authService } from '../services/authService';
+import { createButtonsWithPermissions } from '../utils/simplePermissions';
+import { ElMessageBox } from 'element-plus';
 const router = useRouter();
 
 // Reactive data
@@ -31,35 +34,48 @@ const loading = ref(false);
 const searchQuery = ref('');
 
 // Define columns for roles table
-const columns: Column[] = [
-
-  {
-    key: 'name',
-    label: 'Role Name',
-    type: 'text'
-  },
-  {
-    key: 'actions',
-    label: 'Actions',
-    type: 'actions',
-    actions: [
-      { icon: 'fa-regular fa-edit', label: 'Edit', color: '#3b82f6' },
-    //   { icon: 'fa-solid fa-trash', label: 'Delete', color: '#ef4444' }
-    ],
-    align: 'center',
-    width: '120px'
+const columns = computed(() => {
+  const baseColumns: Column[] = [
+    {
+      key: 'name',
+      label: 'Role Name',
+      type: 'text',
+      isMainColumn: true
+    }
+  ];
+  
+  // Only add actions column if user has permission to edit roles
+  if (authService.hasPermission('Update roles') || authService.hasPermission('Delete roles') || authService.hasRole(1)) {
+    baseColumns.push({
+      key: 'actions',
+      label: 'Actions',
+      type: 'actions',
+      actions: [
+        { icon: 'fa-regular fa-edit', label: 'Edit', color: '#3b82f6' },
+        { icon: 'fa-solid fa-trash', label: 'Delete', color: '#ef4444' }
+      ],
+      align: 'center',
+      width: '120px'
+    });
   }
-];
+  
+  return baseColumns;
+});
 
 // Custom buttons
-const customButtons: CustomButton[] = [
-  {
-    id: 'new-role',
-    label: 'New Role',
-    icon: 'fa-plus',
-    variant: 'btn-primary'
-  }
-];
+const customButtons = computed(() => {
+  return createButtonsWithPermissions([
+    {
+      id: 'new-role',
+      permission: 'Add roles',
+      config: {
+        label: 'New Role',
+        icon: 'fa-plus',
+        variant: 'btn-primary'
+      }
+    }
+  ]);
+});
 
 // Computed property to filter data based on search
 const filteredData = computed(() => {
@@ -83,17 +99,63 @@ const handleSearch = (query: string) => {
 const handleButtonClick = ({ buttonId, button }: { buttonId: string; button: CustomButton }) => {
   if (buttonId === 'new-role') {
     router.push('/adminstrations/roles/create');
-    // TODO: Implement new role creation logic
-    // This could open a modal or navigate to a create role page
   }
 };
 
-const handleAction = ({ action, row }: { action: string; row: any }) => {
-  
+const handleAction = async ({ action, row }: { action: string; row: any }) => {
+  console.log(action, row);
   if (action === 'Edit') {
-    // TODO: Implement edit role logic
+    router.push(`/adminstrations/roles/edit/${row.id}`);
   } else if (action === 'Delete') {
-    // TODO: Implement delete role logic
+    try {
+      // Show confirmation dialog
+      await ElMessageBox.confirm(
+        `Are you sure you want to delete role "${row.name}"? This action cannot be undone.`,
+        'Confirm Delete',
+        {
+          confirmButtonText: 'Delete',
+          cancelButtonText: 'Cancel',
+          type: 'warning',
+          confirmButtonClass: 'btn-danger',
+          cancelButtonClass: 'btn-secondary'
+        }
+      );
+      
+      // User confirmed, proceed with deletion
+      await deleteRole(row.id);
+    } catch (error) {
+      if (error !== 'cancel') {
+        // Only show error if it's not a cancellation
+        dataService.createAlertMessage(
+          error instanceof Error ? error.message : 'Failed to delete role', 
+          'error'
+        );
+      }
+    }
+  }
+};
+
+// Delete role function
+const deleteRole = async (roleId: number) => {
+  loading.value = true;
+  try {
+    const result : any = await dataService.createOnline(`/api/Admin/DeleteRole/${roleId}`, {});
+    
+    if (result && (result.httpStatus === 200 || result.Status === 200)) {
+      // Remove the role from the local array
+      roles.value = roles.value.filter(role => role.id !== roleId);
+      dataService.createAlertMessage('Role deleted successfully', 'success');
+    } else {
+      throw new Error(result?.message || 'Failed to delete role');
+    }
+  } catch (error) {
+    console.error('Error deleting role:', error);
+    dataService.createAlertMessage(
+      error instanceof Error ? error.message : 'An error occurred while deleting the role.', 
+      'error'
+    );
+  } finally {
+    loading.value = false;
   }
 };
 

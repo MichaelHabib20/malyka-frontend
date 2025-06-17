@@ -311,7 +311,7 @@ const handleSubmit = async () => {
     if (isEditMode.value) {
       response = await dataService.put(`/api/Admin/UpdateAdmin/${adminId.value}`, payload)
     } else {
-      response = await dataService.createOnline('/api/Admin/AddAdmin', payload)
+      response = await dataService.createOnline('/api/Admin/AddUser', payload)
     }
 
     if (response && (response.httpStatus === 200 || response.httpStatus === 201)) {

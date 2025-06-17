@@ -75,6 +75,7 @@
                       v-model="startDate"
                       label="Start Date"
                       placeholder="Start date"
+                      :max-date="startDateMaxDate"
                       @update:modelValue="() => getKidsData('start')"
                     />
                   </div>
@@ -84,9 +85,18 @@
                       v-model="endDate"
                       label="End Date"
                       placeholder="End date"
+                      :min-date="endDateMinDate"
                       @update:modelValue="() => getKidsData('end')"
                     />
                   </div>
+                </div>
+              </div>
+              
+              <!-- Date Range Validation Error -->
+              <div v-if="dateType === 'range' && dateValidationError" class="mt-3">
+                <div class="alert alert-danger d-flex align-items-center gap-2" role="alert">
+                  <i class="fa-solid fa-exclamation-triangle"></i>
+                  <span>{{ dateValidationError }}</span>
                 </div>
               </div>
             </div>
@@ -171,8 +181,11 @@
             <i class="fa-solid fa-calendar-xmark"></i>
           </div>
           <h4 class="fw-semibold text-secondary mb-2">No Attendance Data</h4>
-          <p class="text-muted mb-0">
+          <p v-if="!isDateRangeEmpty" class="text-muted mb-0">
             Select a date or date range to view attendance data.
+          </p>
+          <p v-else class="text-muted mb-0">
+            No attendance data found for the selected date range.
           </p>
         </div>
 
@@ -206,7 +219,9 @@ import DatePicker from '../components/shared/datePicker.vue'
 import DataTable from '../components/shared/DataTable.vue'
 import type { Column } from '../interfaces/column'
 import { dataService } from '../services/dataContext';
+import { authService } from '../services/authService';
 import type { CustomButton } from '../interfaces/customButtons';
+import { createButtonsWithPermissions } from '../utils/simplePermissions';
 
 // Types
 interface Kid {
@@ -222,22 +237,36 @@ const singleDate = ref<Date | undefined>(undefined)
 const startDate = ref<Date | undefined>(undefined)
 const endDate = ref<Date | undefined>(undefined)
 const isLoading = ref(false)
+const isDateRangeEmpty = ref(false)
 const isExporting = ref(false)
 const kids = ref<Kid[]>([])
+
+// Date validation state
+const dateValidationError = ref<string>('')
+const isDateRangeValid = ref(true)
 
 // DataTable props
 const sortBy = ref('')
 const sortDirection = ref<'asc' | 'desc'>('asc')
 const filters = ref<Record<string, any>>({})
 const searchQuery = ref('')
-const tableButtons: CustomButton[] = [
-  {
-    id: 'export',
-    label: 'Export Data',
-    icon: 'fa-download',
-    variant: 'btn-primary'
-  },
-];
+
+// Custom buttons
+const tableButtons = computed(() => {
+  // Only add "Export Data" button if user has permission
+  return createButtonsWithPermissions([
+    {
+      id: 'export-attendance',
+      permission: 'Export attendance',
+      config: {
+        label: 'Export Attendance',
+        icon: 'fa-download',
+        variant: 'btn-primary'
+      }
+    }
+  ]);
+});
+
 // Table columns configuration
 const tableColumns: Column[] = [
   {
@@ -282,7 +311,8 @@ const dynamicTableColumns = computed(() => {
         label: 'Name',
         type: 'text',
         sortable: true,
-        align: 'right'
+        align: 'right',
+        isMainColumn: true
       }
     ];
 
@@ -290,7 +320,7 @@ const dynamicTableColumns = computed(() => {
     if (kids.value.length > 0) {
       const firstKid = kids.value[0];
       const dateKeys = Object.keys(firstKid).filter(key => 
-        key !== 'code' && key !== 'name' && key !== 'id'
+        key !== 'code' && key !== 'name' && key !== 'id' && key !== 'percentage'
       );
 
       dateKeys.forEach(dateKey => {
@@ -301,6 +331,15 @@ const dynamicTableColumns = computed(() => {
           sortable: true,
           align: 'center'
         });
+      });
+
+      // Add percentage column as the last column
+      baseColumns.push({
+        key: 'percentage',
+        label: 'Attendance %',
+        type: 'percentage',
+        sortable: true,
+        align: 'center'
       });
     }
 
@@ -337,6 +376,10 @@ const filteredData = computed(() => {
         // For name field, convert to lowercase for case-insensitive sorting
         aValue = String(aValue).toLowerCase();
         bValue = String(bValue).toLowerCase();
+      } else if (sortBy.value === 'percentage') {
+        // For percentage field, treat as number
+        aValue = Number(aValue);
+        bValue = Number(bValue);
       } else {
         // For date columns (attendance status), treat as boolean
         aValue = Boolean(aValue);
@@ -398,12 +441,47 @@ const attendanceRate = computed(() => {
   }
 });
 
-// Methods
+// Date validation computed properties
+const validateDateRange = computed(() => {
+  if (dateType.value !== 'range') {
+    dateValidationError.value = ''
+    isDateRangeValid.value = true
+    return true
+  }
+
+  if (!startDate.value || !endDate.value) {
+    dateValidationError.value = ''
+    isDateRangeValid.value = true
+    return true
+  }
+
+  if (endDate.value < startDate.value) {
+    dateValidationError.value = 'End date cannot be before start date'
+    isDateRangeValid.value = false
+    return false
+  }
+
+  dateValidationError.value = ''
+  isDateRangeValid.value = true
+  return true
+})
+
+const endDateMinDate = computed(() => {
+  return startDate.value || undefined
+})
+
+const startDateMaxDate = computed(() => {
+  return endDate.value || undefined
+})
+
+// Methods  
 const resetDates = () => {
   singleDate.value = undefined
   startDate.value = undefined
   endDate.value = undefined
   kids.value = []
+  dateValidationError.value = ''
+  isDateRangeValid.value = true
 }
 
 const getKidsData = async (localDateType: 'single' | 'start' | 'end') => {
@@ -413,6 +491,12 @@ const getKidsData = async (localDateType: 'single' | 'start' | 'end') => {
         }else if(localDateType === 'start' || localDateType === 'end'){
             dateType.value = 'range'
         }
+
+        // Check date range validation for range type
+        if (dateType.value === 'range' && !validateDateRange.value) {
+            return // Don't proceed if validation fails
+        }
+
         const today = new Date();
         let endpoint = '';
 
@@ -434,14 +518,14 @@ const getKidsData = async (localDateType: 'single' | 'start' | 'end') => {
             endpoint = `/api/TestKidsAtt/GetKidsDataByDateRange?StartDate=${formattedStart}&EndDate=${formattedEnd}`;
         }
 
-
         const result: any = await dataService.fetchOnline(endpoint);
 
         if (result.httpStatus === 200 || result.status) {
             if(dateType.value === 'single'){
                 kids.value = result.data.kids ? result.data.kids : result.data;
             }else if(dateType.value === 'range'){
-                handleDateRangeData(result.data);
+                isDateRangeEmpty.value = result.data.dailyAttendance.length === 0;
+                handleDateRangeData(result.data.dailyAttendance, result.data.attendancePercentages);
             }
         }
     } catch (error) {
@@ -449,7 +533,7 @@ const getKidsData = async (localDateType: 'single' | 'start' | 'end') => {
     }
 };
 
-const handleDateRangeData = (data: any[]) => {
+const handleDateRangeData = (data: any[], attendancePercentages: any[]) => {
     if (!Array.isArray(data) || data.length === 0) {
         kids.value = [];
         return;
@@ -487,6 +571,10 @@ const handleDateRangeData = (data: any[]) => {
             kidData[dateKey] = kidInDate ? kidInDate.isAdded : false;
         });
 
+        // Add percentage from attendancePercentages array
+        const percentageData = attendancePercentages?.find((p: any) => p.code === kid.code);
+        kidData.percentage = percentageData ? percentageData.percentage : 0;
+
         return kidData;
     });
 
@@ -505,7 +593,7 @@ const hasValidDateSelection = (): boolean => {
   if (dateType.value === 'single') {
     return singleDate.value !== undefined
   } else {
-    return startDate.value !== undefined && endDate.value !== undefined
+    return startDate.value !== undefined && endDate.value !== undefined && isDateRangeValid.value
   }
 }
 
@@ -565,6 +653,19 @@ watch([singleDate, startDate, endDate], () => {
   }
 })
 
+// Watch for date range validation
+watch([startDate, endDate], () => {
+  if (dateType.value === 'range') {
+    validateDateRange.value // Trigger validation
+  }
+})
+
+// Watch for date type changes to reset validation
+watch(dateType, () => {
+  dateValidationError.value = ''
+  isDateRangeValid.value = true
+})
+
 // Lifecycle
 onMounted(() => {
   // Set default date to today
@@ -574,6 +675,9 @@ onMounted(() => {
 </script>
 
 <style scoped>
+.container-fluid{
+  max-width: 1200px;
+}
 .card{
   border : none !important;
 }
@@ -653,5 +757,22 @@ onMounted(() => {
   .empty-icon {
     font-size: 3rem;
   }
+}
+
+/* Date validation error styling */
+.alert-danger {
+  background-color: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #991b1b;
+  border-radius: 0.375rem;
+  padding: 0.75rem 1rem;
+  font-size: 0.875rem;
+}
+
+.alert-danger i {
+  color: #dc2626;
+}
+.form-check{
+  cursor: pointer !important;
 }
 </style>

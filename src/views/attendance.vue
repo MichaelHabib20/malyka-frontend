@@ -24,7 +24,8 @@ const columns: Column[] = [
     label: 'Name', 
     type: 'text',
     sortable: true,
-    align: 'right'
+    align: 'right',
+    isMainColumn: true
   },
   { 
     key: 'isAdded', 
