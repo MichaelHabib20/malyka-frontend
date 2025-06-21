@@ -8,6 +8,7 @@
         :class="['input-icon leading-icon', leadingIcon]"
       ></i>
       <input
+        ref="inputRef"
         :id="id"
         :type="type"
         :value="modelValue"
@@ -27,6 +28,7 @@
         @focus="handleFocus"
         @blur="handleBlur"
         @keydown="handleKeydown"
+        @paste="handlePaste"
       />
       <i 
         v-if="trailingIcon" 
@@ -61,6 +63,8 @@
 <script setup>
 import { ref, computed, watch } from 'vue'
 import { useValidation } from '../../composables/useValidation'
+
+const inputRef = ref(null)
 
 const props = defineProps({
   modelValue: {
@@ -117,6 +121,10 @@ const props = defineProps({
     default: null
   },
   isTrailingIconClickable: {
+    type: Boolean,
+    default: false
+  },
+  removeLeadingZero: {
     type: Boolean,
     default: false
   }
@@ -201,8 +209,24 @@ const handleTrailingIconClick = (event) => {
   }
 }
 
+const handlePaste = (event) => {
+  if (props.removeLeadingZero) {
+    event.preventDefault()
+    const pasteData = event.clipboardData.getData('text')
+    const value = pasteData.replace(/^0+/, '')
+    emit('update:modelValue', props.type === 'number' ? Number(value) : value)
+    validateInput(value)
+    showSuggestions.value = props.suggestions.length > 0 && value.length > 0
+  }
+}
+
 watch(() => props.modelValue, (newValue) => {
   validateInput(newValue)
+})
+
+// Expose the input element for parent components
+defineExpose({
+  inputElement: inputRef
 })
 </script>
 

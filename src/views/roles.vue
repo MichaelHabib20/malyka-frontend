@@ -45,7 +45,7 @@ const columns = computed(() => {
   ];
   
   // Only add actions column if user has permission to edit roles
-  if (authService.hasPermission('Update roles') || authService.hasPermission('Delete roles') || authService.hasRole(1)) {
+  if (authService.hasPermission('View roles') || authService.hasPermission('View roles') || authService.hasRole(1)) {
     baseColumns.push({
       key: 'actions',
       label: 'Actions',
@@ -103,7 +103,6 @@ const handleButtonClick = ({ buttonId, button }: { buttonId: string; button: Cus
 };
 
 const handleAction = async ({ action, row }: { action: string; row: any }) => {
-  console.log(action, row);
   if (action === 'Edit') {
     router.push(`/adminstrations/roles/edit/${row.id}`);
   } else if (action === 'Delete') {

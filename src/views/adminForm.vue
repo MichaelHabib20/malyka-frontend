@@ -275,9 +275,10 @@ const fetchAdmin = async () => {
   if (!isEditMode.value || !adminId.value) return
   
   try {
-    const response : any = await dataService.fetchOnline<ApiResponse<Admin>>(`/api/Admin/GetAdmin/${adminId.value}`)
-    if (response && response.data && response.data.admin) {
-      const admin = response.data.admin
+    const response : any = await dataService.fetchOnline<ApiResponse<Admin>>(`/api/Admin/GetContactById/${adminId.value}`)
+    if (response && response.data && response.data.contact) {
+      const admin = response.data.contact
+      console.log(admin)
       formData.value = {
         firstName: admin.firstName,
         lastName: admin.lastName,
@@ -298,18 +299,21 @@ const handleSubmit = async () => {
   isSubmitting.value = true
   
   try {
-    const payload = {
+    let payload : any = {
       FirstName: formData.value.firstName.trim(),
       LastName: formData.value.lastName.trim(),
       Email: formData.value.email.trim(),
       PhoneNumber: formData.value.phoneNumber.trim(),
       Password: !isEditMode.value ? formData.value.password.trim() : undefined,
-      RoleId: formData.value.roleId
+      RoleId: formData.value.roleId,
     }
+
     
     let response
     if (isEditMode.value) {
-      response = await dataService.put(`/api/Admin/UpdateAdmin/${adminId.value}`, payload)
+      payload.id = Number(adminId.value)
+      payload.Password = 'undefined'
+      response = await dataService.createOnline(`/api/Admin/UpdateUser`, payload)
     } else {
       response = await dataService.createOnline('/api/Admin/AddUser', payload)
     }

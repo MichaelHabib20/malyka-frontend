@@ -1,22 +1,21 @@
 <template>
-
-    <div class="card-body p-4">
-      <DataTable
-        :columns="columns"
-        :data="filteredData"
-        :loading="loading"
-        :search-query="searchQuery"
-        :search-placeholder="'Search by name, email, phone number'"
-        :custom-buttons="customButtons"
-        :sort-by="sortBy"
-        :sort-direction="sortDirection"
-        @update:sort-by="handleSortBy"
-        @update:sort-direction="handleSortDirection"
-        @update:search-query="handleSearch"
-        @button-click="handleButtonClick"
-        @action="handleAction"
-      />
-    </div>
+  <div class="card-body p-4">
+    <DataTable
+      :columns="columns"
+      :data="filteredData"
+      :loading="loading"
+      :search-query="searchQuery"
+      :search-placeholder="'Search by name'"
+      :custom-buttons="customButtons"
+      :sort-by="sortBy"
+      :sort-direction="sortDirection"
+      @update:sort-by="handleSortBy"
+      @update:sort-direction="handleSortDirection"
+      @update:search-query="handleSearch"
+      @button-click="handleButtonClick"
+      @action="handleAction"
+    />
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -24,32 +23,23 @@ import { ref, computed, onMounted } from 'vue';
 import DataTable from '../components/shared/DataTable.vue';
 import type { Column } from '../interfaces/column';
 import type { CustomButton } from '../interfaces/customButtons';
+import type { Class } from '../interfaces/class';
 import { dataService } from '../services/dataContext';
 import { authService } from '../services/authService';
 import { createButtonsWithPermissions } from '../utils/simplePermissions';
 import { useRouter } from 'vue-router';
-import type { Admin } from '../interfaces/admin';
 import { ElMessageBox } from 'element-plus';
+
 const router = useRouter();
 
-// Types
-
 // Reactive data
-const admins = ref<Admin[]>([]);
+const classes = ref<Class[]>([]);
 const loading = ref(false);
 const searchQuery = ref('');
 const sortBy = ref('');
 const sortDirection = ref('asc' as 'asc' | 'desc');
 
-// Transform admins data to include combined name
-const transformedAdmins = computed(() => {
-  return admins.value.map(admin => ({
-    ...admin,
-    name: `${admin.firstName} ${admin.lastName}`
-  }));
-});
-
-// Define columns for admins table
+// Define columns for classes table
 const columns = computed(() => {
   const baseColumns: Column[] = [
     {
@@ -59,26 +49,10 @@ const columns = computed(() => {
       sortable: true,
       isMainColumn: true
     },
-    {
-      key: 'email',
-      label: 'Email',
-      type: 'text'
-    },
-    {
-      key: 'phoneNumber',
-      label: 'Phone Number',
-      type: 'text'
-    },
-    {
-      key: 'roleName',
-      label: 'Role',
-      type: 'text',
-      isMainColumn: true
-    }
   ];
   
-  // Only add actions column if user has permission to edit admins
-  if (authService.hasPermission('View admins') || authService.hasRole(1)) {
+  // Only add actions column if user has permission
+  if (authService.hasPermission('View classes') || authService.hasRole(1)) {
     baseColumns.push({
       key: 'actions',
       label: 'Actions',
@@ -95,14 +69,14 @@ const columns = computed(() => {
   return baseColumns;
 });
 
-// Custom buttons - Simple approach using utility function
+// Custom buttons
 const customButtons = computed(() => {
   return createButtonsWithPermissions([
     {
-      id: 'new-admin',
-      permission: 'View admins',
+      id: 'new-class',
+      permission: 'View classes',
       config: {
-        label: 'New Admin',
+        label: 'New Class',
         icon: 'fa-plus',
         variant: 'btn-primary'
       }
@@ -112,19 +86,16 @@ const customButtons = computed(() => {
 
 // Computed property to filter and sort data based on search and sort parameters
 const filteredData = computed(() => {
-  let data = transformedAdmins.value;
+  let data = classes.value;
   
   // Apply search filter
   if (searchQuery.value) {
     const query = searchQuery.value.toLowerCase();
-    data = data.filter((admin) => {
+    data = data.filter((classItem) => {
       return (
-        admin.firstName.toLowerCase().includes(query) ||
-        admin.lastName.toLowerCase().includes(query) ||
-        admin.name.toLowerCase().includes(query) ||
-        admin.email.toLowerCase().includes(query) ||
-        admin.phoneNumber.toLowerCase().includes(query)
-
+        classItem.name.toLowerCase().includes(query) ||
+        (classItem.description && classItem.description.toLowerCase().includes(query)) ||
+        (classItem.gradeName && classItem.gradeName.toLowerCase().includes(query))
       );
     });
   }
@@ -158,22 +129,19 @@ const handleSearch = (query: string) => {
 };
 
 const handleButtonClick = ({ buttonId, button }: { buttonId: string; button: CustomButton }) => {
-  if (buttonId === 'new-admin') {
-    router.push('/adminstrations/admins/create');
-    // TODO: Implement new role creation logic
-    // This could open a modal or navigate to a create role page
+  if (buttonId === 'new-class') {
+    router.push('/grade-levels/classes/create');
   }
 };
 
 const handleAction = async ({ action, row }: { action: string; row: any }) => {
-  
   if (action === 'Edit') {
-    router.push(`/adminstrations/admins/edit/${row.id}`);
+    router.push(`/grade-levels/classes/edit/${row.id}`);
   } else if (action === 'Delete') {
     try {
       // Show confirmation dialog
       await ElMessageBox.confirm(
-        `Are you sure you want to delete admin "${row.name}"? This action cannot be undone.`,
+        `Are you sure you want to delete class "${row.name}"? This action cannot be undone.`,
         'Confirm Delete',
         {
           confirmButtonText: 'Delete',
@@ -185,20 +153,20 @@ const handleAction = async ({ action, row }: { action: string; row: any }) => {
       );
       
       // User confirmed, proceed with deletion
-      const result = await dataService.createOnline(`/api/Admin/DeleteUser/${row.id}`, {});
+      const result = await dataService.createOnline(`/api/Grades/DeleteClass/${row.id}`, {});
       
       if (result && (result.httpStatus === 200 || result.httpStatus === 204)) {
-        dataService.createAlertMessage('Admin deleted successfully', 'success');
-        // Refresh the admins list
-        await fetchAdmins();
+        dataService.createAlertMessage('Class deleted successfully', 'success');
+        // Refresh the classes list
+        await fetchClasses();
       } else {
-        throw new Error(result?.message || 'Failed to delete admin');
+        throw new Error(result?.message || 'Failed to delete class');
       }
     } catch (error) {
       if (error !== 'cancel') {
         // Only show error if it's not a cancellation
         dataService.createAlertMessage(
-          error instanceof Error ? error.message : 'Failed to delete admin', 
+          error instanceof Error ? error.message : 'Failed to delete class', 
           'error'
         );
       }
@@ -214,19 +182,20 @@ const handleSortDirection = (direction: 'asc' | 'desc') => {
   sortDirection.value = direction;
 };
 
-// Fetch admins data
-const fetchAdmins = async () => {
+// Fetch classes data
+const fetchClasses = async () => {
   loading.value = true;
   try {
-    const result : any = await dataService.fetchOnline('/api/Admin/GetAdmins');
+    const result: any = await dataService.fetchOnline('/api/Grades/GetClasses');
     
     if (result && (result.httpStatus === 200 || result.Status === 200)) {
-      admins.value = result.data.contacts || [];
+      classes.value = result.data || [];
     } else {
-        admins.value = [];
+      classes.value = [];
     }
   } catch (error) {
-    admins.value = [];
+    classes.value = [];
+    dataService.createAlertMessage('Failed to fetch classes', 'error');
   } finally {
     loading.value = false;
   }
@@ -234,16 +203,13 @@ const fetchAdmins = async () => {
 
 // Lifecycle
 onMounted(() => {
-    fetchAdmins();
+  fetchClasses();
 });
 </script>
 
 <style scoped>
-
-.card-body{
-    background-color: white;
-    padding: 2 rem !important;
+.card-body {
+  background-color: white;
+  padding: 2rem !important;
 }
-
-
 </style>

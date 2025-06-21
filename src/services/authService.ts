@@ -5,7 +5,7 @@ interface User {
   email: string;
   name?: string;
   RoleId?: number;
-  PermissionName?: string[];
+  PermissionName?: string | string[];
   exp?: number;
   iat?: number;
 }
@@ -22,7 +22,6 @@ class AuthService {
         this.currentUser = jwtDecode<User>(token);
         // Check if token is expired
         if (this.currentUser.exp && this.currentUser.exp * 1000 < Date.now()) {
-          console.warn('Token has expired');
           this.clearUser();
         }
       } catch (error) {
@@ -49,7 +48,6 @@ class AuthService {
       const decoded = jwtDecode<User>(token);
       localStorage.setItem('authToken', token);
       this.currentUser = decoded;
-      console.log(this.currentUser)
     } catch (error) {
       console.error('Error setting token:', error);
       this.clearUser();
@@ -73,12 +71,32 @@ class AuthService {
 
   public hasPermission(permission: string): boolean {
     if (!this.currentUser || !this.currentUser.PermissionName) return false;
-    return this.currentUser.PermissionName.includes(permission);
+    
+    // Handle PermissionName as either string or array
+    const userPermissions = Array.isArray(this.currentUser.PermissionName) 
+      ? this.currentUser.PermissionName 
+      : [this.currentUser.PermissionName];
+    
+    // Case-insensitive comparison
+    return userPermissions.some(userPermission => 
+      userPermission.toLowerCase() === permission.toLowerCase()
+    );
   }
 
   public hasAnyPermission(permissions: string[]): boolean {
     if (!this.currentUser || !this.currentUser.PermissionName) return false;
-    return permissions.some(permission => this.currentUser?.PermissionName?.includes(permission));
+    
+    // Handle PermissionName as either string or array
+    const userPermissions = Array.isArray(this.currentUser.PermissionName) 
+      ? this.currentUser.PermissionName 
+      : [this.currentUser.PermissionName];
+    
+    // Case-insensitive comparison
+    return permissions.some(permission => 
+      userPermissions.some(userPermission => 
+        userPermission.toLowerCase() === permission.toLowerCase()
+      )
+    );
   }
 
   public hasRole(roleId: number): boolean {

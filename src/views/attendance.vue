@@ -95,6 +95,21 @@ const formattedDate = computed(() => {
   });
 });
 
+// Attendance statistics computed properties
+const attendanceStats = computed(() => {
+  const total = tableData.value.length;
+  const present = tableData.value.filter((item: any) => item.isAdded).length;
+  const absent = total - present;
+  const percentage = total > 0 ? Math.round((present / total) * 100) : 0;
+  
+  return {
+    total,
+    present,
+    absent,
+    percentage
+  };
+});
+
 // Event handlers
 const handleSortBy = (newSortBy: string) => {
   sortBy.value = newSortBy;
@@ -108,18 +123,37 @@ const handleSearch = (query: string) => {
   searchQuery.value = query;
 };
 
-const handleEnterKey = (value: boolean) => {
-  console.log('Enter key:', value);
-//   if(value && filteredData.value.length == 1){
-//     handleCheckboxChange({
-//       column: 'isAdded',
-//       value: !filteredData.value[0].isAdded,
-//       row: filteredData.value[0]
-//     })
-//   }
+const handleEnterKey = async (value: boolean) => {
+  
+  // Get the first row from filtered data
+  const firstRow = filteredData.value[0];
+  
+  if (firstRow) {
+    // Toggle the checkbox state (opposite of current state)
+    const newValue = !firstRow.isAdded;
+    
+    // Update the local data immediately for UI responsiveness
+    const originalRow = tableData.value.find((item: any) => item.id === firstRow.id);
+    if (originalRow) {
+      originalRow.isAdded = newValue;
+    }
+    
+    // Call the same function that handles checkbox changes
+    await handleCheckboxChange({
+      column: 'isAdded',
+      value: newValue,
+      row: firstRow
+    });
+  }
 };
 
 const handleCheckboxChange = async (payload: { column: string; value: boolean; row: any }) => {
+    // Update the local data immediately for UI responsiveness
+    const originalRow = tableData.value.find((item: any) => item.id === payload.row.id);
+    if (originalRow) {
+      originalRow.isAdded = payload.value;
+    }
+
     const date = selectedDate.value;
     const formattedDate = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}T00:00:00`;
     const modal = {
@@ -179,6 +213,7 @@ onMounted(async () => {
       <div class="date-info">
         <h2>Taking Attendance for</h2>
         <div class="date-display">{{ formattedDate }}</div>
+        <div class="attendance-ratio">({{ attendanceStats.present }}/{{ attendanceStats.total }})</div>
       </div>
       <div class="date-picker">
         <DatePicker
@@ -194,6 +229,7 @@ onMounted(async () => {
 
     <div class="table-section">
       <DataTable
+        :removeLeadingZero="true"
         :columns="columns"
         :data="filteredData"
         :total-items="totalItems"
@@ -251,6 +287,18 @@ onMounted(async () => {
   font-weight: 600;
 }
 
+.attendance-ratio {
+  color: #4a5568;
+  font-size: 1.1rem;
+  font-weight: 500;
+  margin-top: 0.5rem;
+  padding: 0.25rem 0.75rem;
+  background: #f7fafc;
+  border-radius: 6px;
+  display: inline-block;
+  border: 1px solid #e2e8f0;
+}
+
 .date-picker {
   display: flex;
   align-items: center;
@@ -289,5 +337,130 @@ onMounted(async () => {
   border-radius: 12px;
   padding: 1.5rem;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+/* Attendance Statistics Styles */
+.stats-section {
+  margin-bottom: 2rem;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.stat-card {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 16px;
+  padding: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.stat-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+  pointer-events: none;
+}
+
+.stat-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+}
+
+.stat-card.total {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.stat-card.present {
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+}
+
+.stat-card.absent {
+  background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+}
+
+.stat-card.percentage {
+  background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+}
+
+.stat-icon {
+  font-size: 2.5rem;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+  z-index: 1;
+  position: relative;
+}
+
+.stat-content {
+  flex: 1;
+  z-index: 1;
+  position: relative;
+}
+
+.stat-number {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #ffffff;
+  line-height: 1;
+  margin-bottom: 0.25rem;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.stat-label {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.9);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .stats-grid {
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+  }
+  
+  .stat-card {
+    padding: 1.25rem;
+  }
+  
+  .stat-number {
+    font-size: 2rem;
+  }
+  
+  .stat-icon {
+    font-size: 2rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .stat-card {
+    padding: 1rem;
+  }
+  
+  .stat-number {
+    font-size: 1.75rem;
+  }
+  
+  .stat-icon {
+    font-size: 1.75rem;
+  }
 }
 </style>

@@ -2,12 +2,14 @@
     <div class="container-fluid">
         <div class="d-flex gap-2 mb-4 border-bottom pb-3">
             <button 
+                v-if="authService.hasPermission('View Admins')"
                 @click="navigateToAdmins" 
                 :class="['btn', isAdminsActive ? 'btn-primary' : 'btn-outline-primary']"
             >
                 Admins
             </button>
             <button 
+                v-if="authService.hasPermission('View Roles')"
                 @click="navigateToRoles" 
                 :class="['btn', isRolesActive ? 'btn-primary' : 'btn-outline-primary']"
             >
@@ -23,7 +25,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-
+import {authService} from '../services/authService'
 const route = useRoute()
 const router = useRouter()
 

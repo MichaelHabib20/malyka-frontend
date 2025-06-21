@@ -14,6 +14,12 @@ import Admins from './views/admins.vue'
 import Roles from './views/roles.vue'
 import roleForm from './views/roleForm.vue'
 import adminForm from './views/adminForm.vue'
+import GradeLevels from './views/gradeLevels.vue'
+import Grades from './views/grades.vue'
+import Classes from './views/classes.vue'
+import ClassForm from './views/classForm.vue'
+import GradeForm from './views/gradeForm.vue'
+
 const routes = [
   { 
     path: '/sign-in', 
@@ -94,7 +100,7 @@ const routes = [
             meta : { title : 'New Role',
                     requiresAuth : true,
                     requiredNetwork : true,
-                    permissions : ['Add roles'],
+                    permissions : ['view roles'],
                     rolesId : [1]
             },
             component : roleForm
@@ -105,7 +111,7 @@ const routes = [
             meta : { title : 'Edit Role',
                     requiresAuth : true,
                     requiredNetwork : true,
-                    permissions : ['Update roles'],
+                    permissions : ['view roles'],
                     rolesId : [1]
             },
             component : roleForm
@@ -116,7 +122,7 @@ const routes = [
             meta : { title : 'New Admin',
                     requiresAuth : true,
                     requiredNetwork : true,
-                    permissions : ['Add admins'],
+                    permissions : ['view admins'],
                     rolesId : [1]
             },
             component : adminForm
@@ -127,10 +133,54 @@ const routes = [
             meta : { title : 'Edit Admin',
                     requiresAuth : true,
                     requiredNetwork : true,
-                    permissions : ['Update admins'],
+                    permissions : ['view admins'],
                     rolesId : [1]
             },
             component : adminForm
+          }
+        ]
+      },
+      {
+        path: 'grade-levels',
+        name: 'GradeLevels',
+        meta: { title: 'Grade Levels', requiresAuth: true },
+        component: GradeLevels,
+        children: [
+          {
+            path: 'grades',
+            name: 'Grades',
+            meta: { title: 'Grades', requiresAuth: true },
+            component: Grades
+          },
+          {
+            path: 'classes',
+            name: 'Classes',
+            meta: { title: 'Classes', requiresAuth: true },
+            component: Classes
+          },
+          {
+            path: 'classes/create',
+            name: 'CreateClass',
+            meta: { title: 'Create Class', requiresAuth: true },
+            component: ClassForm
+          },
+          {
+            path: 'classes/edit/:id',
+            name: 'EditClass',
+            meta: { title: 'Edit Class', requiresAuth: true },
+            component: ClassForm
+          },
+          {
+            path: 'grades/create',
+            name: 'CreateGrade',
+            meta: { title: 'Create Grade', requiresAuth: true },
+            component: GradeForm
+          },
+          {
+            path: 'grades/edit/:id',
+            name: 'EditGrade',
+            meta: { title: 'Edit Grade', requiresAuth: true },
+            component: GradeForm
           }
         ]
       },
@@ -180,7 +230,6 @@ router.beforeEach((to, from, next) => {
   // Check permissions and roles for authenticated routes
   if (requiresAuth && isAuthenticated) {
     // If user has role ID 1 (super admin), allow access immediately
-    console.log(authService.hasRole(1))
     if (authService.hasRole(1)) {
       next();
       return;
@@ -189,10 +238,8 @@ router.beforeEach((to, from, next) => {
     // For non-super admin users, check only permissions
     const hasRequiredPermissions = to.matched.every(record => {
       const requiredPermissions = record.meta.permissions as string[] | undefined;
-      console.log(requiredPermissions)
       return !requiredPermissions || authService.hasAnyPermission(requiredPermissions);
     });
-    console.log(hasRequiredPermissions)
     if (!hasRequiredPermissions) {
       ElMessage({
         message: 'You do not have the required permissions to access this page.',

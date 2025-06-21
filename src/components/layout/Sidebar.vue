@@ -51,14 +51,14 @@ const navItems: NavItem[] = [
       {
         title: 'Grades',
         icon: 'fa-solid fa-graduation-cap',
-        path: '/grades',
+        path: '/grade-levels/grades',
         permissions: [''],
         rolesId: [1]
       },
       {
         title: 'Classes',
         icon: 'fa-solid fa-graduation-cap',
-        path: '/classes',
+        path: '/grade-levels/classes',
         permissions: [''],
         rolesId: [1]
       }
@@ -140,7 +140,6 @@ const isItemExpanded = (title: string) => {
 const sidebarWidth = computed(() => props.isCollapsed ? '80px' : '220px');
 
 const navigateTo = (item: NavItem) => {
-  console.log(item);
   if (!item.isReady || (item.isReady && item.isReady())) {
     if (item.path) {
       router.push(item.path);

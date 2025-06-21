@@ -19,7 +19,8 @@ const props = withDefaults(defineProps<Props & {
   filters: () => ({}),
   searchQuery: '',
   searchPlaceholder: 'Search...',
-  customButtons: () => []
+  customButtons: () => [],
+  removeLeadingZero: false
 });
 
 const emit = defineEmits<{
@@ -38,6 +39,7 @@ const emit = defineEmits<{
 
 const localFilters = ref<Record<string, any>>({ ...props.filters });
 const localSearchQuery = ref(props.searchQuery);
+const searchInputRef = ref<HTMLInputElement | null | any>(null);
 
 // Watch for external filter changes
 watch(() => props.filters, (newFilters) => {
@@ -71,6 +73,13 @@ const handleSearchKeydown = (event: KeyboardEvent) => {
   if (event.key === 'Enter') {
     // Trigger search on Enter key press
     emit('update:enterKey', true);
+    
+    // Select all text in the search input after a brief delay
+    setTimeout(() => {
+      if (searchInputRef.value && searchInputRef.value.inputElement) {
+        searchInputRef.value.inputElement.select();
+      }
+    }, 100);
   }
 };
 
@@ -124,11 +133,14 @@ const hasActiveFilters = computed(() => {
         <div class="search-section">
         <Input
           id="table-search"
+          leadingIcon="fa-solid fa-magnifying-glass"
           v-model="localSearchQuery"
           :placeholder="searchPlaceholder"
           @update:modelValue="handleSearchChange"
           @keydown="handleSearchKeydown"
+          :removeLeadingZero="true"
           class="search-input"
+          ref="searchInputRef"
         />
       </div>
 

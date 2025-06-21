@@ -98,7 +98,7 @@
                       <div
                         class="permission-item p-2 border rounded cursor-pointer"
                         :class="{ 'border-primary bg-light': isPermissionSelected(permission.id) }"
-                        @click="togglePermission(permission.id)"
+                        @click="handleContainerClick($event, permission.id)"
                       >
                         <div class="form-check d-flex align-items-center">
                           <input
@@ -311,6 +311,16 @@ const handleCancel = () => {
 
 const clearPermissionSearch = () => {
   permissionSearch.value = ''
+}
+
+const handleContainerClick = (event: Event, permissionId: number) => {
+  // If the click target is the checkbox or its label, don't handle it here
+  // as the checkbox will handle it via @change event
+  const target = event.target as HTMLElement
+  if (target.tagName === 'INPUT' || target.tagName === 'LABEL') {
+    return
+  }
+  togglePermission(permissionId)
 }
 
 // Lifecycle
