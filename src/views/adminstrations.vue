@@ -1,6 +1,6 @@
 <template>
     <div class="container-fluid">
-        <div class="d-flex gap-2 mb-4 border-bottom pb-3">
+        <div class="d-flex gap-2 border-bottom pb-3">
             <button 
                 v-if="authService.hasPermission('View Admins')"
                 @click="navigateToAdmins" 
@@ -16,7 +16,7 @@
                 Roles
             </button>
         </div>
-        <div class="mt-3">
+        <div class="mb-3">
             <router-view></router-view>
         </div>
     </div>

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import Input from './input.vue';
 import Select from './select.vue';
 import type { Column } from '../../interfaces/column';
@@ -40,6 +40,7 @@ const emit = defineEmits<{
 const localFilters = ref<Record<string, any>>({ ...props.filters });
 const localSearchQuery = ref(props.searchQuery);
 const searchInputRef = ref<HTMLInputElement | null | any>(null);
+const showMoreDropdown = ref(false);
 
 // Watch for external filter changes
 watch(() => props.filters, (newFilters) => {
@@ -123,13 +124,45 @@ const hasActiveFilters = computed(() => {
   );
   return hasFilters;
 });
+
+const isMobile = computed(() => {
+  return window.innerWidth < 768;
+});
+
+const visibleButtons = computed(() => {
+  return props.customButtons.slice(0, 3);
+});
+
+const hiddenButtons = computed(() => {
+  return props.customButtons.slice(3);
+});
+
+const hasHiddenButtons = computed(() => {
+  return hiddenButtons.value.length > 0;
+});
+
+const handleClickOutside = (event: Event) => {
+  const target = event.target as Element;
+  if (!target.closest('.dropdown')) {
+    showMoreDropdown.value = false;
+  }
+};
+
+onMounted(() => {
+  document.addEventListener('click', handleClickOutside);
+});
+
+onUnmounted(() => {
+  document.removeEventListener('click', handleClickOutside);
+});
 </script>
 
 <template>
   <div class="data-table-container">
     <!-- Search and Filters Section -->
-    <div class="table-controls">
-      <div class="d-flex justify-content-between">
+    <div class="mb-3 d-flex flex-column">
+      <!-- Desktop Layout -->
+      <div class="d-flex justify-content-between desktop-layout" v-if="!isMobile">
         <div class="search-section">
         <Input
           id="table-search"
@@ -144,9 +177,9 @@ const hasActiveFilters = computed(() => {
         />
       </div>
 
-      <div class="action-buttons">
+      <div class="d-flex gap-2 flex-wrap">
         <button 
-          v-for="button in customButtons"
+          v-for="button in visibleButtons"
           :key="button.id"
           :class="['btn', button.variant || 'btn-primary']"
           @click="handleButtonClick(button.id, button)"
@@ -155,11 +188,91 @@ const hasActiveFilters = computed(() => {
           <i :class="['fa-solid', button.icon]"></i>
           {{ button.loading ? button.loadingText : button.label }}
         </button>
+        
+        <!-- More dropdown for desktop -->
+        <div v-if="hasHiddenButtons" class="dropdown">
+          <button 
+            class="btn btn-secondary more-button"
+            @click="showMoreDropdown = !showMoreDropdown"
+            type="button"
+          >
+            <i class="fa-solid fa-ellipsis"></i>
+           
+          </button>
+          <div v-if="showMoreDropdown" class="dropdown-menu show">
+            <button 
+              v-for="button in hiddenButtons"
+              :key="button.id"
+              class="mb-2"
+              :class="['dropdown-item', button.variant || 'btn-primary']"
+              @click="handleButtonClick(button.id, button); showMoreDropdown = false"
+              :disabled="button.disabled || button.loading"
+            >
+              <i :class="['fa-solid', button.icon]"></i>
+              {{ button.loading ? button.loadingText : button.label }}
+            </button>
+          </div>
+        </div>
       </div>
 
       </div>
 
-      <div class="filters-section">
+      <!-- Mobile Layout -->
+      <div class="mobile-layout" v-if="isMobile">
+        <div class="search-section">
+          <Input
+            id="table-search-mobile"
+            leadingIcon="fa-solid fa-magnifying-glass"
+            v-model="localSearchQuery"
+            :placeholder="searchPlaceholder"
+            @update:modelValue="handleSearchChange"
+            @keydown="handleSearchKeydown"
+            :removeLeadingZero="true"
+            class="search-input"
+            ref="searchInputRef"
+          />
+        </div>
+
+        <div class="mobile-buttons">
+          <!-- Show first button if available -->
+          <button 
+            v-if="customButtons.length > 0"
+            :key="customButtons[0].id"
+            :class="['btn', customButtons[0].variant || 'btn-primary']"
+            @click="handleButtonClick(customButtons[0].id, customButtons[0])"
+            :disabled="customButtons[0].disabled || customButtons[0].loading"
+          >
+            <i :class="['fa-solid', customButtons[0].icon]"></i>
+            {{ customButtons[0].loading ? customButtons[0].loadingText : customButtons[0].label }}
+          </button>
+
+          <!-- More dropdown for mobile -->
+          <div v-if="customButtons.length > 1" class="dropdown">
+            <button 
+              class="btn btn-secondary more-button"
+              @click="showMoreDropdown = !showMoreDropdown"
+              type="button"
+            >
+              <i class="fa-solid fa-ellipsis"></i>
+            </button>
+            <div v-if="showMoreDropdown" class="dropdown-menu show">
+              <button 
+                v-for="button in customButtons.slice(1)"
+                :key="button.id"
+                class="mb-2"
+                :class="['dropdown-item', button.variant || 'btn-primary']"
+                @click="handleButtonClick(button.id, button); showMoreDropdown = false"
+                :disabled="button.disabled || button.loading"
+              >
+                <i :class="['fa-solid', button.icon]"></i>
+                {{ button.loading ? button.loadingText : button.label }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="d-flex flex-wrap gap-3 align-items-start">
         <div v-for="column in columns.filter(col => col.filterable)" :key="column.key" class="filter-item">
           <template v-if="column.filterType === 'select'">
             <Select
@@ -202,7 +315,7 @@ const hasActiveFilters = computed(() => {
       <div class="pagination-info">
         Showing {{ (currentPage - 1) * itemsPerPage + 1 }} to {{ Math.min(currentPage * itemsPerPage, totalItems) }} of {{ totalItems }} entries
       </div>
-      <div class="pagination-controls">
+      <div class="d-flex gap-2">
         <button 
           :disabled="currentPage === 1"
           @click="handlePageChange(currentPage - 1)"
@@ -229,18 +342,19 @@ const hasActiveFilters = computed(() => {
     </div>
 
     <!-- Table -->
-    <div class="table-wrapper">
-      <table class="data-table">
+    <div class="table-responsive">
+      <table class="data-table table">
         <thead>
           <tr>
             <th 
               v-for="column in columns" 
               :key="column.key"
               :style="{ width: column.width }"
-              :class="{ sortable: column.sortable, 'text-left': column.align === 'left', 'text-right': column.align === 'right', 'text-center': column.align === 'center' }"
+              :class="{ sortable: column.sortable, 'text-start': column.align === 'left', 'text-end': column.align === 'right', 'text-center': column.align === 'center' }"
               @click="handleSort(column)"
+              
             >
-              {{ column.label }}
+              <span >{{ column.label }}</span>
               <span v-if="column.sortable" class="sort-icon">
                 {{ sortBy === column.key ? (sortDirection === 'asc' ? '↑' : '↓') : '↕' }}
               </span>
@@ -250,7 +364,7 @@ const hasActiveFilters = computed(() => {
         <tbody>
           <template v-if="!loading && data.length > 0">
             <tr v-for="(row, index) in data" :key="index">
-              <td v-for="column in columns" :key="column.key" :class="{ 'text-left': column.align === 'left', 'text-right': column.align === 'right', 'text-center': column.align === 'center' }">
+              <td v-for="column in columns" :key="column.key" :class="{ 'text-start': column.align === 'left', 'text-end': column.align === 'right', 'text-center': column.align === 'center' }">
                 <!-- Text/Number/Date -->
                 <template v-if="['text', 'number', 'date'].includes(column.type)">
                   <span v-if="column.isMainColumn">
@@ -325,7 +439,7 @@ const hasActiveFilters = computed(() => {
                 <!-- Actions -->
                 <template v-else-if="column.type === 'actions'">
                   
-                  <div class="actions-cell">
+                  <div class="d-flex gap-2">
                     <button 
                       v-for="action in column.actions" 
                       :key="action.icon"
@@ -342,12 +456,12 @@ const hasActiveFilters = computed(() => {
             </tr>
           </template>
           <tr v-else-if="loading">
-            <td :colspan="columns.length" class="loading-state">
+            <td :colspan="columns.length" class="text-center py-4 text-muted">
               Loading...
             </td>
           </tr>
           <tr v-else>
-            <td :colspan="columns.length" class="empty-state">
+            <td :colspan="columns.length" class="text-center py-4 text-muted">
               No data available
             </td>
           </tr>
@@ -358,29 +472,16 @@ const hasActiveFilters = computed(() => {
 </template>
 
 <style scoped>
+/* Custom styles that can't be replaced with Bootstrap classes */
 .data-table-container {
-  background: white;
+  /* background: white; */
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-  overflow: hidden;
-}
-
-.table-controls {
-  margin-bottom: 1rem;
-  display: flex;
-  flex-direction: column;
 }
 
 .search-section {
   width: 100%;
   max-width: 300px;
-}
-
-.filters-section {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1rem;
-  align-items: start;
 }
 
 .filter-item {
@@ -402,17 +503,85 @@ const hasActiveFilters = computed(() => {
   background: #eee;
 }
 
+/* Responsive Layout Styles */
+.desktop-layout {
+  display: flex;
+}
+
+.mobile-layout {
+  display: none;
+}
+
+/* Dropdown Styles */
+.dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  z-index: 1000;
+  min-width: 160px;
+  padding: 0.5rem 0;
+  margin: 0.125rem 0 0;
+  background-color: white;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: 0.375rem;
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.175);
+}
+
+.dropdown-menu.show {
+  display: block;
+}
+
+.dropdown-item {
+  display: block;
+  width: 100%;
+  padding: 0.375rem 1rem;
+  clear: both;
+  font-weight: 400;
+  color: #212529;
+  text-align: inherit;
+  text-decoration: none;
+  white-space: nowrap;
+  background-color: transparent;
+  border: 0;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.dropdown-item:hover {
+  background-color: #f8f9fa;
+  color: #16181b;
+}
+
+.dropdown-item:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.dropdown-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Mobile Layout Styles */
+.mobile-buttons {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  justify-content: center;
+}
+
 .pagination-top {
   padding: 1rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
   border-bottom: 1px solid #eee;
-}
-
-.pagination-controls {
-  display: flex;
-  gap: 0.5rem;
 }
 
 .pagination-button {
@@ -439,14 +608,11 @@ const hasActiveFilters = computed(() => {
   cursor: not-allowed;
 }
 
-.table-wrapper {
-  overflow-x: auto;
-}
-
 .data-table {
   width: 100%;
   border-collapse: collapse;
   font-size: 0.9rem;
+  overflow-x: auto;
 }
 
 .data-table th,
@@ -456,7 +622,7 @@ const hasActiveFilters = computed(() => {
 }
 
 .data-table th {
-  background: #f8f9fa;
+  background: #e2e2e2;
   font-weight: 600;
   color: #2c3e50;
 }
@@ -482,11 +648,6 @@ const hasActiveFilters = computed(() => {
   object-fit: cover;
 }
 
-.actions-cell {
-  display: flex;
-  gap: 0.5rem;
-}
-
 .action-button {
   background: none;
   border: none;
@@ -500,33 +661,31 @@ const hasActiveFilters = computed(() => {
   background: #f5f5f5;
 }
 
-.loading-state,
-.empty-state {
-  text-align: center;
-  padding: 2rem;
-  color: #666;
-}
-
 .icon {
   font-size: 1.1rem;
 }
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
-  .table-controls {
-    flex-direction: column;
+  .desktop-layout {
+    display: none;
+  }
+
+  .mobile-layout {
+    display: block;
   }
 
   .search-section {
     max-width: 100%;
   }
 
-  .filters-section {
-    flex-direction: column;
-  }
-
   .filter-item {
     width: 100%;
+  }
+
+  .reset-filters {
+    width: 100%;
+    margin-top: 0.5rem;
   }
 
   .pagination-top {
@@ -534,20 +693,229 @@ const hasActiveFilters = computed(() => {
     gap: 1rem;
   }
 
-  .pagination-controls {
-    flex-wrap: wrap;
-    justify-content: center;
+  .mobile-buttons {
+    justify-content: space-between;
+    max-width: 100%;
+  }
+
+  .mobile-buttons .btn {
+    flex: 1;
+    max-width: calc(50% - 0.25rem);
+  }
+
+  .dropdown-menu {
+    right: auto;
+    left: -117px;
+    min-width: 200px;
   }
 }
-.text-left {
-  text-align: left;
+
+/* Enhanced Responsive Design */
+/* Tablet Styles (768px - 1024px) */
+@media (max-width: 1024px) and (min-width: 769px) {
+  .data-table-container {
+    margin: 0 0.5rem;
+  }
+
+  .search-section {
+    max-width: 250px;
+  }
+
+  .filter-item {
+    min-width: 180px;
+  }
+
+  .data-table th,
+  .data-table td {
+    padding: 0.75rem 0.5rem;
+    font-size: 0.85rem;
+  }
+
+  .pagination-button {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.85rem;
+  }
+
+  .btn {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.85rem;
+  }
 }
-.text-right {
-  text-align: right;
+
+/* Mobile Styles (up to 768px) */
+@media (max-width: 768px) {
+  .data-table-container {
+    margin: 0;
+    border-radius: 0;
+    box-shadow: none;
+    border: 1px solid #eee;
+  }
+
+  .search-section {
+    max-width: 100%;
+  }
+
+  .search-input {
+    width: 100%;
+  }
+
+  .filter-item {
+    width: 100%;
+    min-width: unset;
+  }
+
+  .reset-filters {
+    width: 100%;
+    margin-top: 0.5rem;
+  }
+
+  .pagination-top {
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1rem;
+    text-align: center;
+  }
+
+  .pagination-info {
+    font-size: 0.85rem;
+    color: #666;
+  }
+
+  .pagination-button {
+    padding: 0.4rem 0.6rem;
+    font-size: 0.8rem;
+    min-width: 40px;
+  }
+
+  /* Mobile table layout */
+  .data-table {
+    min-width: 600px; /* Ensure minimum width for readability */
+    font-size: 0.8rem;
+  }
+
+  .data-table th,
+  .data-table td {
+    padding: 0.6rem 0.4rem;
+    white-space: nowrap;
+  }
+
+  .data-table th {
+    font-size: 0.75rem;
+    padding: 0.5rem 0.4rem;
+  }
+
+  /* Compact action buttons */
+  .action-button {
+    padding: 0.2rem;
+    font-size: 0.9rem;
+  }
+
+  /* Compact custom buttons */
+  .btn {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.8rem;
+    flex: 1;
+    min-width: 80px;
+    justify-content: center;
+  }
+
+  /* Compact status badges */
+  .status-badge {
+    padding: 0.3rem 0.5rem;
+    font-size: 0.75rem;
+    gap: 0.25rem;
+  }
+
+  /* Compact percentage values */
+  .percentage-value {
+    padding: 0.2rem 0.5rem;
+    font-size: 0.75rem;
+    min-width: 50px;
+  }
+
+  /* Compact code badges */
+  .code-badge {
+    padding: 0.2rem 0.4rem;
+    font-size: 0.75rem;
+  }
+
+  /* Compact table images */
+  .table-image {
+    max-width: 40px;
+    max-height: 40px;
+  }
 }
-.text-center {
-  text-align: center;
+
+
+/* Landscape Mobile Styles */
+@media (max-width: 768px) and (orientation: landscape) {
+  .search-section {
+    max-width: 200px;
+  }
+
+  .filter-item {
+    width: auto;
+    min-width: 150px;
+  }
+
+  .pagination-top {
+    flex-direction: row;
+    align-items: center;
+  }
 }
+
+/* High DPI displays */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  .data-table {
+    border-width: 0.5px;
+  }
+
+  .data-table th,
+  .data-table td {
+    border-bottom-width: 0.5px;
+  }
+}
+
+/* Touch device optimizations */
+@media (hover: none) and (pointer: coarse) {
+  .data-table th.sortable:hover {
+    background: #f8f9fa;
+  }
+
+  .action-button:hover {
+    background: none;
+  }
+
+  .pagination-button:hover:not(:disabled) {
+    background: white;
+  }
+
+  .btn:hover:not(:disabled) {
+    transform: none;
+  }
+
+  /* Increase touch targets */
+  .action-button {
+    min-width: 44px;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .pagination-button {
+    min-width: 44px;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .btn {
+    min-height: 44px;
+  }
+}
+
 .checkbox-input{
   cursor: pointer !important;
 }
@@ -649,11 +1017,6 @@ const hasActiveFilters = computed(() => {
   background: #138496;
 }
 
-.action-buttons {
-  display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-}
 .btn-primary {
   background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
   color: white;
@@ -693,5 +1056,9 @@ const hasActiveFilters = computed(() => {
 .percentage-high:hover {
   transform: translateY(-1px);
   box-shadow: 0 4px 8px rgba(16, 185, 129, 0.3);
+}
+.more-button{
+  display: flex;
+  height: 48px
 }
 </style> 

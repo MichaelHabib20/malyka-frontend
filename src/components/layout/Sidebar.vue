@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import statusService from '../../services/statusService';
 import { dataService } from '../../services/dataContext';
@@ -11,15 +11,39 @@ const props = defineProps<{
   isCollapsed: boolean;
 }>();
 
+const emit = defineEmits<{
+  (e: 'expand-sidebar'): void;
+  (e: 'close-sidebar'): void;
+}>();
+
 const router = useRouter();
 const expandedItems = ref<Set<string>>(new Set());
-  const isOnline = ref(statusService.isOnline());
+const isOnline = ref(statusService.isOnline());
 const currentRoute = computed(() => router.currentRoute.value.path);
+
+// Mobile detection
+const isMobile = ref(false);
+
+const checkMobile = () => {
+  isMobile.value = window.innerWidth <= 768;
+};
+
 onMounted(() => {
   statusService.subscribe((status) => {
     isOnline.value = status;
   });
-})
+  
+  // Check mobile on mount
+  checkMobile();
+  
+  // Add resize listener
+  window.addEventListener('resize', checkMobile);
+});
+
+onUnmounted(() => {
+  window.removeEventListener('resize', checkMobile);
+});
+
 const isActive = (path?: string) => {
   if (!path) return false;
   return currentRoute.value === path;
@@ -43,6 +67,22 @@ const navItems: NavItem[] = [
     },
     permissions: ['dashboard'],
     rolesId: [1]
+  },
+  {
+    title: 'Students',
+    icon: 'fa-solid fa-user-graduate',
+    path: '/students',
+    permissions :['View students'],
+    rolesId : [1],
+    children: [
+      {
+        title: 'Students',
+        icon: 'fa-solid fa-user-graduate',
+        path: '/students',
+        permissions :['View students'],
+        rolesId : [1],
+      }
+    ]
   },
   {
     title: 'Grade Levels',
@@ -122,7 +162,8 @@ const navItems: NavItem[] = [
       }
 
     ]
-  },
+  }
+
 ];
 
 const toggleItem = (title: string) => {
@@ -143,9 +184,46 @@ const navigateTo = (item: NavItem) => {
   if (!item.isReady || (item.isReady && item.isReady())) {
     if (item.path) {
       router.push(item.path);
+      
+      // Close sidebar on mobile after navigation
+      if (isMobile.value) {
+        emit('close-sidebar');
+      }
     }
   } else {
     dataService.createAlertMessage('You are offline, please check your internet connection', 'warning');
+  }
+};
+
+// New function to handle icon clicks when sidebar is collapsed
+const handleIconClick = (item: NavItem, event: Event) => {
+  if (props.isCollapsed) {
+    // Prevent the default click behavior
+    event.stopPropagation();
+    
+    // Expand the sidebar first
+    emit('expand-sidebar');
+    
+    // If the item has children, expand it after a short delay to allow sidebar animation
+    if (item.children) {
+      setTimeout(() => {
+        toggleItem(item.title);
+      }, 300); // Wait for sidebar expansion animation
+    } else if (item.path) {
+      // If no children but has path, navigate after sidebar expansion
+      setTimeout(() => {
+        navigateTo(item);
+      }, 300);
+    }
+  }
+};
+
+// New function to handle navigation with mobile consideration
+const handleNavigation = (item: NavItem) => {
+  if (item.children) {
+    toggleItem(item.title);
+  } else {
+    navigateTo(item);
   }
 };
 
@@ -234,7 +312,7 @@ const filteredNavItems = computed(() => {
       <div v-for="item in filteredNavItems" :key="item.title" class="nav-item">
         <div 
           class="nav-item-header"
-          @click="item.children ? toggleItem(item.title) : navigateTo(item)"
+          @click="props.isCollapsed ? handleIconClick(item, $event) : handleNavigation(item)"
           :class="{ 
             'has-children': item.children,
             'active': isParentActive(item)
@@ -386,5 +464,89 @@ const filteredNavItems = computed(() => {
 .nav-child-item .icon {
   font-size: 1rem;
   margin-right: 0.75rem;
+}
+
+/* Mobile responsive styles */
+@media (max-width: 768px) {
+  .sidebar {
+    width: 280px !important; /* Fixed width on mobile */
+    max-width: 85vw;
+    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+  }
+  
+  .sidebar-header {
+    padding: 1.25rem 1rem;
+  }
+  
+  .sidebar-header h2 {
+    font-size: 1.5rem;
+  }
+  
+  .nav-item-header {
+    padding: 1rem;
+    min-height: 56px; /* Better touch target */
+  }
+  
+  .nav-child-item {
+    padding: 0.75rem 1rem 0.75rem 3.5rem;
+    min-height: 48px; /* Better touch target */
+  }
+  
+  .icon {
+    font-size: 1.5rem;
+    margin-right: 1.25rem;
+    min-width: 2rem;
+  }
+  
+  .title {
+    font-size: 1rem;
+  }
+  
+  .expand-icon {
+    font-size: 1rem;
+  }
+}
+
+/* Small mobile devices */
+@media (max-width: 480px) {
+  .sidebar {
+    width: 260px !important;
+  }
+  
+  .nav-item-header {
+    padding: 0.875rem 1rem;
+  }
+  
+  .nav-child-item {
+    padding: 0.625rem 1rem 0.625rem 3.5rem;
+  }
+  
+  .icon {
+    font-size: 1.375rem;
+    margin-right: 1rem;
+  }
+  
+  .title {
+    font-size: 0.95rem;
+  }
+}
+
+/* Touch device optimizations */
+@media (hover: none) and (pointer: coarse) {
+  .nav-item-header:hover {
+    background-color: transparent;
+  }
+  
+  .nav-item-header:active {
+    background-color: #f8f9fa;
+  }
+  
+  .nav-child-item:hover {
+    background-color: transparent;
+  }
+  
+  .nav-child-item:active {
+    background-color: #f8f9fa;
+  }
 }
 </style> 

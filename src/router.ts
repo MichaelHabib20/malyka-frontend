@@ -19,6 +19,9 @@ import Grades from './views/grades.vue'
 import Classes from './views/classes.vue'
 import ClassForm from './views/classForm.vue'
 import GradeForm from './views/gradeForm.vue'
+import Students from './views/students.vue'
+import studentForm from './views/studentForm.vue'
+import StudentView from './views/studentView.vue'
 
 const routes = [
   { 
@@ -183,6 +186,30 @@ const routes = [
             component: GradeForm
           }
         ]
+      },
+      {
+        path: 'students',
+        name: 'Students',
+        meta: { title: 'Students', requiresAuth: true },
+        component: Students
+      },
+      {
+        path: 'students/create',
+        name: 'CreateStudent',
+        meta: { title: 'Create Student', requiresAuth: true },
+        component:  studentForm
+      },
+      {
+        path: 'students/edit/:id',
+        name: 'EditStudent',
+        meta: { title: 'Edit Student', requiresAuth: true },
+        component: studentForm
+      },
+      {
+        path: 'students/view/:id',
+        name: 'ViewStudent',
+        meta: { title: 'View Student', requiresAuth: true },
+        component: StudentView
       },
       {
         path: 'ziko',

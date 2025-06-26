@@ -167,8 +167,8 @@
     </div>
 
     <!-- Attendance Data Section -->
-    <div class="data-section">
-      <div class="card shadow-sm">
+    <div class="data-section no-background">
+      <div class="  no-background">
         <!-- Loading State -->
         <div v-if="isLoading && kids.length === 0" class="card-body d-flex flex-column align-items-center justify-content-center py-5">
           <div class="loading-spinner mb-3"></div>
@@ -190,7 +190,7 @@
         </div>
 
         <!-- DataTable -->
-        <div v-else class="card-body p-4">
+        <div v-else class="card-body no-background ">
           <DataTable
             :customButtons="tableButtons"
             :columns="dynamicTableColumns"
@@ -675,8 +675,18 @@ onMounted(() => {
 </script>
 
 <style scoped>
+.no-background{
+  background-color: transparent !important;
+}
+.filters-section{
+  margin-bottom: 2rem;
+}
+.summary-section{
+  margin-bottom: 2rem;
+}
 .container-fluid{
   max-width: 1200px;
+  /* margin: 0 auto; */
 }
 .card{
   border : none !important;

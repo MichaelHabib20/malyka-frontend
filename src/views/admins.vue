@@ -1,6 +1,6 @@
 <template>
 
-    <div class="card-body p-4">
+    <div class="card-body pt-4">
       <DataTable
         :columns="columns"
         :data="filteredData"
@@ -106,7 +106,7 @@ const customButtons = computed(() => {
         icon: 'fa-plus',
         variant: 'btn-primary'
       }
-    }
+    },
   ]);
 });
 
@@ -241,7 +241,7 @@ onMounted(() => {
 <style scoped>
 
 .card-body{
-    background-color: white;
+    /* background-color: white; */
     padding: 2 rem !important;
 }
 

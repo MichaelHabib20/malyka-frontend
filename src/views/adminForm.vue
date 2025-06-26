@@ -1,113 +1,131 @@
 <template>
-  <div class="container-fluid">
+  <div class="container-fluid pt-4 px-0">
     <div class="row justify-content-center">
       <div class="col-12">
         <div class="card shadow-sm">
           <div class="card-body p-4">
-            <form @submit.prevent="handleSubmit" class="needs-validation" novalidate>
-              <!-- First Name Input -->
-              <div class="mb-2">
-                <Input
-                  id="first-name"
-                  v-model="formData.firstName"
-                  label="First Name"
-                  placeholder="Enter first name"
-                  :validation-rules="nameValidationRules"
-                  @validation-change="handleFirstNameValidation"
-                />
+            <div class="row">
+              <!-- Form Column (8 columns) -->
+              <div class="col-md-8">
+                <form @submit.prevent="handleSubmit" class="needs-validation" novalidate>
+                  <!-- First Name Input -->
+                  <div class="mb-2">
+                    <Input
+                      id="first-name"
+                      v-model="formData.firstName"
+                      label="First Name"
+                      placeholder="Enter first name"
+                      :validation-rules="nameValidationRules"
+                      @validation-change="handleFirstNameValidation"
+                    />
+                  </div>
+
+                  <!-- Last Name Input -->
+                  <div class="mb-2">
+                    <Input
+                      id="last-name"
+                      v-model="formData.lastName"
+                      label="Last Name"
+                      placeholder="Enter last name"
+                      :validation-rules="nameValidationRules"
+                      @validation-change="handleLastNameValidation"
+                    />
+                  </div>
+
+                  <!-- Email Input -->
+                  <div class="mb-4">
+                    <Input
+                      id="email"
+                      v-model="formData.email"
+                      label="Email"
+                      type="email"
+                      placeholder="Enter email address"
+                      leadingIcon="fa-regular fa-envelope"
+                      :validation-rules="emailValidationRules"
+                      @validation-change="handleEmailValidation"
+                    />
+                  </div>
+
+                  <!-- Phone Number Input -->
+                  <div class="mb-2">
+                    <Input
+                      id="phone"
+                      v-model="formData.phoneNumber"
+                      label="Phone Number"
+                      placeholder="Enter phone number"
+                      leadingIcon="fa-solid fa-phone"
+                      :validation-rules="phoneValidationRules"
+                      @validation-change="handlePhoneValidation"
+                    />
+                  </div>
+
+                  <!-- Password Input (only for create mode) -->
+                  <div v-if="!isEditMode" class="mb-2">
+                    <Input
+                      id="password"
+                      v-model="formData.password"
+                      label="Password"
+                      :type="passwordType"
+                      placeholder="Enter password"
+                      trailingIcon="fa-regular fa-eye"
+                      :is-trailing-icon-clickable="true"
+                      @trailing-icon-click="togglePasswordVisibility"
+                      :validation-rules="passwordValidationRules"
+                      @validation-change="handlePasswordValidation"
+                    />
+                  </div>
+
+                  <!-- Form Actions -->
+                  <div class="d-flex justify-content-end gap-2 pt-3 border-top">
+                    <button
+                      type="button"
+                      class="btn btn-secondary"
+                      @click="handleCancel"
+                      :disabled="isSubmitting"
+                    >
+                      <i class="fas fa-times me-1"></i>
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      class="btn btn-primary"
+                      :disabled="!isFormValid || isSubmitting"
+                    >
+                      <i v-if="isSubmitting" class="fas fa-spinner fa-spin me-1"></i>
+                      <i v-else class="fas fa-save me-1"></i>
+                      {{ isSubmitting ? 'Saving...' : (isEditMode ? 'Update Admin' : 'Create Admin') }}
+                    </button>
+                  </div>
+                </form>
               </div>
 
-              <!-- Last Name Input -->
-              <div class="mb-2">
-                <Input
-                  id="last-name"
-                  v-model="formData.lastName"
-                  label="Last Name"
-                  placeholder="Enter last name"
-                  :validation-rules="nameValidationRules"
-                  @validation-change="handleLastNameValidation"
-                />
+              <!-- Roles Column (4 columns) -->
+              <div class="col-md-4">
+                <div class="card border-0 bg-light">
+                  <div class="card-body">
+                    <h6 class="card-title mb-3">
+                      <i class="fas fa-user-tag me-2"></i>
+                      Role Assignment
+                    </h6>
+                    <Select
+                      id="role"
+                      v-model="formData.roleId"
+                      label="Role"
+                      :options="roleOptions"
+                      placeholder="Select role"
+                      :validation-rules="['required']"
+                      @validation-change="handleRoleValidation"
+                    />
+                    <div class="mt-3">
+                      <small class="text-muted">
+                        <i class="fas fa-info-circle me-1"></i>
+                        Select the appropriate role for this admin user. The role determines the user's permissions and access levels.
+                      </small>
+                    </div>
+                  </div>
+                </div>
               </div>
-
-              <!-- Email Input -->
-              <div class="mb-4">
-                <Input
-                  id="email"
-                  v-model="formData.email"
-                  label="Email"
-                  type="email"
-                  placeholder="Enter email address"
-                  leadingIcon="fa-regular fa-envelope"
-
-                  :validation-rules="emailValidationRules"
-                  @validation-change="handleEmailValidation"
-                />
-              </div>
-
-              <!-- Phone Number Input -->
-              <div class="mb-2">
-                <Input
-                  id="phone"
-                  v-model="formData.phoneNumber"
-                  label="Phone Number"
-                  placeholder="Enter phone number"
-                  leadingIcon="fa-solid fa-phone"
-                  :validation-rules="phoneValidationRules"
-                  @validation-change="handlePhoneValidation"
-                />
-              </div>
-
-              <!-- Password Input (only for create mode) -->
-              <div v-if="!isEditMode" class="mb-2">
-                <Input
-                  id="password"
-                  v-model="formData.password"
-                  label="Password"
-                  :type="passwordType"
-                  placeholder="Enter password"
-                  trailingIcon="fa-regular fa-eye"
-                  :is-trailing-icon-clickable="true"
-                  @trailing-icon-click="togglePasswordVisibility"
-                  :validation-rules="passwordValidationRules"
-                  @validation-change="handlePasswordValidation"
-                />
-              </div>
-
-              <!-- Role Select -->
-              <div class="mb-2">
-                <Select
-                  id="role"
-                  v-model="formData.roleId"
-                  label="Role"
-                  :options="roleOptions"
-                  placeholder="Select role"
-                  :validation-rules="['required']"
-                  @validation-change="handleRoleValidation"
-                />
-              </div>
-
-              <!-- Form Actions -->
-              <div class="d-flex justify-content-end gap-2 pt-3 border-top">
-                <button
-                  type="button"
-                  class="btn btn-secondary"
-                  @click="handleCancel"
-                  :disabled="isSubmitting"
-                >
-                  <i class="fas fa-times me-1"></i>
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  class="btn btn-primary"
-                  :disabled="!isFormValid || isSubmitting"
-                >
-                  <i v-if="isSubmitting" class="fas fa-spinner fa-spin me-1"></i>
-                  <i v-else class="fas fa-save me-1"></i>
-                  {{ isSubmitting ? 'Saving...' : (isEditMode ? 'Update Admin' : 'Create Admin') }}
-                </button>
-              </div>
-            </form>
+            </div>
           </div>
         </div>
       </div>

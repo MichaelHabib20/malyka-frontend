@@ -141,7 +141,13 @@ const hasError = computed(() => errors.value.length > 0)
 const errorMessage = computed(() => errors.value[0] || '')
 
 const handleInput = (event) => {
-  const value = event.target.value
+  let value = event.target.value
+  
+  // Remove leading zeros if the prop is enabled
+  if (props.removeLeadingZero) {
+    value = value.replace(/^0+/, '')
+  }
+  
   emit('update:modelValue', props.type === 'number' ? Number(value) : value)
   validateInput(value)
   showSuggestions.value = props.suggestions.length > 0 && value.length > 0
@@ -221,6 +227,15 @@ const handlePaste = (event) => {
 }
 
 watch(() => props.modelValue, (newValue) => {
+  // Remove leading zeros if the prop is enabled and value is a string
+  if (props.removeLeadingZero && typeof newValue === 'string' && newValue.startsWith('0')) {
+    const cleanedValue = newValue.replace(/^0+/, '')
+    if (cleanedValue !== newValue) {
+      emit('update:modelValue', props.type === 'number' ? Number(cleanedValue) : cleanedValue)
+      return
+    }
+  }
+  
   validateInput(newValue)
 })
 

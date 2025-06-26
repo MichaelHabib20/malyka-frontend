@@ -1,6 +1,6 @@
 <template>
 
-    <div class="card-body p-4">
+    <div class="card-body pt-4">
       <DataTable
         :columns="columns"
         :data="filteredData"
@@ -183,11 +183,6 @@ onMounted(() => {
 </script>
 
 <style scoped>
-
-.card-body{
-    background-color: white;
-    padding: 2 rem !important;
-}
 
 
 </style>
