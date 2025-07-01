@@ -22,6 +22,7 @@ import GradeForm from './views/gradeForm.vue'
 import Students from './views/students.vue'
 import studentForm from './views/studentForm.vue'
 import StudentView from './views/studentView.vue'
+import eventEnrollments from './views/eventEnrollments.vue'
 
 const routes = [
   { 
@@ -210,6 +211,12 @@ const routes = [
         name: 'ViewStudent',
         meta: { title: 'View Student', requiresAuth: true },
         component: StudentView
+      },
+      {
+        path: 'events/enrollments',
+        name: 'EventEnrollments',
+        meta: { title: 'Event Enrollments', requiresAuth: true },
+        component: eventEnrollments
       },
       {
         path: 'ziko',

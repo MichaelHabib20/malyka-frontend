@@ -111,8 +111,8 @@ const fetchGrade = async () => {
     if (response && response.data && response.data) {
       const grade = response.data
       formData.value = {
-        id: grade.id,
-        name: grade.name
+        id: grade.grade.id,
+        name: grade.grade.name
           }
     }
   } catch (error) {

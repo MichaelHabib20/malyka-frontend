@@ -23,7 +23,7 @@
                           label="Student Code"
                           placeholder="Enter student code"
                           leadingIcon="fa-solid fa-id-card"
-                          :validation-rules="['required']"
+                          :validation-rules="['required', 'noConsecutiveSpaces']"
                           @validation-change="handleCodeValidation"
                         />
                       </div>
@@ -133,6 +133,7 @@
                         <Input
                           id="home-phone"
                           v-model="formData.homePhone"
+                          :validation-rules="phoneValidationRules"
                           label="Home Phone"
                           placeholder="Enter home phone"
                           leadingIcon="fa-solid fa-phone"
@@ -479,8 +480,10 @@ const classOptions = computed(() => {
 // Validation rules
 const nameValidationRules = [
   'required',
+  'fourWords',
   { type: 'minLength', params: 2, message: 'Name must be at least 2 characters' },
-  { type: 'maxLength', params: 100, message: 'Name must be less than 100 characters' }
+  { type: 'maxLength', params: 100, message: 'Name must be less than 100 characters' },
+  
 ]
 
 const phoneValidationRules = [

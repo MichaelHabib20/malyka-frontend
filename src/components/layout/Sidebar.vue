@@ -162,6 +162,21 @@ const navItems: NavItem[] = [
       }
 
     ]
+  },
+  {
+    title: 'Events',
+    icon: 'fa-solid fa-calendar-days',
+    path: '/events/enrollments',
+    permissions :['View events'],
+    rolesId : [1],
+    children: [
+      {
+        title: 'Enrollment',
+        path: '/events/enrollments',
+        permissions :['View events'],
+        rolesId : [1],
+      }
+    ]
   }
 
 ];

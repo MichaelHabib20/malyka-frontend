@@ -36,6 +36,27 @@ const validationRules = {
     message: message || 'Invalid format'
   }),
   
+  fourWords: (value) => {
+    const words = value.trim().split(/\s+/).filter(word => word.length > 0)
+    const isValid = words.length === 4 && words.every(word => word.length >= 2)
+    return {
+      isValid,
+      message: 'Please enter exactly 4 words, each with at least 2 characters'
+    }
+  },
+  
+  noConsecutiveSpaces: (enabled = true) => (value) => {
+    if (!enabled) {
+      return { isValid: true, message: '' }
+    }
+    
+    const hasConsecutiveSpaces = /\s{3,}/.test(value)
+    return {
+      isValid: !hasConsecutiveSpaces,
+      message: 'Please do not enter more than 2 consecutive spaces'
+    }
+  },
+  
   custom: (validator, message) => (value) => ({
     isValid: validator(value),
     message: message || 'Invalid value'
@@ -50,11 +71,22 @@ export const useValidation = () => {
     
     if (!rules.length) return true
     
+    
     for (const rule of rules) {
       let validationResult
       
       if (typeof rule === 'string' && validationRules[rule]) {
-        validationResult = validationRules[rule](value)
+        const validator = validationRules[rule]
+        if (typeof validator === 'function') {
+          const result = validator(value)
+          if (typeof result === 'function') {
+            validationResult = result(value)
+          } else {
+            validationResult = result
+          }
+        } else {
+          validationResult = validator(value)
+        }
       } else if (typeof rule === 'object') {
         const { type, params, message } = rule
         if (validationRules[type]) {
@@ -64,11 +96,11 @@ export const useValidation = () => {
         }
       }
       
+      
       if (validationResult && !validationResult.isValid) {
         errors.value.push(validationResult.message)
       }
     }
-    
     return errors.value.length === 0
   }
 

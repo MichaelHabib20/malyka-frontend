@@ -9,6 +9,8 @@ import type { CustomButton } from '../../interfaces/customButtons';
 
 const props = withDefaults(defineProps<Props & {
   customButtons?: CustomButton[];
+  selectedRows?: any[];
+  showSelection?: boolean;
 }>(), {
   loading: false,
   totalItems: 0,
@@ -20,7 +22,8 @@ const props = withDefaults(defineProps<Props & {
   searchQuery: '',
   searchPlaceholder: 'Search...',
   customButtons: () => [],
-  removeLeadingZero: false
+  removeLeadingZero: false,
+  showSelection: false
 });
 
 const emit = defineEmits<{
@@ -35,12 +38,20 @@ const emit = defineEmits<{
   (e: 'selectChange', payload: { column: string; value: any; row: any }): void;
   (e: 'checkboxChange', payload: { column: string; value: boolean; row: any }): void;
   (e: 'buttonClick', payload: { buttonId: string; button: CustomButton }): void;
+  (e: 'update:selectedRows', value: any[]): void;
 }>();
 
 const localFilters = ref<Record<string, any>>({ ...props.filters });
 const localSearchQuery = ref(props.searchQuery);
 const searchInputRef = ref<HTMLInputElement | null | any>(null);
 const showMoreDropdown = ref(false);
+
+// Row selection logic
+const selectedRows = ref<any[]>(props.selectedRows ? [...props.selectedRows] : []);
+
+watch(() => props.selectedRows, (newVal) => {
+  if (newVal) selectedRows.value = [...newVal];
+}, { deep: true });
 
 // Watch for external filter changes
 watch(() => props.filters, (newFilters) => {
@@ -155,6 +166,44 @@ onMounted(() => {
 onUnmounted(() => {
   document.removeEventListener('click', handleClickOutside);
 });
+
+const isRowSelected = (row: any) => {
+  return selectedRows.value.some(r => r.id === row.id);
+};
+
+const toggleRowSelection = (row: any) => {
+  const idx = selectedRows.value.findIndex(r => r.id === row.id);
+  if (idx === -1) {
+    selectedRows.value.push(row);
+  } else {
+    selectedRows.value.splice(idx, 1);
+  }
+  emit('update:selectedRows', [...selectedRows.value]);
+};
+
+const isAllPageSelected = computed(() => {
+  if (!props.data.length) return false;
+  return props.data.every(row => selectedRows.value.some(r => r.id === row.id));
+});
+
+const toggleSelectAllPage = () => {
+  if (isAllPageSelected.value) {
+    // Unselect all rows on this page
+    selectedRows.value = selectedRows.value.filter(r => !props.data.some(row => row.id === r.id));
+  } else {
+    // Add all rows on this page
+    const newRows = props.data.filter(row => !selectedRows.value.some(r => r.id === row.id));
+    selectedRows.value = [...selectedRows.value, ...newRows];
+  }
+  emit('update:selectedRows', [...selectedRows.value]);
+};
+
+// Utility function to get nested object values
+const getNestedValue = (obj: any, path: string) => {
+  return path.split('.').reduce((current, key) => {
+    return current && current[key] !== undefined ? current[key] : null;
+  }, obj);
+};
 </script>
 
 <template>
@@ -346,13 +395,15 @@ onUnmounted(() => {
       <table class="data-table table">
         <thead>
           <tr>
+            <th v-if="showSelection" style="width: 40px;">
+              <input type="checkbox" :checked="isAllPageSelected" @change="toggleSelectAllPage" />
+            </th>
             <th 
               v-for="column in columns" 
               :key="column.key"
               :style="{ width: column.width }"
               :class="{ sortable: column.sortable, 'text-start': column.align === 'left', 'text-end': column.align === 'right', 'text-center': column.align === 'center' }"
               @click="handleSort(column)"
-              
             >
               <span >{{ column.label }}</span>
               <span v-if="column.sortable" class="sort-icon">
@@ -364,14 +415,17 @@ onUnmounted(() => {
         <tbody>
           <template v-if="!loading && data.length > 0">
             <tr v-for="(row, index) in data" :key="index">
+              <td v-if="showSelection">
+                <input type="checkbox" :checked="isRowSelected(row)" @change="toggleRowSelection(row)" />
+              </td>
               <td v-for="column in columns" :key="column.key" :class="{ 'text-start': column.align === 'left', 'text-end': column.align === 'right', 'text-center': column.align === 'center' }">
                 <!-- Text/Number/Date -->
                 <template v-if="['text', 'number', 'date'].includes(column.type)">
                   <span v-if="column.isMainColumn">
-                    <strong>{{ row[column.key] }}</strong>
+                    <strong>{{ getNestedValue(row, column.key) }}</strong>
                   </span>
                   <span v-else>
-                    {{ row[column.key] }}
+                    {{ getNestedValue(row, column.key) }}
                   </span>
                 </template>
 
@@ -385,26 +439,26 @@ onUnmounted(() => {
                 </template>
 
                 <template v-else-if="column.type === 'code'">
-                  <span class="code-badge">{{ row[column.key] }}</span>
+                  <span class="code-badge">{{ getNestedValue(row, column.key) }}</span>
                 </template>
 
                 <template v-else-if="column.type === 'attendance-status'">
                   <span 
                       :class="[
                         'status-badge',
-                        row[column.key] ? 'status-present' : 'status-absent'
+                        getNestedValue(row, column.key) ? 'status-present' : 'status-absent'
                       ]"
                     >
-                      <i :class="row[column.key] ? 'fa-solid fa-check' : 'fa-solid fa-times'"></i>
-                      {{ row[column.key] ? 'Present' : 'Absent' }}
+                      <i :class="getNestedValue(row, column.key) ? 'fa-solid fa-check' : 'fa-solid fa-times'"></i>
+                      {{ getNestedValue(row, column.key) ? 'Present' : 'Absent' }}
                     </span>
                 </template>
                 <template v-else-if="column.type === 'percentage'">
                   <span :class="[
                     'percentage-value',
-                    { 'percentage-low': row[column.key] < 50, 'percentage-high': row[column.key] >= 50 }
+                    { 'percentage-low': getNestedValue(row, column.key) < 50, 'percentage-high': getNestedValue(row, column.key) >= 50 }
                   ]">
-                    {{ row[column.key] }}%
+                    {{ getNestedValue(row, column.key) }}%
                   </span>
                 </template>
 
@@ -412,7 +466,7 @@ onUnmounted(() => {
                 <template v-else-if="column.type === 'checkbox'">
                   <input 
                     type="checkbox"
-                    :checked="row[column.key]"
+                    :checked="getNestedValue(row, column.key)"
                     class="checkbox-input"
                     @change="handleCheckboxChange(column.key, ($event.target as HTMLInputElement).checked, row)"
                   >
@@ -421,7 +475,7 @@ onUnmounted(() => {
                 <!-- Select -->
                 <template v-else-if="column.type === 'select'">
                   <Select
-                    :modelValue="row[column.key]"
+                    :modelValue="getNestedValue(row, column.key)"
                     :options="column.selectOptions || []"
                     @update:modelValue="(val) => handleSelectChange(column.key, val, row)"
                   />
@@ -430,8 +484,8 @@ onUnmounted(() => {
                 <!-- Image -->
                 <template v-else-if="column.type === 'image'">
                   <img 
-                    :src="row[column.key]" 
-                    :alt="row[column.key + '_alt'] || ''"
+                    :src="getNestedValue(row, column.key)" 
+                    :alt="getNestedValue(row, column.key + '_alt') || ''"
                     class="table-image"
                   >
                 </template>

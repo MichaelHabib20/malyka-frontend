@@ -43,11 +43,25 @@ const sortDirection = ref('asc' as 'asc' | 'desc');
 const columns = computed(() => {
   const baseColumns: Column[] = [
     {
-      key: 'name',
+      key: 'class.name',
       label: 'Name',
       type: 'text',
       sortable: true,
       isMainColumn: true
+    },
+    {
+      key: 'class.grade.name',
+      label: 'Grade',
+      type: 'text',
+      sortable: true,
+      isMainColumn: false
+    },
+    {
+      key: 'kidsCount',
+      label: 'No. of Kids',
+      type: 'number',
+      sortable: true,
+      isMainColumn: false
     },
   ];
   
@@ -91,11 +105,10 @@ const filteredData = computed(() => {
   // Apply search filter
   if (searchQuery.value) {
     const query = searchQuery.value.toLowerCase();
-    data = data.filter((classItem) => {
+    data = data.filter((classItem: any) => {
       return (
-        classItem.name.toLowerCase().includes(query) ||
-        (classItem.description && classItem.description.toLowerCase().includes(query)) ||
-        (classItem.gradeName && classItem.gradeName.toLowerCase().includes(query))
+        classItem.class.name.toLowerCase().includes(query) ||
+        (classItem.class.grade.name && classItem.class.grade.name.toLowerCase().includes(query))
       );
     });
   }
@@ -136,12 +149,12 @@ const handleButtonClick = ({ buttonId, button }: { buttonId: string; button: Cus
 
 const handleAction = async ({ action, row }: { action: string; row: any }) => {
   if (action === 'Edit') {
-    router.push(`/grade-levels/classes/edit/${row.id}`);
+    router.push(`/grade-levels/classes/edit/${row.class.id}`);
   } else if (action === 'Delete') {
     try {
       // Show confirmation dialog
       await ElMessageBox.confirm(
-        `Are you sure you want to delete class "${row.name}"? This action cannot be undone.`,
+        `Are you sure you want to delete class "${row.class.name}"? This action cannot be undone.`,
         'Confirm Delete',
         {
           confirmButtonText: 'Delete',
@@ -153,7 +166,7 @@ const handleAction = async ({ action, row }: { action: string; row: any }) => {
       );
       
       // User confirmed, proceed with deletion
-      const result = await dataService.createOnline(`/api/Grades/DeleteClass/${row.id}`, {});
+      const result = await dataService.createOnline(`/api/Grades/DeleteClass/${row.class.id}`, {});
       
       if (result && (result.httpStatus === 200 || result.httpStatus === 204)) {
         dataService.createAlertMessage('Class deleted successfully', 'success');

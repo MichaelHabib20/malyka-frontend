@@ -296,7 +296,6 @@ const fetchAdmin = async () => {
     const response : any = await dataService.fetchOnline<ApiResponse<Admin>>(`/api/Admin/GetContactById/${adminId.value}`)
     if (response && response.data && response.data.contact) {
       const admin = response.data.contact
-      console.log(admin)
       formData.value = {
         firstName: admin.firstName,
         lastName: admin.lastName,

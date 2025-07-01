@@ -112,9 +112,9 @@ const isFormValid = computed(() => {
 })
 
 const gradeOptions = computed(() => {
-  return grades.value.map(grade => ({
-    label: grade.name,
-    value: grade.id
+  return grades.value.map((grade: any) => ({
+    label: grade.grade.name,
+    value: grade.grade.id
   }))
 })
 
@@ -155,11 +155,10 @@ const fetchClass = async () => {
     const response: any = await dataService.fetchOnline<ApiResponse<Class>>(`/api/Grades/GetClassById/${classId.value}`)
     if (response && response.data && response.data) {
       const classData = response.data
-      console.log(classData)
       formData.value = {
-        id: classData.id,
-        name: classData.name,
-        gradeId: classData.gradeId
+        id: classData.class.id,
+        name: classData.class.name,
+        gradeId: classData.class.gradeId
       }
     }
   } catch (error) {

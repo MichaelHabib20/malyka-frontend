@@ -43,11 +43,25 @@ const sortDirection = ref('asc' as 'asc' | 'desc');
 const columns = computed(() => {
   const baseColumns: Column[] = [
     {
-      key: 'name',
+      key: 'grade.name',
       label: 'Name',
       type: 'text',
       sortable: true,
       isMainColumn: true
+    },
+    {
+      key: 'classesCount',
+      label: 'No. of Classes',
+      type: 'number',
+      sortable: true,
+      isMainColumn: false
+    },
+    {
+      key: 'kidsCount',
+      label: 'No. of Kids',
+      type: 'number',
+      sortable: true,
+      isMainColumn: false
     }
   ];
   
@@ -91,9 +105,9 @@ const filteredData = computed(() => {
   // Apply search filter
   if (searchQuery.value) {
     const query = searchQuery.value.toLowerCase();
-    data = data.filter((grade) => {
+    data = data.filter((grade: any) => {
       return (
-        grade.name.toLowerCase().includes(query) ||
+        (grade.grade && grade.grade.name && grade.grade.name.toLowerCase().includes(query)) ||
         (grade.description && grade.description.toLowerCase().includes(query))
       );
     });
@@ -102,8 +116,15 @@ const filteredData = computed(() => {
   // Apply sorting
   if (sortBy.value) {
     data = [...data].sort((a, b) => {
-      const aValue = a[sortBy.value as keyof typeof a];
-      const bValue = b[sortBy.value as keyof typeof b];
+      // Helper function to get nested value
+      const getNestedValue = (obj: any, path: string) => {
+        return path.split('.').reduce((current, key) => {
+          return current && current[key] !== undefined ? current[key] : null;
+        }, obj);
+      };
+      
+      const aValue = getNestedValue(a, sortBy.value);
+      const bValue = getNestedValue(b, sortBy.value);
       
       if (aValue === null || aValue === undefined) return 1;
       if (bValue === null || bValue === undefined) return -1;
@@ -135,12 +156,12 @@ const handleButtonClick = ({ buttonId, button }: { buttonId: string; button: Cus
 
 const handleAction = async ({ action, row }: { action: string; row: any }) => {
   if (action === 'Edit') {
-    router.push(`/grade-levels/grades/edit/${row.id}`);
+    router.push(`/grade-levels/grades/edit/${row.grade.id}`);
   } else if (action === 'Delete') {
     try {
       // Show confirmation dialog
       await ElMessageBox.confirm(
-        `Are you sure you want to delete grade "${row.name}"? This action cannot be undone.`,
+        `Are you sure you want to delete grade "${row.grade.name}"? This action cannot be undone.`,
         'Confirm Delete',
         {
           confirmButtonText: 'Delete',
@@ -152,7 +173,7 @@ const handleAction = async ({ action, row }: { action: string; row: any }) => {
       );
       
       // User confirmed, proceed with deletion
-      const result = await dataService.createOnline(`/api/Grades/DeleteGrade/${row.id}`, {});
+      const result = await dataService.createOnline(`/api/Grades/DeleteGrade/${row.grade.id}`, {});
       
       if (result && (result.httpStatus === 200 || result.httpStatus === 204)) {
         dataService.createAlertMessage('Grade deleted successfully', 'success');

@@ -12,4 +12,6 @@ export interface Props {
   filters?: Record<string, any>;
   searchQuery?: string;
   searchPlaceholder?: string;
+  selectedRows?: any[];
+  showSelection?: boolean;
 }
