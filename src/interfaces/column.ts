@@ -2,7 +2,7 @@ export interface Column {
     key: string;
     label: string;
     align?: 'left' | 'center' | 'right';
-    type: 'text' | 'number' | 'date' | 'icon' | 'checkbox' | 'select' | 'image' | 'actions' | 'link'| 'attendance-status' | 'code'| 'percentage';
+    type: 'text' | 'number' | 'date' | 'icon' | 'checkbox' | 'select' | 'image' | 'actions' | 'link'| 'attendance-status' | 'code'| 'percentage' | 'clickable-number';
     sortable?: boolean;
     filterable?: boolean;
     filterType?: 'text' | 'select' | 'date' | 'number';
@@ -13,4 +13,10 @@ export interface Column {
     selectOptions?: { label: string; value: any }[];
     actions?: { icon: string; label: string; color?: string }[];
     isMainColumn?: boolean;
+    tooltip?: string;
+    nestedStructureForClickableNumber?: string;
+    routeConfig?: string | {
+      path: string;
+      params?: (row: any, value: any) => Record<string, any>;
+    };
   }

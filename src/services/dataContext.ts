@@ -8,6 +8,7 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://forsa.runasp.net';
 
 // Generic interface for API response
 interface ApiResponse<T> {
+  statusCode?: number;
   data?: T;
   status?: number;
   message: string;

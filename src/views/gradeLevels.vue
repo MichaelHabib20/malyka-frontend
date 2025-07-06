@@ -31,7 +31,7 @@ const router = useRouter()
 
 
 const isGradesActive = computed(() => route.name === 'Grades' || route.name === 'CreateGrade' || route.name === 'EditGrade')
-const isClassesActive = computed(() => route.name === 'Classes' || route.name === 'CreateClass' || route.name === 'EditClass')
+const isClassesActive = computed(() => route.name === 'Classes' || route.name === 'CreateClass' || route.name === 'EditClass' || route.name === 'ClassesByGrade')
 // Navigation functions
 const navigateToGrades = () => {
     router.push({ name: 'Grades' })

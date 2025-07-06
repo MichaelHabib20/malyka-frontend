@@ -32,6 +32,12 @@ const routes = [
     meta: { requiresAuth: false }
   },
   {
+    path: '/register',
+    name: 'register',
+    component: studentForm,
+    meta: { requiresAuth: false }
+  },
+  {
     path: '/',
     component: DashboardLayout,
     meta: { requiresAuth: true },
@@ -163,6 +169,12 @@ const routes = [
             component: Classes
           },
           {
+            path: 'classes/:gradeId',
+            name: 'ClassesByGrade',
+            meta: { title: 'Classes', requiresAuth: true },
+            component: Classes
+          },
+          {
             path: 'classes/create',
             name: 'CreateClass',
             meta: { title: 'Create Class', requiresAuth: true },
@@ -192,6 +204,12 @@ const routes = [
         path: 'students',
         name: 'Students',
         meta: { title: 'Students', requiresAuth: true },
+        component: Students
+      },
+      {
+        path: 'students/:id',
+        name: 'StudentView',
+        meta: { title: 'Student View', requiresAuth: true },
         component: Students
       },
       {

@@ -14,6 +14,7 @@
       @update:search-query="handleSearch"
       @button-click="handleButtonClick"
       @action="handleAction"
+      @number-click="handleNumberClick"
     />
   </div>
 </template>
@@ -52,9 +53,14 @@ const columns = computed(() => {
     {
       key: 'classesCount',
       label: 'No. of Classes',
-      type: 'number',
+      type: 'clickable-number',
       sortable: true,
-      isMainColumn: false
+      isMainColumn: false,
+      nestedStructureForClickableNumber: 'grade.id',
+      routeConfig: {
+        path: '/grade-levels/classes/:gradeId',
+        params: (row: any, value: any) => ({ gradeId: row.grade.id })
+      }
     },
     {
       key: 'kidsCount',
@@ -201,6 +207,13 @@ const handleSortBy = (column: string) => {
 const handleSortDirection = (direction: 'asc' | 'desc') => {
   sortDirection.value = direction;
 };
+const handleNumberClick = ({ column, value, row }: { column: string; value: any; row: any }) => {
+  // This handler is called when a clickable number is clicked
+  // The automatic routing is already handled by the DataTable component
+  console.log('Number clicked:', { column, value, row });
+  // You can add additional logic here if needed
+};
+
 
 // Fetch grades data
 const fetchGrades = async () => {

@@ -38,10 +38,10 @@ const validationRules = {
   
   fourWords: (value) => {
     const words = value.trim().split(/\s+/).filter(word => word.length > 0)
-    const isValid = words.length === 4 && words.every(word => word.length >= 2)
+    const isValid = words.length >= 4 && words.every(word => word.length >= 2)
     return {
       isValid,
-      message: 'Please enter exactly 4 words, each with at least 2 characters'
+      message: 'Please enter more than 4 names, each with at least 2 characters'
     }
   },
   
@@ -60,7 +60,52 @@ const validationRules = {
   custom: (validator, message) => (value) => ({
     isValid: validator(value),
     message: message || 'Invalid value'
-  })
+  }),
+  
+  // Custom validation for 14-digit ID starting with 3 and containing birthday, or 7-digit number
+  idOrPhone: (value) => {
+    if (!value) return { isValid: false, message: 'This field is required' }
+    
+    const strValue = String(value).replace(/\s/g, '') // Remove spaces
+    
+    // Pattern 1: 14 digits starting with 3, with birthday in positions 2-7 (YYMMDD format)
+    const pattern1 = /^3\d{13}$/
+    if (pattern1.test(strValue)) {
+      const birthdayPart = strValue.substring(1, 7) // Get the 6 digits after the first 3
+      const year = parseInt(birthdayPart.substring(0, 2))
+      const month = parseInt(birthdayPart.substring(2, 4))
+      const day = parseInt(birthdayPart.substring(4, 6))
+      
+      // Basic date validation
+      if (month >= 1 && month <= 12 && day >= 1 && day <= 31) {
+        return { isValid: true, message: '' }
+      }
+    }
+    
+    // Pattern 2: Exactly 7 digits
+    const pattern2 = /^\d{7}$/
+    if (pattern2.test(strValue)) {
+      return { isValid: true, message: '' }
+    }
+    
+    return { 
+      isValid: false, 
+      message: 'Please enter either a 14-digit ID starting with 3 and containing birthday (YYMMDD), or a 7-digit number' 
+    }
+  },
+  
+  // Validation to prevent English letters
+  noEnglishLetters: (value) => {
+    if (!value) return { isValid: true, message: '' }
+    
+    const englishLettersRegex = /[a-zA-Z]/
+    const hasEnglishLetters = englishLettersRegex.test(value)
+    
+    return {
+      isValid: !hasEnglishLetters,
+      message: 'English letters are not allowed'
+    }
+  }
 }
 
 export const useValidation = () => {

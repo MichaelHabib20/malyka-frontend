@@ -1,5 +1,5 @@
 <template>
-  <div class="student-view container bg-light min-vh-100 p-4">
+  <div class="student-view container bg-light min-vh-100 p-4" v-if="student && !loading">
     <!-- Header Section -->
     <div class="card shadow-sm mb-4">
       <div class="card-body p-4">
@@ -49,11 +49,11 @@
             </div>
             <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
               <span class="fw-semibold text-dark">Class:</span>
-              <span class="text-secondary">{{ student.class.name }}</span>
+              <span class="text-secondary">{{ student.class?.name }}</span>
             </div>
             <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
               <span class="fw-semibold text-dark">Grade:</span>
-              <span class="badge bg-success fs-6">{{ student.grade.name }}</span>
+              <span class="badge bg-success fs-6">{{ student.grade?.name }}</span>
             </div>
             <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
               <span class="fw-semibold text-dark">Gender:</span>
@@ -82,21 +82,21 @@
               <span class="fw-semibold text-dark">Home Phone:</span>
               <span class="d-flex align-items-center gap-2">
                 <i class="fa-solid fa-phone text-muted"></i>
-                {{ student.homePhone || 'Not provided' }}
+                {{ student.whatsapp || 'Not provided' }}
               </span>
             </div>
             <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
               <span class="fw-semibold text-dark">Mother Mobile:</span>
               <span class="d-flex align-items-center gap-2">
                 <i class="fa-solid fa-mobile-alt text-muted"></i>
-                {{ student.motherMobile }}
+                {{ student.momMob }}
               </span>
             </div>
             <div class="d-flex justify-content-between align-items-center py-2">
               <span class="fw-semibold text-dark">Father Mobile:</span>
               <span class="d-flex align-items-center gap-2">
                 <i class="fa-solid fa-mobile-alt text-muted"></i>
-                {{ student.fatherMobile }}
+                {{ student.dadMob }}
               </span>
             </div>
           </div>
@@ -121,7 +121,7 @@
             </div>
             <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
               <span class="fw-semibold text-dark">Sub Street:</span>
-              <span class="text-secondary">{{ student.subStreet || 'Not specified' }}</span>
+              <span class="text-secondary">{{ student.sideStreet || 'Not specified' }}</span>
             </div>
             <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
               <span class="fw-semibold text-dark">Building Number:</span>
@@ -133,7 +133,7 @@
             </div>
             <div class="d-flex justify-content-between align-items-center py-2">
               <span class="fw-semibold text-dark">Apartment:</span>
-              <span class="text-secondary">{{ student.apartment }}</span>
+              <span class="text-secondary">{{ student.apartmentNumber }}</span>
             </div>
           </div>
         </div>
@@ -167,7 +167,7 @@
       </div>
 
       <!-- Notes Card -->
-      <div class="col-12" v-if="student.notes">
+      <div class="col-12" v-if="student.landmark">
         <div class="card shadow-sm hover-card">
           <div class="card-header bg-gradient text-white d-flex align-items-center gap-3">
             <i class="fa-solid fa-sticky-note fs-4"></i>
@@ -175,7 +175,7 @@
           </div>
           <div class="card-body p-4">
             <div class="bg-light p-3 rounded border-start border-primary border-4 fst-italic text-dark">
-              {{ student.notes }}
+              {{ student.landmark }}
             </div>
           </div>
         </div>
@@ -219,39 +219,16 @@ import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import type { Student } from '../interfaces/student';
 import FollowUpSection from './FollowUpSection.vue';
+import { useRoute } from 'vue-router';
+import { dataService } from '../services/dataContext';
 
 const router = useRouter();
+const route = useRoute()
 const showDeleteModal = ref(false);
+const loading = ref(false)
 
 // Mock student data based on the Excel data provided
-const student = ref<Student>({
-  id: 1,
-  code: '108',
-  class: {
-    id: 1,
-    name: 'بدون أولياء أمور 12:15',
-  },
-  name: 'ايليانا عماد جورج',
-  number: '114',
-  subStreet: '',
-  mainStreet: 'طومان باى',
-  area: 'الزيتون',
-  floor: '8',
-  apartment: '36',
-  notes: 'امام بي تك',
-  homePhone: '',
-  motherMobile: '01220853382',
-  fatherMobile: '01225130825',
-  birthDate: '2020-11-26',
-  age: 4.6,
-  siblings: false,
-  gender: 'بنت',
-  nationalId: '24356778987',
-  grade: {
-    id: 1,
-    name: 'Baby Class (Boys)',
-  },
-});
+const student = ref<Student>();
 
 const formatDate = (dateString: string): string => {
   if (!dateString) return 'Not provided';
@@ -263,8 +240,9 @@ const formatDate = (dateString: string): string => {
   });
 };
 
+
 const handleEdit = () => {
-  router.push(`/students/edit/${student.value.id}`);
+  router.push(`/students/edit/${student.value?.id}`);
 };
 
 const handleDelete = () => {
@@ -276,7 +254,7 @@ const closeDeleteModal = () => {
 };
 
 const confirmDelete = () => {
-  console.log('Deleting student:', student.value.id);
+  console.log('Deleting student:', student.value?.id);
   showDeleteModal.value = false;
   router.push('/students');
 };
@@ -285,7 +263,21 @@ const handleFollowUpAdded = () => {
   // Handle follow-up added event
 };
 
+const handleGetStudentById = async (id: string) => {
+  const response : any = await dataService.fetchOnline(`/api/KidsRegistration/GetKidById/${id}`)
+  if(response){
+    loading.value = false
+  console.log(response)
+  student.value = response.data
+  console.log(student.value)
+  }
+}
+
 onMounted(() => {
+  if(route.params.id){
+    loading.value = true
+    handleGetStudentById(route.params.id as string)
+  }
   // Load student data based on route parameter
   // For now using mock data
 });

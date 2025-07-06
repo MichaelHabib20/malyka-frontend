@@ -81,6 +81,9 @@ const navItems: NavItem[] = [
         path: '/students',
         permissions :['View students'],
         rolesId : [1],
+        isReady: () => {
+          return isOnline.value;
+        }
       }
     ]
   },

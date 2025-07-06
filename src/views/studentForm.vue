@@ -16,12 +16,23 @@
                   <!-- Basic Information Row -->
                   <div class="row">
                     <div class="col-md-6">
-                      <div class="mb-3">
+                      <div class="mb-3" v-if="!isRegisterMode">
                         <Input
                           id="student-code"
                           v-model="formData.code"
                           label="Student Code"
                           placeholder="Enter student code"
+                          leadingIcon="fa-solid fa-id-card"
+                          :validation-rules="['required', 'noConsecutiveSpaces']"
+                          @validation-change="handleCodeValidation"
+                        />
+                      </div>
+                      <div class="mb-3" v-else>
+                        <Input
+                          id="student-code"
+                          v-model="formData.verificationCode"
+                          label="Verification Code"
+                          placeholder="Enter verification code"
                           leadingIcon="fa-solid fa-id-card"
                           :validation-rules="['required', 'noConsecutiveSpaces']"
                           @validation-change="handleCodeValidation"
@@ -53,7 +64,7 @@
                           label="National ID"
                           placeholder="Enter national ID"
                           leadingIcon="fa-solid fa-id-badge"
-                          :validation-rules="['required']"
+                          :validation-rules="['required', 'idOrPhone', 'noEnglishLetters']"
                           @validation-change="handleNationalIdValidation"
                         />
                       </div>
@@ -131,11 +142,11 @@
                     <div class="col-md-6">
                       <div class="mb-3">
                         <Input
-                          id="home-phone"
-                          v-model="formData.homePhone"
+                          id="whatsapp-number"
+                          v-model="formData.whatsapp"
                           :validation-rules="phoneValidationRules"
-                          label="Home Phone"
-                          placeholder="Enter home phone"
+                          label="Whatsapp Number"
+                          placeholder="Enter whatsapp number"
                           leadingIcon="fa-solid fa-phone"
                         />
                       </div>
@@ -144,7 +155,7 @@
                       <div class="mb-3">
                         <Input
                           id="mother-mobile"
-                          v-model="formData.motherMobile"
+                          v-model="formData.momMob"
                           label="Mother Mobile"
                           placeholder="Enter mother's mobile"
                           leadingIcon="fa-solid fa-mobile-alt"
@@ -160,7 +171,7 @@
                       <div class="mb-3">
                         <Input
                           id="father-mobile"
-                          v-model="formData.fatherMobile"
+                          v-model="formData.dadMob"
                           label="Father Mobile"
                           placeholder="Enter father's mobile"
                           leadingIcon="fa-solid fa-mobile-alt"
@@ -185,6 +196,7 @@
                           v-model="formData.mainStreet"
                           label="Main Street"
                           placeholder="Enter main street"
+                          :validation-rules="['required', 'noEnglishLetters']"
                           leadingIcon="fa-solid fa-road"
                         />
                       </div>
@@ -193,9 +205,10 @@
                       <div class="mb-3">
                         <Input
                           id="sub-street"
-                          v-model="formData.subStreet"
+                          v-model="formData.sideStreet"
                           label="Sub Street"
-                          placeholder="Enter sub street"
+                          placeholder="Enter Sub street"
+                          :validation-rules="['noEnglishLetters']"
                           leadingIcon="fa-solid fa-road"
                         />
                       </div>
@@ -210,6 +223,7 @@
                           v-model="formData.area"
                           label="Area"
                           placeholder="Enter area"
+                          :validation-rules="['required', 'noEnglishLetters']"
                           leadingIcon="fa-solid fa-map-marker-alt"
                         />
                       </div>
@@ -221,6 +235,7 @@
                           v-model="formData.floor"
                           label="Floor"
                           placeholder="Enter floor"
+                          :validation-rules="['required', 'noEnglishLetters']"
                           leadingIcon="fa-solid fa-building"
                         />
                       </div>
@@ -229,10 +244,11 @@
                       <div class="mb-3">
                         <Input
                           id="apartment"
-                          v-model="formData.apartment"
+                          v-model="formData.apartmentNumber"
                           label="Apartment"
                           placeholder="Enter apartment"
                           leadingIcon="fa-solid fa-home"
+                          :validation-rules="['required', 'noEnglishLetters']"
                         />
                       </div>
                     </div>
@@ -271,7 +287,7 @@
                       </div>
 
                       <!-- Siblings Toggle -->
-                      <div class="mb-4">
+                      <div class="mb-4" v-if="!isRegisterMode">
                         <div class="form-check form-switch">
                           <input
                             class="form-check-input"
@@ -279,7 +295,7 @@
                             id="siblings"
                             v-model="formData.siblings"
                           />
-                          <label class="form-check-label" for="siblings">
+                          <label class="form-check-label" for="siblings" >
                             <i class="fa-solid fa-users me-2"></i>
                             Brothers
                           </label>
@@ -297,7 +313,7 @@
                         </label>
                         <textarea
                           id="notes"
-                          v-model="formData.notes"
+                          v-model="formData.landmark"
                           class="form-control"
                           rows="6"
                           placeholder="Enter additional notes about the student..."
@@ -341,7 +357,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { dataService } from '../services/dataContext'
 import Input from '../components/shared/input.vue'
@@ -363,30 +379,34 @@ interface ApiResponse<T> {
     classes?: Class[]
   }
   httpStatus: number
+  statusCode: number
   message: string
 }
 
 interface StudentFormData {
   id: number
   code: string
+  verificationCode?: string | undefined
   name: string
   number: string
-  subStreet: string
+  sideStreet: string
   mainStreet: string
   area: string
   floor: string
-  apartment: string
-  notes: string
-  homePhone: string
-  motherMobile: string
-  fatherMobile: string
+  apartmentNumber: string
+  landmark: string
+  whatsapp: string
+  momMob: string
+  dadMob: string
   birthDate: string
   siblings: boolean
   gender: string
   nationalId: string
   gradeId?: number
   classId?: number
-  photo?: File | string
+  photo?: File | string,
+  fullAddress?: string,
+  isNew?: boolean
 }
 
 // Route and Router
@@ -397,17 +417,18 @@ const router = useRouter()
 const formData = ref<StudentFormData>({
   id: 0,
   code: '',
+  verificationCode: '',
   name: '',
   number: '',
-  subStreet: '',
+  sideStreet: '',
   mainStreet: '',
   area: '',
   floor: '',
-  apartment: '',
-  notes: '',
-  homePhone: '',
-  motherMobile: '',
-  fatherMobile: '',
+  apartmentNumber: '',
+  landmark: '',
+  whatsapp: '',
+  momMob: '',
+  dadMob: '',
   birthDate: '',
   siblings: false,
   gender: '',
@@ -421,6 +442,8 @@ const grades = ref<Grade[]>([])
 const classes = ref<Class[]>([])
 const loading = ref(false)
 const isSubmitting = ref(false)
+const isRegisterMode = computed(() => route.name === 'register')
+const isNeedToResetClassId = ref(true)
 
 // Validation states
 const codeValidation = ref<ValidationResult>({ isValid: false, errors: [] })
@@ -436,10 +459,10 @@ const fatherMobileValidation = ref<ValidationResult>({ isValid: false, errors: [
 // Computed properties
 const isEditMode = computed(() => route.name === 'EditStudent')
 const studentId = computed(() => route.params.id as string)
+const gradeId = computed(() => formData.value.gradeId )
 
 const isFormValid = computed(() => {
   const validations = [
-    codeValidation.value.isValid,
     nameValidation.value.isValid,
     nationalIdValidation.value.isValid,
     genderValidation.value.isValid,
@@ -449,7 +472,6 @@ const isFormValid = computed(() => {
   ]
 
   return validations.every(v => v) &&
-         formData.value.code?.trim() !== '' &&
          formData.value.name?.trim() !== '' &&
          formData.value.nationalId?.trim() !== '' &&
          formData.value.gender !== '' &&
@@ -464,16 +486,16 @@ const genderOptions = computed(() => [
 ])
 
 const gradeOptions = computed(() => {
-  return grades.value.map(grade => ({
-    label: grade.name,
-    value: grade.id
+  return grades.value.map((grade : any)=> ({
+    label: grade.grade.name,
+    value: grade.grade.id
   }))
 })
 
 const classOptions = computed(() => {
-  return classes.value.map(cls => ({
-    label: cls.name,
-    value: cls.id
+  return classes.value.map((cls : any)=> ({
+    label: cls.class.name,
+    value: cls.class.id
   }))
 })
 
@@ -481,12 +503,14 @@ const classOptions = computed(() => {
 const nameValidationRules = [
   'required',
   'fourWords',
+  'noEnglishLetters',
   { type: 'minLength', params: 2, message: 'Name must be at least 2 characters' },
   { type: 'maxLength', params: 100, message: 'Name must be less than 100 characters' },
   
 ]
 
 const phoneValidationRules = [
+  'noEnglishLetters',
   { 
     type: 'pattern', 
     params: [/^\d{11}$/], 
@@ -538,11 +562,9 @@ const handlePhotoValidation = (validation: ValidationResult) => {
 }
 
 const handlePhotoSelected = (file: File) => {
-  console.log('Student photo selected:', file)
 }
 
 const handlePhotoRemoved = () => {
-  console.log('Student photo removed')
   formData.value.photo = undefined
 }
 
@@ -578,32 +600,38 @@ const fetchStudent = async () => {
   if (!isEditMode.value || !studentId.value) return
   
   try {
-    const response: any = await dataService.fetchOnline<ApiResponse<Student>>(`/api/Users/GetStudentById/${studentId.value}`)
-    if (response && response.data && response.data.student) {
-      const student = response.data.student
-      console.log(student)
+    const response: any = await dataService.fetchOnline<ApiResponse<Student>>(`/api/KidsRegistration/GetKidById/${studentId.value}`)
+    if (response && response.data) {
+      const student : Student  = response.data
+      isNeedToResetClassId.value = false
       formData.value = {
         id: student.id,
         code: student.code,
+        verificationCode: student.verificationCode,
         name: student.name,
         number: student.number,
-        subStreet: student.subStreet,
+        sideStreet: student.sideStreet,
         mainStreet: student.mainStreet,
         area: student.area,
         floor: student.floor,
-        apartment: student.apartment,
-        notes: student.notes,
-        homePhone: student.homePhone,
-        motherMobile: student.motherMobile,
-        fatherMobile: student.fatherMobile,
-        birthDate: student.birthDate,
+        apartmentNumber: student.apartmentNumber,
+        landmark: student.landmark || '',
+        whatsapp: student.whatsapp,
+        momMob: student.momMob,
+        dadMob: student.dadMob,
+        birthDate: formatDateForInput(student.birthDate),
         siblings: student.siblings,
         gender: student.gender,
         nationalId: student.nationalId,
-        gradeId: student.grade?.id,
-        classId: student.class?.id,
-        photo: student.photo
+        gradeId: student.gradeId,
+        classId: student.classId,
+        photo: student.photo,
+        fullAddress: student.fullAddress,
+        isNew: student.isNew
       }
+      // if(student.gradeId){
+      //   handleGetClassesByGradeId(student.gradeId)
+      // }
     }
   } catch (error) {
     dataService.createAlertMessage('Failed to load student data', 'error')
@@ -617,49 +645,50 @@ const handleSubmit = async () => {
   
   try {
     let payload: any = {
-      Code: formData.value.code?.trim(),
-      Name: formData.value.name?.trim(),
-      Number: formData.value.number?.trim(),
-      SubStreet: formData.value.subStreet?.trim(),
-      MainStreet: formData.value.mainStreet?.trim(),
-      Area: formData.value.area?.trim(),
-      Floor: formData.value.floor?.trim(),
-      Apartment: formData.value.apartment?.trim(),
-      Notes: formData.value.notes?.trim(),
-      HomePhone: formData.value.homePhone?.trim(),
-      MotherMobile: formData.value.motherMobile?.trim(),
-      FatherMobile: formData.value.fatherMobile?.trim(),
-      BirthDate: formData.value.birthDate,
+      Code: formData.value.code,
+      RegistrationCode : formData.value.verificationCode,
+      KidName : formData.value.name,
+      Number: formData.value.number,
+      SideStreet: formData.value.sideStreet,
+      MainStreet : formData.value.mainStreet,
+      Area: formData.value.area,
+      Floor : formData.value.floor,
+      ApartmentNumber: formData.value.apartmentNumber,
+      landmark: formData.value.landmark,
+      Whatsapp : formData.value.whatsapp,
+      MomMob : formData.value.momMob,
+      DadMob : formData.value.dadMob,
+      BirthDate : formData.value.birthDate,
       Siblings: formData.value.siblings,
       Gender: formData.value.gender,
-      NationalId: formData.value.nationalId?.trim(),
+      NationalId : formData.value.nationalId,
       GradeId: formData.value.gradeId,
       ClassId: formData.value.classId
     }
-
     // Handle photo upload
-    if (formData.value.photo instanceof File) {
-      // Convert file to base64 for API submission
-      const base64 = await fileToBase64(formData.value.photo)
-      payload.Photo = base64
-    } else if (typeof formData.value.photo === 'string') {
-      // If it's already a string (base64 or URL), use it directly
-      payload.Photo = formData.value.photo
-    }
+    // if (formData.value.photo instanceof File) {
+    //   // Convert file to base64 for API submission
+    //   const base64 = await fileToBase64(formData.value.photo)
+    //   payload.Photo = base64
+    // } else if (typeof formData.value.photo === 'string') {
+    //   // If it's already a string (base64 or URL), use it directly
+    //   payload.Photo = formData.value.photo
+    // }
 
     let response
     if (isEditMode.value) {
       payload.Id = Number(studentId.value)
-      response = await dataService.createOnline('/api/Users/UpdateUser', payload)
+      response = await dataService.createOnline(`/api/KidsRegistration/UpdateKid/${studentId.value}`, payload)
     } else {
-      response = await dataService.createOnline('/api/Users/CreateUser', payload)
+      response  = await dataService.createOnline('/api/KidsRegistration/RegisterKid', payload)
     }
-
-    if (response && (response.httpStatus === 200 || response.httpStatus === 201)) {
+    console.log(response)
+    if (response && (response.statusCode === 200 || response.statusCode === 201)) {
       dataService.createAlertMessage(response.message, 'success')
       router.push('/students')
     } else {
-      throw new Error('Failed to save student')
+      dataService.createAlertMessage(response?.message!, 'error')
+
     }
   } catch (error) {
     dataService.createAlertMessage(isEditMode.value ? 'Failed to update student' : 'Failed to create student', 'error')
@@ -667,6 +696,32 @@ const handleSubmit = async () => {
     isSubmitting.value = false
   }
 }
+const handleGetClassesByGradeId = async (gradeId: number) => {
+  const response: any = await dataService.fetchOnline<ApiResponse<Class[]>>(`/api/Grades/GetClassByGradeId/${gradeId}`)
+  if (response && response.data && response.data) {
+    classes.value = response.data
+  }
+}
+
+// Watch for grade ID changes and fetch corresponding classes
+watch(() => formData.value.gradeId, async (newGradeId, oldGradeId) => {
+  if (newGradeId && newGradeId !== oldGradeId) {
+    if(oldGradeId){
+      isNeedToResetClassId.value = true
+    }
+    await handleGetClassesByGradeId(newGradeId)
+    // Reset class selection when grade changes
+    if(isNeedToResetClassId.value){
+      formData.value.classId = undefined
+    }
+  } else if (!newGradeId) {
+    // Clear classes when no grade is selected
+    classes.value = []
+    if(isNeedToResetClassId.value){
+      formData.value.classId = undefined
+    }
+  }
+})
 
 // Helper function to convert file to base64
 const fileToBase64 = (file: File): Promise<string> => {
@@ -686,6 +741,25 @@ const fileToBase64 = (file: File): Promise<string> => {
   })
 }
 
+// Helper function to convert ISO date string to YYYY-MM-DD format for date input
+const formatDateForInput = (dateString: string): string => {
+  if (!dateString) return ''
+  
+  try {
+    const date = new Date(dateString)
+    if (isNaN(date.getTime())) return ''
+    
+    // Format as YYYY-MM-DD
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
+    
+    return `${year}-${month}-${day}`
+  } catch (error) {
+    return ''
+  }
+}
+
 const handleCancel = () => {
   router.push('/students')
 }
@@ -695,6 +769,9 @@ onMounted(async () => {
   await Promise.all([fetchGrades(), fetchClasses()])
   if (isEditMode.value) {
     await fetchStudent()
+  }
+  if (gradeId.value) {
+    await handleGetClassesByGradeId(gradeId.value)
   }
 })
 </script>

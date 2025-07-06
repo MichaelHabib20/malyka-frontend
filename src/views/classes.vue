@@ -1,5 +1,6 @@
 <template>
-  <div class="card-body pt-4">
+  <div class="card-body pt-4"
+  >
     <DataTable
       :columns="columns"
       :data="filteredData"
@@ -27,10 +28,11 @@ import type { Class } from '../interfaces/class';
 import { dataService } from '../services/dataContext';
 import { authService } from '../services/authService';
 import { createButtonsWithPermissions } from '../utils/simplePermissions';
-import { useRouter } from 'vue-router';
+import { useRouter, useRoute } from 'vue-router';
 import { ElMessageBox } from 'element-plus';
 
 const router = useRouter();
+const route = useRoute();
 
 // Reactive data
 const classes = ref<Class[]>([]);
@@ -38,6 +40,7 @@ const loading = ref(false);
 const searchQuery = ref('');
 const sortBy = ref('');
 const sortDirection = ref('asc' as 'asc' | 'desc');
+const gradeId  = ref(route.params.gradeId as string);
 
 // Define columns for classes table
 const columns = computed(() => {
@@ -214,9 +217,30 @@ const fetchClasses = async () => {
   }
 };
 
+const fetchClassesByGradeId = async (gradeId: string) => {
+  loading.value = true;
+  try {
+    const result: any = await dataService.fetchOnline(`/api/Grades/GetClassByGradeId/${gradeId}`);
+    if (result && (result.httpStatus === 200 || result.Status === 200)) {
+      classes.value = result.data || [];
+    } else {
+      classes.value = [];
+    }
+  } catch (error) {
+    classes.value = [];
+    dataService.createAlertMessage('Failed to fetch classes', 'error');
+  } finally {
+    loading.value = false;
+  }
+}
+
 // Lifecycle
 onMounted(() => {
-  fetchClasses();
+  if(gradeId.value){
+    fetchClassesByGradeId(gradeId.value);
+  }else{
+    fetchClasses();
+  }
 });
 </script>
 

@@ -59,127 +59,17 @@ import type { Student } from '../interfaces/student';
 import { dataService } from '../services/dataContext';
 import { authService } from '../services/authService';
 import { createButtonsWithPermissions } from '../utils/simplePermissions';
-import { useRouter } from 'vue-router';
+import { useRouter, useRoute } from 'vue-router';
 import { ElMessageBox } from 'element-plus';
 import jsPDF from 'jspdf';
 import JsBarcode from 'jsbarcode';
 import { AmiriFont } from '../assets/fonts/Amiri-normal.js';
 
 const router = useRouter();
+const route = useRoute()
 
 // Static student data
-const staticStudents: Student[] = [
-  {
-    id: 1,
-    code: '101',
-    class: { id: 1, name: 'الصف الأول أ', description: 'الصف الأول الابتدائي أ' },
-    name: 'أحمد محمد علي',
-    number: '1',
-    subStreet: 'شارع النصر',
-    mainStreet: 'الشارع الرئيسي',
-    area: 'وسط البلد',
-    floor: 'الدور الثاني',
-    apartment: 'شقة 5',
-    notes: 'طالب ممتاز',
-    homePhone: '02-1234567',
-    motherMobile: '010-12345678',
-    fatherMobile: '011-12345678',
-    birthDate: '2015-03-15',
-    age: 8,
-    siblings: true,
-    gender: 'ذكر',
-    nationalId: '12345678901234',
-    grade: { id: 1, name: 'الصف الأول', description: 'الصف الأول الابتدائي' }
-  },
-  {
-    id: 2,
-    code: '1005',
-    class: { id: 1, name: 'الصف الأول أ', description: 'الصف الأول الابتدائي أ' },
-    name: 'فاطمة حسن',
-    number: '2',
-    subStreet: 'شارع السلام',
-    mainStreet: 'شارع السلام',
-    area: 'الحي الراقي',
-    floor: 'الدور الأول',
-    apartment: 'شقة 12',
-    notes: 'تحتاج إلى متابعة في الرياضيات',
-    homePhone: '02-2345678',
-    motherMobile: '010-23456789',
-    fatherMobile: '011-23456789',
-    birthDate: '2015-07-22',
-    age: 8,
-    siblings: false,
-    gender: 'أنثى',
-    nationalId: '23456789012345',
-    grade: { id: 1, name: 'الصف الأول', description: 'الصف الأول الابتدائي' }
-  },
-  {
-    id: 3,
-    code: '2368',
-    class: { id: 2, name: 'الصف الأول ب', description: 'الصف الأول الابتدائي ب' },
-    name: 'عمر خليل',
-    number: '3',
-    subStreet: 'شارع الأمل',
-    mainStreet: 'شارع الأمل',
-    area: 'الأحياء الجديدة',
-    floor: 'الدور الثالث',
-    apartment: 'شقة 8',
-    notes: 'طالب نشيط جداً',
-    homePhone: '02-3456789',
-    motherMobile: '010-34567890',
-    fatherMobile: '011-34567890',
-    birthDate: '2014-11-10',
-    age: 9,
-    siblings: true,
-    gender: 'ذكر',
-    nationalId: '34567890123456',
-    grade: { id: 2, name: 'الصف الثاني', description: 'الصف الثاني الابتدائي' }
-  },
-  {
-    id: 4,
-    code: '1547',
-    class: { id: 2, name: 'الصف الأول ب', description: 'الصف الأول الابتدائي ب' },
-    name: 'عائشة محمود',
-    number: '4',
-    subStreet: 'شارع النور',
-    mainStreet: 'شارع النور',
-    area: 'مركز المدينة',
-    floor: 'الدور الأرضي',
-    apartment: 'شقة 3',
-    notes: 'من المتفوقين',
-    homePhone: '02-4567890',
-    motherMobile: '010-45678901',
-    fatherMobile: '011-45678901',
-    birthDate: '2014-05-18',
-    age: 9,
-    siblings: true,
-    gender: 'أنثى',
-    nationalId: '45678901234567',
-    grade: { id: 2, name: 'الصف الثاني', description: 'الصف الثاني الابتدائي' }
-  },
-  {
-    id: 5,
-    code: '154',
-    class: { id: 3, name: 'الصف الأول ج', description: 'الصف الأول الابتدائي ج' },
-    name: 'يوسف إبراهيم',
-    number: '5',
-    subStreet: 'شارع الفلاح',
-    mainStreet: 'شارع النجاح',
-    area: 'الحي الجديد',
-    floor: 'الدور الرابع',
-    apartment: 'شقة 15',
-    notes: 'حسن السلوك',
-    homePhone: '02-5678901',
-    motherMobile: '010-56789012',
-    fatherMobile: '011-56789012',
-    birthDate: '2013-09-25',
-    age: 10,
-    siblings: false,
-    gender: 'ذكر',
-    nationalId: '56789012345678',
-    grade: { id: 3, name: 'الصف الثالث', description: 'الصف الثالث الابتدائي' }
-  }
-];
+const staticStudents: Student[] = [];
 
 // Reactive data
 const students = ref<Student[]>(staticStudents);
@@ -260,18 +150,18 @@ const customButtons = computed(() => {
 });
 
 // Transform students data to include computed fields
-const transformedStudents = computed(() => {
-  return students.value.map(student => ({
-    ...student,
-    class: student.class.name,
-    grade: student.grade.name,
-    contact: student.motherMobile || student.fatherMobile || student.homePhone
-  }));
-});
+// const transformedStudents = computed(() => {
+//   return students.value.map(student => ({
+//     ...student,
+//     class: student.class.name,
+//     grade: student.grade.name,
+//     contact: student.momMob || student.dadMob || student.whatsapp
+//   }));
+// });
 
 // Computed property to filter and sort data based on search and sort parameters
 const filteredData = computed(() => {
-  let data = transformedStudents.value;
+  let data = students.value;
   
   // Apply search filter
   if (searchQuery.value) {
@@ -280,9 +170,9 @@ const filteredData = computed(() => {
       return (
         student.name.toLowerCase().includes(query) ||
         student.code.toLowerCase().includes(query) ||
-        (student.motherMobile && student.motherMobile.includes(query)) ||
-        (student.fatherMobile && student.fatherMobile.includes(query)) ||
-        (student.homePhone && student.homePhone.includes(query))
+        (student.momMob && student.momMob.includes(query)) ||
+        (student.dadMob && student.dadMob.includes(query)) ||
+        (student.whatsapp && student.whatsapp.includes(query))
       );
     });
   }
@@ -444,9 +334,9 @@ const handlePrintCards = async () => {
     }
 
     // Address in Arabic
-    const address = `${student.subStreet || ''}، ${student.mainStreet || ''}، ${student.area || ''}، ${student.floor || ''}، ${student.apartment || ''}`;
+    const address = `${student.sideStreet || ''}، ${student.mainStreet || ''}، ${student.area || ''}، ${student.floor || ''}، ${student.apartmentNumber || ''}`;
     const name = student.name;
-    const phone = student.motherMobile || student.fatherMobile || student.homePhone || '';
+    const phone = student.momMob || student.dadMob || student.homePhone || '';
 
     // Layout coordinates
     const padding = 6;
@@ -473,8 +363,19 @@ const handlePrintCards = async () => {
   doc.save('student-cards.pdf');
 };
 
+const handleGetStudentById = async (id: string) => {
+  const response : any = await dataService.fetchOnline(`/api/KidsRegistration/GetKidById/${id}`)
+  console.log(response)
+  students.value = [response.data]
+  console.log(students.value)
+  console.log(filteredData.value)
+}
+
 // Lifecycle
 onMounted(() => {
+  if(route.params.id){
+    handleGetStudentById(route.params.id as string)
+  }
   // Data is already loaded as static data
 });
 </script>

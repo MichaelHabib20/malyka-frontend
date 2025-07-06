@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
+import { useRouter } from 'vue-router';
 import Input from './input.vue';
 import Select from './select.vue';
 import type { Column } from '../../interfaces/column';
 import type { Props } from '../../interfaces/props';
 import type { CustomButton } from '../../interfaces/customButtons';
 
+const router = useRouter();
 
 const props = withDefaults(defineProps<Props & {
   customButtons?: CustomButton[];
@@ -39,6 +41,7 @@ const emit = defineEmits<{
   (e: 'checkboxChange', payload: { column: string; value: boolean; row: any }): void;
   (e: 'buttonClick', payload: { buttonId: string; button: CustomButton }): void;
   (e: 'update:selectedRows', value: any[]): void;
+  (e: 'numberClick', payload: { column: string; value: any; row: any }): void;
 }>();
 
 const localFilters = ref<Record<string, any>>({ ...props.filters });
@@ -117,6 +120,30 @@ const handleCheckboxChange = (column: string, value: boolean, row: any) => {
 
 const handleButtonClick = (buttonId: string, button: CustomButton) => {
   emit('buttonClick', { buttonId, button });
+};
+
+const handleNumberClick = (column: string, value: any, row: any) => {
+  emit('numberClick', { column, value, row });
+  
+  // If the column has a route configuration, navigate automatically
+  const columnConfig = props.columns.find(col => col.key === column);
+  if (columnConfig?.routeConfig) {
+    const routePath = typeof columnConfig.routeConfig === 'string' 
+      ? columnConfig.routeConfig 
+      : columnConfig.routeConfig.path;
+    
+    const routeParams = typeof columnConfig.routeConfig === 'string'
+      ? { id: value }
+      : columnConfig.routeConfig.params ? columnConfig.routeConfig.params(row, value) : { id: value };
+    
+    // Simple path replacement for navigation
+    let path = routePath;
+    // Object.entries(routeParams).forEach(([key, val]) => {
+    //   path = path.replace(`:${key}`, String(val));
+    // });
+    path = path.replace(':gradeId', String(value));
+    router.push(path);
+  }
 };
 
 const resetFilters = () => {
@@ -459,6 +486,18 @@ const getNestedValue = (obj: any, path: string) => {
                     { 'percentage-low': getNestedValue(row, column.key) < 50, 'percentage-high': getNestedValue(row, column.key) >= 50 }
                   ]">
                     {{ getNestedValue(row, column.key) }}%
+                  </span>
+                </template>
+
+                <!-- Clickable Number -->
+                <template v-else-if="column.type === 'clickable-number'">
+                  <span 
+                    class="clickable-number"
+                    @click="handleNumberClick(column.key, getNestedValue(row, column.nestedStructureForClickableNumber!), row)"
+                    :title="column.tooltip || `Click to view details for ${getNestedValue(row, column.key)}`"
+                  >
+                    {{ getNestedValue(row, column.key) }}
+                    <i class="fa-solid fa-external-link-alt clickable-icon"></i>
                   </span>
                 </template>
 
@@ -898,6 +937,17 @@ const getNestedValue = (obj: any, path: string) => {
     max-width: 40px;
     max-height: 40px;
   }
+
+  /* Compact clickable numbers */
+  .clickable-number {
+    padding: 0.2rem 0.4rem;
+    font-size: 0.8rem;
+    gap: 0.25rem;
+  }
+  
+  .clickable-icon {
+    font-size: 0.7rem;
+  }
 }
 
 
@@ -967,6 +1017,16 @@ const getNestedValue = (obj: any, path: string) => {
 
   .btn {
     min-height: 44px;
+  }
+
+  /* Increase touch targets for clickable numbers */
+  .clickable-number {
+    min-width: 44px;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5rem 0.75rem;
   }
 }
 
@@ -1111,6 +1171,49 @@ const getNestedValue = (obj: any, path: string) => {
   transform: translateY(-1px);
   box-shadow: 0 4px 8px rgba(16, 185, 129, 0.3);
 }
+
+/* Clickable Number Styling */
+.clickable-number {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem 0.5rem;
+  background: transparent;
+  color: #4f46e5;
+  border: 1px solid #e5e7eb;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+}
+
+.clickable-number:hover {
+  background: #f3f4f6;
+  border-color: #4f46e5;
+  color: #3730a3;
+}
+
+.clickable-number:active {
+  background: #e5e7eb;
+}
+
+.clickable-number:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.2);
+}
+
+.clickable-icon {
+  font-size: 0.75rem;
+  opacity: 0.7;
+  transition: opacity 0.2s ease;
+}
+
+.clickable-number:hover .clickable-icon {
+  opacity: 1;
+}
+
 .more-button{
   display: flex;
   height: 48px
