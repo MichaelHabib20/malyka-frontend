@@ -6,7 +6,7 @@
       <div class="card shadow-sm">
         <div class="card-body p-4">
           <!-- Date Range Type Selection -->
-          <div class="d-flex justify-content-between align-items-center mb-4">
+          <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap">
             <div class="filter-group">
               <label class="form-label fw-semibold text-secondary mb-2">Date Range Type</label>
               <div class="d-flex gap-4">
@@ -37,6 +37,26 @@
                   </label>
                 </div>
               </div>
+            </div>
+            
+            <!-- Place summary row here -->
+            <div
+              v-if="kids.length > 0"
+              class="d-flex flex-wrap gap-2 align-items-center ms-auto px-2 py-1 rounded-3"
+              style="background: #f8fafc; font-size: 0.95rem;"
+            >
+              <span class="d-flex align-items-center gap-1 px-2 py-1 rounded-pill bg-success bg-opacity-10 text-success fw-semibold">
+                <i class="fa-solid fa-check-circle"></i> {{ presentCount }} <span class="d-none d-md-inline">Present</span>
+              </span>
+              <span class="d-flex align-items-center gap-1 px-2 py-1 rounded-pill bg-danger bg-opacity-10 text-danger fw-semibold">
+                <i class="fa-solid fa-times-circle"></i> {{ absentCount }} <span class="d-none d-md-inline">Absent</span>
+              </span>
+              <span class="d-flex align-items-center gap-1 px-2 py-1 rounded-pill bg-primary bg-opacity-10 text-primary fw-semibold">
+                <i class="fa-solid fa-users"></i> {{ kids.length }} <span class="d-none d-md-inline">Total</span>
+              </span>
+              <span class="d-flex align-items-center gap-1 px-2 py-1 rounded-pill bg-warning bg-opacity-10 text-warning fw-semibold">
+                <i class="fa-solid fa-percentage"></i> {{ attendanceRate }}% <span class="d-none d-md-inline">Rate</span>
+              </span>
             </div>
             
             <!-- Refresh Button -->
@@ -99,72 +119,15 @@
                   <span>{{ dateValidationError }}</span>
                 </div>
               </div>
+
+          
             </div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Summary Cards -->
-    <div v-if="kids.length > 0" class="summary-section mb-4">
-      <div class="row g-3">
-        <div class="col-lg-3 col-md-6">
-          <div class="card shadow-sm h-100 present-card">
-            <div class="card-body d-flex align-items-center gap-3">
-              <div class="summary-icon">
-                <i class="fa-solid fa-check-circle"></i>
-              </div>
-              <div class="flex-grow-1">
-                <h6 class="card-subtitle mb-1 text-muted text-uppercase fw-semibold small">Present</h6>
-                <h3 class="card-title mb-0 fw-bold text-dark">{{ presentCount }}</h3>
-              </div>
-            </div>
-          </div>
-        </div>
-        
-        <div class="col-lg-3 col-md-6">
-          <div class="card shadow-sm h-100 absent-card">
-            <div class="card-body d-flex align-items-center gap-3">
-              <div class="summary-icon">
-                <i class="fa-solid fa-times-circle"></i>
-              </div>
-              <div class="flex-grow-1">
-                <h6 class="card-subtitle mb-1 text-muted text-uppercase fw-semibold small">Absent</h6>
-                <h3 class="card-title mb-0 fw-bold text-dark">{{ absentCount }}</h3>
-              </div>
-            </div>
-          </div>  
-        </div>
-        
-        <div class="col-lg-3 col-md-6">
-          <div class="card shadow-sm h-100 total-card">
-            <div class="card-body d-flex align-items-center gap-3">
-              <div class="summary-icon">
-                <i class="fa-solid fa-users"></i>
-              </div>
-              <div class="flex-grow-1">
-                <h6 class="card-subtitle mb-1 text-muted text-uppercase fw-semibold small">Total</h6>
-                <h3 class="card-title mb-0 fw-bold text-dark">{{ kids.length }}</h3>
-              </div>
-            </div>
-          </div>
-        </div>
-        
-        <div class="col-lg-3 col-md-6">
-          <div class="card shadow-sm h-100 attendance-rate-card">
-            <div class="card-body d-flex align-items-center gap-3">
-              <div class="summary-icon">
-                <i class="fa-solid fa-percentage"></i>
-              </div>
-              <div class="flex-grow-1">
-                <h6 class="card-subtitle mb-1 text-muted text-uppercase fw-semibold small">Rate</h6>
-                <h3 class="card-title mb-0 fw-bold text-dark">{{ attendanceRate }}%</h3>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+
 
     <!-- Attendance Data Section -->
     <div class="data-section no-background">
@@ -204,7 +167,7 @@
             @update:sort-by="handleSortBy"
             @update:sort-direction="handleSortDirection"
             @update:search-query="handleSearch"
-            @update:enterKey="handleEnterKey"
+            @buttonClick="handleButtonClick"
           />
         </div>
       </div>
@@ -259,9 +222,11 @@ const tableButtons = computed(() => {
       id: 'export-attendance',
       permission: 'Export attendance',
       config: {
-        label: 'Export Attendance',
-        icon: 'fa-download',
-        variant: 'btn-primary'
+        label: isExporting.value ? 'Exporting...' : 'Export Attendance',
+        icon: isExporting.value ? 'fa-spinner fa-spin' : 'fa-download',
+        variant: 'btn-primary',
+        // onClick: exportAttendance,
+        disabled: isExporting.value || !hasValidDateSelection()
       }
     }
   ]);
@@ -283,6 +248,22 @@ const tableColumns: Column[] = [
     sortable: true,
     align: 'right'
   },
+  {
+        key: 'gradeName',
+        label: 'Grade',
+        type: 'grade-chip',
+        sortable: false,
+        align: 'center',
+        isMainColumn: false
+      },
+      {
+        key: 'className',
+        label: 'Class',
+        type: 'text',
+        sortable: false,
+        align: 'center',
+        isMainColumn: false
+      },
   {
     key: 'isAdded',
     label: 'Status',
@@ -313,14 +294,31 @@ const dynamicTableColumns = computed(() => {
         sortable: true,
         align: 'right',
         isMainColumn: true
-      }
+      },
+      {
+        key: 'gradeName',
+        label: 'Grade',
+        type: 'grade-chip',
+        sortable: false,
+        align: 'left',
+        isMainColumn: false
+      },
+      {
+        key: 'className',
+        label: 'Class',
+        type: 'text',
+        sortable: false,
+        align: 'left',
+        isMainColumn: false
+      },
+ 
     ];
 
     // Add date columns if we have data
     if (kids.value.length > 0) {
       const firstKid = kids.value[0];
       const dateKeys = Object.keys(firstKid).filter(key => 
-        key !== 'code' && key !== 'name' && key !== 'id' && key !== 'percentage'
+        key !== 'code' && key !== 'name' && key !== 'id' && key !== 'percentage' && key !== 'gradeName' && key !== 'className'
       );
 
       dateKeys.forEach(dateKey => {
@@ -549,7 +547,9 @@ const handleDateRangeData = (data: any[], attendancePercentages: any[]) => {
                     allKidsMap.set(kid.code, {
                         code: kid.code,
                         name: kid.name,
-                        id: kid.id
+                        id: kid.id,
+                        gradeName: kid.gradeName,
+                        className: kid.className
                     });
                 }
             });
@@ -561,7 +561,9 @@ const handleDateRangeData = (data: any[], attendancePercentages: any[]) => {
         const kidData: any = {
             code: kid.code,
             name: kid.name,
-            id: kid.id
+            id: kid.id,
+            gradeName: kid.gradeName,
+            className: kid.className
         };
 
         // Add attendance status for each date
@@ -579,6 +581,7 @@ const handleDateRangeData = (data: any[], attendancePercentages: any[]) => {
     });
 
     kids.value = processedKids;
+    console.log(kids.value);
 };
 
 const formatDateForColumn = (dateString: string): string => {
@@ -598,7 +601,7 @@ const hasValidDateSelection = (): boolean => {
 }
 
 
-const exportAttendance = async () => {
+const handleButtonClick = async () => {
   if (!hasValidDateSelection()) {
     // Show error message
     return
@@ -607,16 +610,29 @@ const exportAttendance = async () => {
   isExporting.value = true
   
   try {
-    // Simulate API call - replace with actual export API
-    await new Promise(resolve => setTimeout(resolve, 2000))
-    
-    // Mock export success
-    console.log('Exporting attendance data...')
-    // Handle successful export - show notification
+    const today = new Date();
+    let endpoint = '';
+    let filename = '';
+
+    if (dateType.value === 'single') {
+      const date = singleDate.value ?? today;
+      const formattedDate = date.toLocaleDateString('en-CA');
+      endpoint = `/api/TestKidsAtt/ExportKidsData?SpecificDate=${formattedDate}`;
+      filename = `attendance_${formattedDate}.xlsx`;
+    } else if (dateType.value === 'range') {
+      const start = startDate.value ?? today;
+      const end = endDate.value ?? today;
+      const formattedStart = start.toLocaleDateString('en-CA');
+      const formattedEnd = end.toLocaleDateString('en-CA');
+      endpoint = `/api/TestKidsAtt/ExportKidsDataByDateRange?startDate=${formattedStart}&endDate=${formattedEnd}`;
+      filename = `attendance_${formattedStart}_to_${formattedEnd}.xlsx`;
+    }
+
+    // Use the new downloadFile method
+    await dataService.downloadFile(endpoint, filename);
     
   } catch (error) {
-    console.error('Error exporting attendance:', error)
-    // Handle error - show notification
+    console.error('Error exporting attendance:', error);
   } finally {
     isExporting.value = false
   }
@@ -633,17 +649,6 @@ const handleSortDirection = (newSortDirection: 'asc' | 'desc') => {
 
 const handleSearch = (query: string) => {
   searchQuery.value = query;
-};
-
-const handleEnterKey = (value: boolean) => {
-  console.log('Enter key:', value);
-//   if(value && filteredData.value.length == 1){
-//     handleCheckboxChange({
-//       column: 'isAdded',
-//       value: !filteredData.value[0].isAdded,
-//       row: filteredData.value[0]
-//     })
-//   }
 };
 
 // Watchers

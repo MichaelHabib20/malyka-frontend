@@ -231,6 +231,84 @@ const getNestedValue = (obj: any, path: string) => {
     return current && current[key] !== undefined ? current[key] : null;
   }, obj);
 };
+
+// Function to format dates
+const formatDate = (dateValue: any, format?: string) => {
+  if (!dateValue) return '';
+  
+  try {
+    const date = new Date(dateValue);
+    
+    // Check if date is valid
+    if (isNaN(date.getTime())) return dateValue;
+    // If a specific format is provided, use it
+    if (format) {
+      return new Intl.DateTimeFormat('en-US', {
+        year: 'numeric',
+        month: format.includes('short') ? 'short' : 'long',
+        day: 'numeric',
+        ...(format.includes('time') && {
+          hour: '2-digit',
+          minute: '2-digit'
+        })
+      }).format(date);
+    }
+    // Default format: MM/DD/YYYY
+    return new Intl.DateTimeFormat('en-US', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    }).format(date);
+  } catch (error) {
+    // If formatting fails, return the original value
+    return dateValue;
+  }
+};
+
+// Function to determine grade chip color class based on content
+const getGradeChipClass = (gradeText: string) => {
+  if (!gradeText) return 'grade-chip-primary';
+  
+  const text = gradeText.toLowerCase();
+  
+  // Baby Class - Soft blue
+  if (text.includes('baby')) {
+    return 'grade-chip-baby';
+  }
+  
+  // KG1 - Green
+  if (text.includes('kg1')) {
+    return 'grade-chip-kg1';
+  }
+  
+  // KG2 - Orange
+  if (text.includes('kg2')) {
+    return 'grade-chip-kg2';
+  }
+  
+  // KG3 - Purple
+  if (text.includes('kg3')) {
+    return 'grade-chip-kg3';
+  }
+  
+  // Primary grades - Blue
+  if (text.includes('primary') || text.includes('1') || text.includes('2') || text.includes('3')) {
+    return 'grade-chip-primary';
+  }
+  
+  // Boys - Blue variant
+  if (text.includes('boys')) {
+    return 'grade-chip-boys';
+  }
+  
+  // Girls - Pink variant
+  if (text.includes('girls')) {
+    return 'grade-chip-girls';
+  }
+  
+  // Default
+  return 'grade-chip-default';
+};
 </script>
 
 <template>
@@ -447,12 +525,18 @@ const getNestedValue = (obj: any, path: string) => {
               </td>
               <td v-for="column in columns" :key="column.key" :class="{ 'text-start': column.align === 'left', 'text-end': column.align === 'right', 'text-center': column.align === 'center' }">
                 <!-- Text/Number/Date -->
-                <template v-if="['text', 'number', 'date'].includes(column.type)">
-                  <span v-if="column.isMainColumn">
-                    <strong>{{ getNestedValue(row, column.key) }}</strong>
+                <template v-if="['text', 'number'].includes(column.type)">
+                  <span v-if="column.isMainColumn" class="d-block fit-width">
+                    <strong>{{ getNestedValue(row, column.key) ? getNestedValue(row, column.key) : '-' }}</strong>
                   </span>
-                  <span v-else>
-                    {{ getNestedValue(row, column.key) }}
+                  <span v-else class="min-width-100">
+                    {{ getNestedValue(row, column.key) ? getNestedValue(row, column.key) : '-' }}
+                  </span>
+                </template>
+                <template v-else-if="column.type === 'date'">
+                  <span class="d-block fit-width"  >
+                    <!-- {{ getNestedValue(row, column.key) }} -->
+                    {{ formatDate(getNestedValue(row, column.key), column.dateFormat) ? formatDate(getNestedValue(row, column.key), column.dateFormat) : '-' }}
                   </span>
                 </template>
 
@@ -501,6 +585,34 @@ const getNestedValue = (obj: any, path: string) => {
                   </span>
                 </template>
 
+                <!-- Grade Chip -->
+                <template v-else-if="column.type === 'grade-chip'">
+                  <div class="grade-chip-container d-flex justify-content-center">
+                    <span 
+                      class="grade-chip badge rounded-pill fw-semibold text-uppercase"
+                      :class="getGradeChipClass(getNestedValue(row, column.key))"
+                      :title="getNestedValue(row, column.key)"
+                    >
+                      {{ getNestedValue(row, column.key) }}
+                    </span>
+                  </div>
+                </template>
+
+                <!-- Phone Chip -->
+                <template v-else-if="column.type === 'phone-chip'">
+                  <div class="phone-chip-container d-flex justify-content-center" v-if="getNestedValue(row, column.key)">
+                    <a 
+                      :href="`tel:${getNestedValue(row, column.key)}`"
+                      class="phone-chip btn btn-sm btn-outline-success text-decoration-none"
+                      :title="`Call ${getNestedValue(row, column.key)}`"
+                    >
+                      <i class="fa-solid fa-phone me-1" v-if="getNestedValue(row, column.key)"></i>
+                      {{ getNestedValue(row, column.key) }}
+                    </a>
+                  </div>
+                  <span v-else>-</span>
+                </template>
+
                 <!-- Checkbox -->
                 <template v-else-if="column.type === 'checkbox'">
                   <input 
@@ -526,7 +638,9 @@ const getNestedValue = (obj: any, path: string) => {
                     :src="getNestedValue(row, column.key)" 
                     :alt="getNestedValue(row, column.key + '_alt') || ''"
                     class="table-image"
+                    v-if="getNestedValue(row, column.key)"
                   >
+                  <span v-else>-</span>
                 </template>
 
                 <!-- Actions -->
@@ -1217,5 +1331,174 @@ const getNestedValue = (obj: any, path: string) => {
 .more-button{
   display: flex;
   height: 48px
+}
+
+/* Grade Chip Container - Ensures consistent width */
+.grade-chip-container {
+  width: 100%;
+  min-width: 120px;
+}
+
+/* Base Grade Chip Styling */
+.grade-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 1rem;
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  width: 100%;
+  max-width: 140px;
+  min-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  border: none;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.grade-chip:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Color Variants */
+.grade-chip-baby {
+  background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
+  color: white;
+}
+
+.grade-chip-kg1 {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+}
+
+.grade-chip-kg2 {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  color: white;
+}
+
+.grade-chip-kg3 {
+  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+  color: white;
+}
+
+.grade-chip-primary {
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  color: white;
+}
+
+.grade-chip-middle {
+  background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+  color: white;
+}
+
+.grade-chip-high {
+  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+  color: white;
+}
+
+.grade-chip-boys {
+  background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+  color: white;
+}
+
+.grade-chip-girls {
+  background: linear-gradient(135deg, #ec4899 0%, #db2777 100%);
+  color: white;
+}
+
+.grade-chip-default {
+  background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+  color: white;
+}
+
+/* Responsive adjustments for grade chips */
+@media (max-width: 768px) {
+  .grade-chip-container {
+    min-width: 100px;
+  }
+  
+  .grade-chip {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.7rem;
+    border-radius: 0.75rem;
+    max-width: 120px;
+  }
+}
+
+@media (max-width: 576px) {
+  .grade-chip-container {
+    min-width: 80px;
+  }
+  
+  .grade-chip {
+    padding: 0.2rem 0.4rem;
+    font-size: 0.65rem;
+    border-radius: 0.5rem;
+    max-width: 100px;
+  }
+}
+
+/* Phone Chip Styling */
+.phone-chip-container {
+  width: 100%;
+  min-width: 140px;
+}
+
+.phone-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  width: 100%;
+  max-width: 160px;
+  min-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: all 0.2s ease;
+  border-radius: 6px;
+  font-weight: 500;
+}
+
+.phone-chip:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(25, 135, 84, 0.2);
+}
+
+.phone-chip:active {
+  transform: translateY(0);
+}
+
+/* Responsive adjustments for phone chips */
+@media (max-width: 768px) {
+  .phone-chip-container {
+    min-width: 120px;
+  }
+  
+  .phone-chip {
+    max-width: 140px;
+    font-size: 0.8rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .phone-chip-container {
+    min-width: 100px;
+  }
+  
+  .phone-chip {
+    max-width: 120px;
+    font-size: 0.75rem;
+  }
+}
+.fit-width{
+  width: 100%;
+  text-wrap: nowrap;
+}
+.min-width-100{
+  display: block;
+  min-width: 100px;
 }
 </style> 

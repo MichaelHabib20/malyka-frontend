@@ -2,6 +2,7 @@ import axios from 'axios';
 import type { AxiosResponse, AxiosError } from 'axios';
 import { offlineStore } from './offlineStore';
 import { statusService } from './statusService';
+import { loadingService } from './loadingService';
 import { ElMessage } from 'element-plus'
 // Base API URL configuration
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://forsa.runasp.net';
@@ -262,6 +263,7 @@ export class DataService {
   }
     // New methods for online-only CRUD operations
     public async fetchOnline<T>(endpoint: string, params?: Record<string, any>): Promise<ApiResponse<T> | undefined> {
+      // loadingService.startLoading();
       try {
         if (!this.isOnline) {
           this.createAlertMessage('You are currently offline. This action requires an internet connection.', 'warning');
@@ -280,10 +282,13 @@ export class DataService {
         };
       } catch (error) {
         return this.handleError(error as AxiosError);
+      } finally {
+        loadingService.endLoading();
       }
     }
   
     public async createOnline<T>(endpoint: string, data: any): Promise<ApiResponse<T> | undefined> {
+      loadingService.startLoading();
       try {
         if (!this.isOnline) {
           this.createAlertMessage('You are currently offline. This action requires an internet connection.', 'warning');
@@ -302,10 +307,13 @@ export class DataService {
         };
       } catch (error) {
         return this.handleError(error as AxiosError);
+      } finally {
+        loadingService.endLoading();
       }
     }
   
     public async updateOnline<T>(endpoint: string, data: any): Promise<ApiResponse<T> | undefined>{
+      loadingService.startLoading();
       try {
         if (!this.isOnline) {
           this.createAlertMessage('You are currently offline. This action requires an internet connection.', 'warning');
@@ -324,10 +332,13 @@ export class DataService {
         };
       } catch (error) {
         return this.handleError(error as AxiosError);
+      } finally {
+        loadingService.endLoading();
       }
     }
   
     public async removeOnline<T>(endpoint: string): Promise<ApiResponse<T> | undefined> {
+      loadingService.startLoading();
       try {
         if (!this.isOnline) {
           this.createAlertMessage('You are currently offline. This action requires an internet connection.', 'warning');
@@ -346,6 +357,63 @@ export class DataService {
         };
       } catch (error) {
         return this.handleError(error as AxiosError);
+      } finally {
+        loadingService.endLoading();
+      }
+    }
+
+    public async downloadFile(endpoint: string, filename?: string): Promise<void> {
+      loadingService.startLoading();
+      try {
+        if (!this.isOnline) {
+          this.createAlertMessage('You are currently offline. This action requires an internet connection.', 'warning');
+          return;
+        }
+
+        const response = await axios.get(endpoint, {
+          responseType: 'blob',
+          headers: {
+            'Accept': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel, application/octet-stream'
+          }
+        });
+
+        // Create blob from response data
+        const blob = new Blob([response.data], {
+          type: response.headers['content-type'] || 'application/octet-stream'
+        });
+
+        // Create download link
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        
+        // Set filename from response headers or use provided filename
+        const contentDisposition = response.headers['content-disposition'];
+        let downloadFilename = filename;
+        
+        if (contentDisposition) {
+          const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+          if (filenameMatch && filenameMatch[1]) {
+            downloadFilename = filenameMatch[1].replace(/['"]/g, '');
+          }
+        }
+        
+        link.download = downloadFilename || 'download.xlsx';
+        
+        // Trigger download
+        document.body.appendChild(link);
+        link.click();
+        
+        // Cleanup
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+        
+        this.createAlertMessage('File downloaded successfully!', 'success');
+      } catch (error) {
+        console.error('Error downloading file:', error);
+        this.createAlertMessage('Failed to download file. Please try again.', 'error');
+      } finally {
+        loadingService.endLoading();
       }
     }
     createAlertMessage(message: string, type: 'success' | 'warning' | 'info' | 'error') {

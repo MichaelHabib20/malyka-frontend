@@ -23,6 +23,7 @@ import Students from './views/students.vue'
 import studentForm from './views/studentForm.vue'
 import StudentView from './views/studentView.vue'
 import eventEnrollments from './views/eventEnrollments.vue'
+import registerKids from './views/registerKids.vue'
 
 const routes = [
   { 
@@ -229,6 +230,12 @@ const routes = [
         name: 'ViewStudent',
         meta: { title: 'View Student', requiresAuth: true },
         component: StudentView
+      },
+      {
+        path: 'register-students',
+        name: 'RegisterStudents',
+        meta: { title: 'Register Students', requiresAuth: true },
+        component: registerKids
       },
       {
         path: 'events/enrollments',

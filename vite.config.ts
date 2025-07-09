@@ -8,6 +8,7 @@ export default defineConfig({
     vue(),
     VitePWA({
       registerType: 'autoUpdate',
+      
       includeAssets: ['favicon.svg'],
       manifest: {
         name: 'Hotel Booking App',
@@ -39,5 +40,8 @@ export default defineConfig({
       }
       
     })
-  ]
+  ],
+  server: {
+    allowedHosts: true // 👈 Add this line
+  }
 })

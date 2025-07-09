@@ -4,6 +4,7 @@ import { computed, onMounted } from 'vue';
 import { ref } from 'vue';
 import DataTable from '../components/shared/DataTable.vue';
 import DatePicker from '../components/shared/datePicker.vue';
+import BarcodeScanner from '../components/shared/BarcodeScanner.vue';
 import type { Column } from '../interfaces/column';
 import { statusService } from '../services/statusService';
 import { offlineStore } from '../services/offlineStore';
@@ -26,6 +27,22 @@ const columns: Column[] = [
     sortable: true,
     align: 'right',
     isMainColumn: true
+  },
+  {
+  key: 'gradeName',
+  label: 'Grade',
+  type: 'grade-chip',
+  sortable: false,
+  align: 'center',
+  isMainColumn: false
+  },
+  {
+  key: 'className',
+  label: 'Class',
+  type: 'text',
+  sortable: false,
+  align: 'center',
+  isMainColumn: false
   },
   { 
     key: 'isAdded', 
@@ -147,6 +164,33 @@ const handleEnterKey = async (value: boolean) => {
   }
 };
 
+// Handle barcode scanned code
+const handleBarcodeScanned = async (scannedCode: string) => {
+  // Find the student by code
+  const student = tableData.value.find((item: any) => item.code.toString() === scannedCode);
+  
+  if (student) {
+    // Toggle the attendance for this student
+    const newValue = !student.isAdded;
+    
+    // Update the local data immediately for UI responsiveness
+    const originalRow = tableData.value.find((item: any) => item.id === student.id);
+    if (originalRow) {
+      originalRow.isAdded = newValue;
+    }
+    
+    // Call the same function that handles checkbox changes
+    await handleCheckboxChange({
+      column: 'isAdded',
+      value: newValue,
+      row: student
+    });
+  } else {
+    // Show notification that student not found
+    console.warn(`Student with code ${scannedCode} not found`);
+  }
+};
+
 const handleCheckboxChange = async (payload: { column: string; value: boolean; row: any }) => {
     // Update the local data immediately for UI responsiveness
     const originalRow = tableData.value.find((item: any) => item.id === payload.row.id);
@@ -224,6 +268,9 @@ onMounted(async () => {
           :isNeedNetwork="true"
           @update:modelValue="handleDateChange"
         />
+      </div>
+      <div class="scanner-section">
+        <BarcodeScanner @code-scanned="handleBarcodeScanned" />
       </div>
     </div>
 
@@ -304,6 +351,12 @@ onMounted(async () => {
   align-items: center;
   gap: 1rem;
   min-width: 250px;
+}
+
+.scanner-section {
+  display: flex;
+  align-items: center;
+  min-width: 200px;
 }
 
 .date-picker label {
@@ -428,6 +481,27 @@ onMounted(async () => {
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
+  .date-section {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1.5rem;
+  }
+  
+  .date-info {
+    min-width: auto;
+    text-align: center;
+  }
+  
+  .date-picker {
+    min-width: auto;
+    justify-content: center;
+  }
+  
+  .scanner-section {
+    min-width: auto;
+    justify-content: center;
+  }
+  
   .stats-grid {
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     gap: 1rem;

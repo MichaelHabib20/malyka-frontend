@@ -156,7 +156,9 @@
             </div>
             <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
               <span class="fw-semibold text-dark">Age:</span>
-              <span class="badge bg-warning text-dark fs-6">{{ student.age }} years</span>
+              <span class="badge bg-warning text-dark fs-6">
+                {{ calculateAge(student.birthDate).years }}y {{ calculateAge(student.birthDate).months }}m
+              </span>
             </div>
             <div class="d-flex justify-content-between align-items-center py-2">
               <span class="fw-semibold text-dark">Brothers:</span>
@@ -240,6 +242,33 @@ const formatDate = (dateString: string): string => {
   });
 };
 
+const calculateAge = (birthDate: string): { years: number; months: number } => {
+  if (!birthDate) return { years: 0, months: 0 };
+  
+  const today = new Date();
+  const birth = new Date(birthDate);
+  
+  let years = today.getFullYear() - birth.getFullYear();
+  let months = today.getMonth() - birth.getMonth();
+  
+  // Adjust for negative months
+  if (months < 0) {
+    years--;
+    months += 12;
+  }
+  
+  // Adjust for day of month
+  if (today.getDate() < birth.getDate()) {
+    months--;
+    if (months < 0) {
+      years--;
+      months += 12;
+    }
+  }
+  
+  return { years, months };
+};
+
 
 const handleEdit = () => {
   router.push(`/students/edit/${student.value?.id}`);
@@ -267,9 +296,7 @@ const handleGetStudentById = async (id: string) => {
   const response : any = await dataService.fetchOnline(`/api/KidsRegistration/GetKidById/${id}`)
   if(response){
     loading.value = false
-  console.log(response)
-  student.value = response.data
-  console.log(student.value)
+  student.value = response.data.kid
   }
 }
 

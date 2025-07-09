@@ -83,6 +83,16 @@ const navItems: NavItem[] = [
         rolesId : [1],
         isReady: () => {
           return isOnline.value;
+        } 
+      },
+      {
+        title: 'Register Students',
+        icon: 'fa-solid fa-user-graduate',
+        path: '/register-students',
+        permissions :['View students'],
+        rolesId : [1],  
+        isReady: () => {
+          return isOnline.value;
         }
       }
     ]

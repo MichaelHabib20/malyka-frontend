@@ -63,7 +63,7 @@ import { useRouter, useRoute } from 'vue-router';
 import { ElMessageBox } from 'element-plus';
 import jsPDF from 'jspdf';
 import JsBarcode from 'jsbarcode';
-import { AmiriFont } from '../assets/fonts/Amiri-normal.js';
+// import { AmiriFont } from '../assets/fonts/Amiri-normal.js';
 
 const router = useRouter();
 const route = useRoute()
@@ -83,35 +83,70 @@ const selectedRows = ref<any[]>([]);
 const columns = computed(() => {
   const baseColumns: Column[] = [
     {
-      key: 'code',
+      key: 'kid.code',
       label: 'Code',
       type: 'code',
       sortable: true,
       width: '80px'
     },
     {
-      key: 'name',
+      key: 'kid.name',
       label: 'Name',
       type: 'text',
+      align: 'right',
       sortable: true,
       isMainColumn: true
     },
     {
-      key: 'class',
+      key: 'kid.grade.name',
+      label: 'Grade',
+      type: 'grade-chip',
+      align: 'center',
+      sortable: false
+    },
+    {
+      key: 'kid.class.name',
       label: 'Class',
       type: 'text',
+      align: 'center',
       sortable: true
     },
     {
-      key: 'grade',
-      label: 'Grade',
+      key: 'kid.area',
+      label: 'Area',
       type: 'text',
-      sortable: true
+      align: 'center',
+      sortable: false
+    },
+
+    {
+      key: 'kid.whatsapp',
+      label: 'Contact',
+      type: 'phone-chip',
+      align: 'center',
+      sortable: false
     },
     {
-      key: 'contact',
-      label: 'Contact',
-      type: 'text'
+      key: 'kid.birthDate',
+      label: 'Birth Date',
+      type: 'date',
+      dateFormat: 'short',
+      align: 'center',
+      sortable: false
+    },
+    {
+      key: 'isPresentOnLastSession',
+      label: 'Last Session',
+      type: 'attendance-status',
+      align: 'center',
+      sortable: false
+    },
+    {
+      key: 'attendancePercentage',
+      label: 'Attendance',
+      type: 'percentage',
+      align: 'center',
+      sortable: false
     }
   ];
   
@@ -166,13 +201,11 @@ const filteredData = computed(() => {
   // Apply search filter
   if (searchQuery.value) {
     const query = searchQuery.value.toLowerCase();
-    data = data.filter((student) => {
+    data = data.filter((student :any) => {
       return (
-        student.name.toLowerCase().includes(query) ||
-        student.code.toLowerCase().includes(query) ||
-        (student.momMob && student.momMob.includes(query)) ||
-        (student.dadMob && student.dadMob.includes(query)) ||
-        (student.whatsapp && student.whatsapp.includes(query))
+        student.kid.name.toLowerCase().includes(query) ||
+        student.kid.code.toLowerCase().includes(query) ||
+        (student.kid.whatsapp && student.kid.whatsapp.includes(query))
       );
     });
   }
@@ -213,9 +246,9 @@ const handleButtonClick = ({ buttonId, button }: { buttonId: string; button: Cus
 
 const handleAction = async ({ action, row }: { action: string; row: any }) => {
   if (action === 'View') {
-    router.push(`/students/view/${row.id}`);
+    router.push(`/students/view/${row.kid.id}`);
   } else if (action === 'Edit') {
-    router.push(`/students/edit/${row.id}`);
+    router.push(`/students/edit/${row.kid.id}`);
   } else if (action === 'Delete') {
     try {
       // Show confirmation dialog
@@ -371,10 +404,20 @@ const handleGetStudentById = async (id: string) => {
   console.log(filteredData.value)
 }
 
+const getStudents = async () => {
+  console.log('hana')
+  const response : any = await dataService.fetchOnline(`/api/KidsRegistration/GetKids`)
+  console.log(response)
+  students.value = response.data.kids
+  console.log(students)
+}
+
 // Lifecycle
 onMounted(() => {
   if(route.params.id){
     handleGetStudentById(route.params.id as string)
+  }else{
+    getStudents()
   }
   // Data is already loaded as static data
 });

@@ -494,8 +494,8 @@ const gradeOptions = computed(() => {
 
 const classOptions = computed(() => {
   return classes.value.map((cls : any)=> ({
-    label: cls.class.name,
-    value: cls.class.id
+    label: cls.name,
+    value: cls.id
   }))
 })
 
@@ -601,8 +601,9 @@ const fetchStudent = async () => {
   
   try {
     const response: any = await dataService.fetchOnline<ApiResponse<Student>>(`/api/KidsRegistration/GetKidById/${studentId.value}`)
+      console.log(response)
     if (response && response.data) {
-      const student : Student  = response.data
+      const student : Student  = response.data.kid
       isNeedToResetClassId.value = false
       formData.value = {
         id: student.id,
@@ -683,11 +684,12 @@ const handleSubmit = async () => {
       response  = await dataService.createOnline('/api/KidsRegistration/RegisterKid', payload)
     }
     console.log(response)
-    if (response && (response.statusCode === 200 || response.statusCode === 201)) {
+    if (response && (response.statusCode === 200 || response.httpStatus === 200)) {
       dataService.createAlertMessage(response.message, 'success')
       router.push('/students')
     } else {
       dataService.createAlertMessage(response?.message!, 'error')
+      router.push('/students')
 
     }
   } catch (error) {
@@ -698,8 +700,9 @@ const handleSubmit = async () => {
 }
 const handleGetClassesByGradeId = async (gradeId: number) => {
   const response: any = await dataService.fetchOnline<ApiResponse<Class[]>>(`/api/Grades/GetClassByGradeId/${gradeId}`)
-  if (response && response.data && response.data) {
+  if (response && response.data) {
     classes.value = response.data
+    console.log(classes.value)
   }
 }
 
@@ -773,6 +776,9 @@ onMounted(async () => {
   if (gradeId.value) {
     await handleGetClassesByGradeId(gradeId.value)
   }
+  // if(studentId.value){
+  //   await fetchStudent()
+  // }
 })
 </script>
 

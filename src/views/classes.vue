@@ -44,7 +44,7 @@ const gradeId  = ref(route.params.gradeId as string);
 
 // Define columns for classes table
 const columns = computed(() => {
-  const baseColumns: Column[] = [
+  const baseColumns: Column[] = !gradeId.value ? [
     {
       key: 'class.name',
       label: 'Name',
@@ -63,7 +63,31 @@ const columns = computed(() => {
       key: 'kidsCount',
       label: 'No. of Kids',
       type: 'number',
+      sortable: false,
+      align: 'center',
+      isMainColumn: false
+    },
+  ] : [
+    {
+      key: 'name',
+      label: 'Name',
+      type: 'text',
       sortable: true,
+      isMainColumn: true
+    },
+    {
+      key: 'grade.name',
+      label: 'Grade',
+      type: 'text',
+      sortable: true,
+      isMainColumn: false
+    },
+    {
+      key: 'kidsCount',
+      label: 'No. of Kids',
+      type: 'number',
+      align: 'center',
+      sortable: false,
       isMainColumn: false
     },
   ];
@@ -223,6 +247,7 @@ const fetchClassesByGradeId = async (gradeId: string) => {
     const result: any = await dataService.fetchOnline(`/api/Grades/GetClassByGradeId/${gradeId}`);
     if (result && (result.httpStatus === 200 || result.Status === 200)) {
       classes.value = result.data || [];
+ 
     } else {
       classes.value = [];
     }
