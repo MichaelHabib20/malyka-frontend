@@ -10,8 +10,8 @@
                 <Input
                   id="role-name"
                   v-model="formData.name"
-                  label="Role Name"
-                  placeholder="Enter role name"
+                  :label="$t('roles.form.roleName')"
+                  :placeholder="$t('roles.form.roleNamePlaceholder')"
                   :validation-rules="nameValidationRules"
                   @validation-change="handleNameValidation"
                 />
@@ -20,7 +20,7 @@
               <!-- Permissions Section -->
               <div class="mb-4">
                 <div class="d-flex justify-content-between align-items-center mb-3">
-                  <h5 class="mb-0 fw-semibold text-dark">Permissions</h5>
+                  <h5 class="mb-0 fw-semibold text-dark">{{ $t('roles.permissions') }}</h5>
                   <div class="d-flex align-items-center gap-3">
                     <button
                       type="button"
@@ -28,10 +28,10 @@
                       @click="toggleSelectAll"
                     >
                       <i class="fas fa-check-square me-1"></i>
-                      {{ isAllSelected ? 'Deselect All' : 'Select All' }}
+                      {{ isAllSelected ? $t('common.deselectAll') : $t('common.selectAll') }}
                     </button>
                     <span class="text-muted small">
-                      {{ selectedPermissions.length }} of {{ permissions.length }} selected
+                      {{ $t('roles.selectedPermissions', { selected: selectedPermissions.length, total: permissions.length }) }}
                     </span>
                   </div>
                 </div>
@@ -45,7 +45,7 @@
                     <input
                       type="text"
                       class="form-control"
-                      placeholder="Search permissions..."
+                      :placeholder="$t('roles.searchPermissions')"
                       v-model="permissionSearch"
                     />
                     <button
@@ -59,32 +59,32 @@
                   </div>
                   <div v-if="permissionSearch" class="mt-2">
                     <small class="text-muted">
-                      Showing {{ filteredPermissions.length }} of {{ permissions.length }} permissions
+                      {{ $t('roles.showingPermissions', { showing: filteredPermissions.length, total: permissions.length }) }}
                     </small>
                   </div>
                 </div>
 
                 <div v-if="loading" class="text-center py-4">
                   <div class="spinner-border text-primary" role="status">
-                    <span class="visually-hidden">Loading...</span>
+                    <span class="visually-hidden">{{ $t('common.loading') }}</span>
                   </div>
-                  <p class="mt-2 text-muted">Loading permissions...</p>
+                  <p class="mt-2 text-muted">{{ $t('roles.loadingPermissions') }}</p>
                 </div>
 
                 <div v-else-if="permissions.length === 0" class="text-center py-4">
                   <i class="fas fa-exclamation-triangle text-warning fs-3 mb-2"></i>
-                  <p class="text-muted">No permissions available</p>
+                  <p class="text-muted">{{ $t('roles.noPermissionsAvailable') }}</p>
                 </div>
 
                 <div v-else-if="filteredPermissions.length === 0" class="text-center py-4">
                   <i class="fas fa-search text-muted fs-3 mb-2"></i>
-                  <p class="text-muted">No permissions found matching "{{ permissionSearch }}"</p>
+                  <p class="text-muted">{{ $t('roles.noPermissionsFound', { search: permissionSearch }) }}</p>
                   <button
                     type="button"
                     class="btn btn-outline-primary btn-sm"
                     @click="clearPermissionSearch"
                   >
-                    Clear Search
+                    {{ $t('common.clearSearch') }}
                   </button>
                 </div>
 
@@ -132,7 +132,7 @@
                   :disabled="isSubmitting"
                 >
                   <i class="fas fa-times me-1"></i>
-                  Cancel
+                  {{ $t('students.form.cancel') }}
                 </button>
                 <button
                   type="submit"
@@ -141,7 +141,7 @@
                 >
                   <i v-if="isSubmitting" class="fas fa-spinner fa-spin me-1"></i>
                   <i v-else class="fas fa-save me-1"></i>
-                  {{ isSubmitting ? 'Saving...' : (isEditMode ? 'Update Role' : 'Create Role') }}
+                  {{ isSubmitting ? $t('common.saving') : (isEditMode ? $t('roles.form.updateRole') : $t('roles.form.createRole')) }}
                 </button>
               </div>
             </form>
@@ -154,12 +154,14 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import { dataService } from '../services/dataContext'
 import Input from '../components/shared/input.vue'
 import type { Permission } from '../interfaces/permission'
 import type { FormData, ValidationResult, Role } from '../interfaces/permission'
 
+const { t } = useI18n()
 
 // Route and Router
 const route = useRoute()
@@ -204,11 +206,11 @@ const filteredPermissions = computed(() => {
 })
 
 // Validation rules
-const nameValidationRules = [
+const nameValidationRules = computed(() => [
   'required',
-  { type: 'minLength', params: 2, message: 'Role name must be at least 2 characters' },
-  { type: 'maxLength', params: 50, message: 'Role name must be less than 50 characters' }
-]
+  { type: 'minLength', params: 2, message: t('roles.validation.nameMinLength') },
+  { type: 'maxLength', params: 50, message: t('roles.validation.nameMaxLength') }
+])
 
 // Methods
 const handleNameValidation = (validation: ValidationResult) => {
@@ -245,10 +247,10 @@ const fetchPermissions = async () => {
     if (response && response.data) {
       permissions.value = response.data.roles || response.data || []
     } else {
-      throw new Error('Failed to load permissions')
+      throw new Error(t('roles.errors.loadPermissionsFailed'))
     }
   } catch (error) {
-    permissionsError.value = 'Failed to load permissions. Please try again.'
+    permissionsError.value = t('roles.errors.loadPermissionsFailed')
   } finally {
     loading.value = false
   }
@@ -267,7 +269,7 @@ const fetchRole = async () => {
       }
     }
   } catch (error) {
-    dataService.createAlertMessage('Failed to load role data', 'error')
+    dataService.createAlertMessage(t('roles.errors.loadRoleFailed'), 'error')
   }
 }
 
@@ -296,10 +298,10 @@ const handleSubmit = async () => {
         dataService.createAlertMessage(response.message, 'success')
       router.push('/adminstrations/roles')
     } else {
-      throw new Error('Failed to save role')
+      throw new Error(t('roles.errors.saveFailed'))
     }
   } catch (error) {
-    dataService.createAlertMessage(isEditMode.value ? 'Failed to update role' : 'Failed to create role', 'error')
+    dataService.createAlertMessage(isEditMode.value ? t('roles.errors.updateFailed') : t('roles.errors.createFailed'), 'error')
   } finally {
     isSubmitting.value = false
   }

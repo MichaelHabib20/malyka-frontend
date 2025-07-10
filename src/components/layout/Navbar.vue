@@ -1,15 +1,22 @@
 <script setup lang="ts">
-import { computed, ref, onMounted } from 'vue';
+import { computed, ref, onMounted, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import type { SyncStatus } from '../../interfaces/syncStatus';
 import statusService from '../../services/statusService';
 import { offlineStore } from '../../services/offlineStore';
 import { authService } from '../../services/authService';
 import { dataService } from '../../services/dataContext';
+import LanguageSwitcher from '../shared/LanguageSwitcher.vue'
+
+const { t, locale } = useI18n();
 
 const route = useRoute()
 const router = useRouter()
-const pageTitle = computed(() => route.meta.title)
+const pageTitle = computed(() => {
+  const meta = route.meta as any;
+  return locale.value === 'ar' && meta.title_ar ? meta.title_ar : meta.title;
+})
 const isDropdownOpen = ref(false)
 const user = ref<any>({
   name: '',
@@ -40,7 +47,9 @@ onMounted(async () => {
     console.error('Error loading initial pending request count:', error);
     pendingRequestCount.value = 0;
   }
+  
 });
+
 const handleSyncStatus = (status: SyncStatus) => {
   syncStatus.value = status;
 };
@@ -74,17 +83,18 @@ defineEmits<{
         <span class="notification-badge">3</span> -->
       </div>
       <div class="online-status" @click="isStatusDropdownOpen = !isStatusDropdownOpen">
-        <span v-if="pendingRequestCount > 0">🟠 Pending</span>
-        <span v-else-if="!isOnline">🔴 Offline</span>
-        <span v-else>🟢 Online</span>
+        <span v-if="pendingRequestCount > 0">🟠 {{ t('common.pending') }}</span>
+        <span v-else-if="!isOnline">🔴 {{ t('app.offline') }}</span>
+        <span v-else>🟢 {{ t('app.online') }}</span>
         <div v-if="isStatusDropdownOpen" class="status-dropdown">
           <div class="status-dropdown-content">
-            <span>Requests : {{ pendingRequestCount  }}</span>
-            <span>Sync Status: {{ syncStatus.isCurrentlySyncing ? 'Syncing' : 'Idle' }}</span>
-            <span>Last Sync: {{ syncStatus.lastSuccessfulSync ? new Date(syncStatus.lastSuccessfulSync).toLocaleString() : 'Never' }}</span>
+            <span>{{ t('common.requests') }}: {{ pendingRequestCount  }}</span>
+            <span>{{ t('common.syncStatus') }}: {{ syncStatus.isCurrentlySyncing ? t('common.syncing') : t('common.idle') }}</span>
+            <span>{{ t('common.lastSync') }}: {{ syncStatus.lastSuccessfulSync ? new Date(syncStatus.lastSuccessfulSync).toLocaleString() : t('common.never') }}</span>
           </div>
         </div>
       </div>
+      <LanguageSwitcher />
       <div class="dropdown">
         <a class="btn dropdown-toggle" role="button" data-bs-toggle="dropdown" aria-expanded="false">
           {{ user.Name }}
@@ -93,7 +103,7 @@ defineEmits<{
         <ul class="dropdown-menu">
           <!-- <li><span class="dropdown-item">{{ user.email }}</span></li>
           <li><hr class="dropdown-divider"></li> -->
-          <li><a class="dropdown-item" @click="handleLogout">Logout</a></li>
+          <li><a class="dropdown-item" @click="handleLogout">{{ t('navigation.logout') }}</a></li>
         </ul>
       </div>
  
@@ -240,5 +250,58 @@ defineEmits<{
   padding: 12px;
   color: #2c3e50;
   font-size: 0.9rem;
+}
+
+@media (max-width: 600px) {
+  .navbar {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 0.5rem 0.5rem;
+    min-width: 0;
+  }
+  .navbar-left, .navbar-right {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    gap: 0.5rem;
+  }
+  .navbar-left {
+    margin-bottom: 0.5rem;
+  }
+  .page-title {
+    font-size: 1rem;
+    flex: 1;
+    text-align: left;
+    margin-left: 0.5rem;
+  }
+  .navbar-right {
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+  .online-status {
+    font-size: 0.9rem;
+    padding: 6px 8px;
+    min-width: 0;
+  }
+  .status-dropdown {
+    min-width: 120px;
+    width: 180px;
+    left: 0;
+  }
+  .dropdown-menu {
+    left: 0 !important;
+    min-width: 120px;
+  }
+  .toggle-btn {
+    font-size: 1.2rem;
+    padding: 0.3rem;
+  }
+  .user-profile, .user-name {
+    font-size: 0.95rem;
+  }
+  .notifications {
+    display: none;
+  }
 }
 </style> 

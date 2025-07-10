@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { ref } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { signInWithPopup } from 'firebase/auth';
 import { auth, provider } from '../../../firebase';
 import { useRouter } from 'vue-router';
 import { dataService } from '../../../services/dataContext';
 import { authService } from '../../../services/authService';
 
+const { t } = useI18n();
 const router = useRouter();
 const email = ref('');
 const password = ref('');
@@ -29,7 +31,7 @@ const loginWithGoogle = async () => {
 
 const loginWithEmail = async () => {
   if (!email.value || !password.value) {
-    error.value = 'Please fill in all fields';
+    error.value = t('auth.fillAllFields');
     return;
   }
 
@@ -54,16 +56,16 @@ const loginWithEmail = async () => {
         dataService.setAuthToken(result.data.token);
         router.push('/');
       } catch (tokenError: any) {
-        error.value = tokenError.message || 'Invalid authentication token';
+        error.value = tokenError.message || t('auth.invalidToken');
         console.error('Token error:', tokenError);
       }
     } else if(result.httpStatus === 503) {
       error.value = ''
     } else {
-      error.value = result.message || 'Login failed';
+      error.value = result.message || t('auth.loginFailed');
     }
   } catch (err: any) {
-    error.value = err.message || 'An error occurred during login';
+    error.value = err.message || t('auth.loginError');
     console.error('Email sign-in error:', err);
   } finally {
     loading.value = false;
@@ -79,8 +81,8 @@ const loginWithEmail = async () => {
           <div class="logo-container">
             <div class="logo-circle"></div>
           </div>
-          <h2 class="title">Welcome Back</h2>
-          <p class="subtitle">Sign in to continue to your account</p>
+          <h2 class="title">{{ t('auth.welcomeBack') }}</h2>
+          <p class="subtitle">{{ t('auth.signInToContinue') }}</p>
         </div>
 
         <form @submit.prevent="loginWithEmail" class="sign-in-form">
@@ -94,7 +96,7 @@ const loginWithEmail = async () => {
                 id="email"
                 v-model="email"
                 type="email"
-                placeholder="Email address"
+                :placeholder="t('auth.email')"
                 required
               />
             </div>
@@ -110,7 +112,7 @@ const loginWithEmail = async () => {
                 id="password"
                 v-model="password"
                 type="password"
-                placeholder="Password"
+                :placeholder="t('auth.password')"
                 required
               />
             </div>
@@ -119,9 +121,9 @@ const loginWithEmail = async () => {
           <!-- <div class="form-footer">
             <label class="remember-me">
               <input type="checkbox" />
-              <span>Remember me</span>
+              <span>{{ t('auth.rememberMe') }}</span>
             </label>
-            <a href="#" class="forgot-password">Forgot password?</a>
+            <a href="#" class="forgot-password">{{ t('auth.forgotPassword') }}</a>
           </div> -->
 
           <div v-if="error" class="error-message">
@@ -138,13 +140,13 @@ const loginWithEmail = async () => {
             class="sign-in-button"
             :disabled="loading"
           >
-            <span v-if="!loading">Sign In</span>
+            <span v-if="!loading">{{ t('auth.signIn') }}</span>
             <div v-else class="loading-spinner"></div>
           </button>
         </form>
 
         <div class="divider">
-          <span>or continue with</span>
+          <span>{{ t('auth.orContinueWith') }}</span>
         </div>
 
         <button 
@@ -153,11 +155,11 @@ const loginWithEmail = async () => {
           :disabled="loading"
         >
           <img src="https://www.google.com/favicon.ico" alt="Google" class="google-icon" />
-          <span>Sign in with Google</span>
+          <span>{{ t('auth.signInWithGoogle') }}</span>
         </button>
 
         <!-- <p class="sign-up-prompt">
-          Don't have an account? <a href="#" class="sign-up-link">Sign up</a>
+          {{ t('auth.dontHaveAccount') }} <a href="#" class="sign-up-link">{{ t('auth.signUp') }}</a>
         </p> -->
       </div>
     </div>

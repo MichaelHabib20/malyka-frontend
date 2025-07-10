@@ -6,7 +6,7 @@
       :data="filteredData"
       :loading="loading"
       :search-query="searchQuery"
-      :search-placeholder="'Search by name'"
+      :search-placeholder="t('classes.searchPlaceholder')"
       :custom-buttons="customButtons"
       :sort-by="sortBy"
       :sort-direction="sortDirection"
@@ -21,6 +21,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
+import { useI18n } from 'vue-i18n';
 import DataTable from '../components/shared/DataTable.vue';
 import type { Column } from '../interfaces/column';
 import type { CustomButton } from '../interfaces/customButtons';
@@ -33,6 +34,7 @@ import { ElMessageBox } from 'element-plus';
 
 const router = useRouter();
 const route = useRoute();
+const { t } = useI18n();
 
 // Reactive data
 const classes = ref<Class[]>([]);
@@ -47,21 +49,21 @@ const columns = computed(() => {
   const baseColumns: Column[] = !gradeId.value ? [
     {
       key: 'class.name',
-      label: 'Name',
+      label: t('classes.columns.name'),
       type: 'text',
       sortable: true,
       isMainColumn: true
     },
     {
       key: 'class.grade.name',
-      label: 'Grade',
+      label: t('classes.columns.grade'),
       type: 'text',
       sortable: true,
       isMainColumn: false
     },
     {
       key: 'kidsCount',
-      label: 'No. of Kids',
+      label: t('classes.columns.kidsCount'),
       type: 'number',
       sortable: false,
       align: 'center',
@@ -70,21 +72,21 @@ const columns = computed(() => {
   ] : [
     {
       key: 'name',
-      label: 'Name',
+      label: t('classes.columns.name'),
       type: 'text',
       sortable: true,
       isMainColumn: true
     },
     {
       key: 'grade.name',
-      label: 'Grade',
+      label: t('classes.columns.grade'),
       type: 'text',
       sortable: true,
       isMainColumn: false
     },
     {
       key: 'kidsCount',
-      label: 'No. of Kids',
+      label: t('classes.columns.kidsCount'),
       type: 'number',
       align: 'center',
       sortable: false,
@@ -96,11 +98,11 @@ const columns = computed(() => {
   if (authService.hasPermission('View classes') || authService.hasRole(1)) {
     baseColumns.push({
       key: 'actions',
-      label: 'Actions',
+      label: t('app.actions'),
       type: 'actions',
       actions: [
-        { icon: 'fa-regular fa-edit', label: 'Edit', color: '#3b82f6' },
-        { icon: 'fa-solid fa-trash', label: 'Delete', color: '#dc3545' }
+        { icon: 'fa-regular fa-edit', label: t('common.edit'), color: '#3b82f6' },
+        { icon: 'fa-solid fa-trash', label: t('common.delete'), color: '#dc3545' }
       ],
       align: 'center',
       width: '120px'
@@ -117,7 +119,7 @@ const customButtons = computed(() => {
       id: 'new-class',
       permission: 'View classes',
       config: {
-        label: 'New Class',
+        label: t('classes.buttons.newClass'),
         icon: 'fa-plus',
         variant: 'btn-primary'
       }
@@ -175,17 +177,17 @@ const handleButtonClick = ({ buttonId, button }: { buttonId: string; button: Cus
 };
 
 const handleAction = async ({ action, row }: { action: string; row: any }) => {
-  if (action === 'Edit') {
+  if (action === t('common.edit')) {
     router.push(`/grade-levels/classes/edit/${row.class.id}`);
-  } else if (action === 'Delete') {
+  } else if (action === t('common.delete')) {
     try {
       // Show confirmation dialog
       await ElMessageBox.confirm(
-        `Are you sure you want to delete class "${row.class.name}"? This action cannot be undone.`,
-        'Confirm Delete',
+        t('classes.deleteConfirmation', { name: row.class.name }),
+        t('classes.confirmDelete'),
         {
-          confirmButtonText: 'Delete',
-          cancelButtonText: 'Cancel',
+          confirmButtonText: t('common.delete'),
+          cancelButtonText: t('common.cancel'),
           type: 'warning',
           confirmButtonClass: 'btn-danger',
           cancelButtonClass: 'btn-secondary'
@@ -196,17 +198,17 @@ const handleAction = async ({ action, row }: { action: string; row: any }) => {
       const result = await dataService.createOnline(`/api/Grades/DeleteClass/${row.class.id}`, {});
       
       if (result && (result.httpStatus === 200 || result.httpStatus === 204)) {
-        dataService.createAlertMessage('Class deleted successfully', 'success');
+        dataService.createAlertMessage(t('classes.deleteSuccess'), 'success');
         // Refresh the classes list
         await fetchClasses();
       } else {
-        throw new Error(result?.message || 'Failed to delete class');
+        throw new Error(result?.message || t('classes.deleteError'));
       }
     } catch (error) {
       if (error !== 'cancel') {
         // Only show error if it's not a cancellation
         dataService.createAlertMessage(
-          error instanceof Error ? error.message : 'Failed to delete class', 
+          error instanceof Error ? error.message : t('classes.deleteError'), 
           'error'
         );
       }
@@ -235,7 +237,7 @@ const fetchClasses = async () => {
     }
   } catch (error) {
     classes.value = [];
-    dataService.createAlertMessage('Failed to fetch classes', 'error');
+    dataService.createAlertMessage(t('classes.errors.fetchFailed'), 'error');
   } finally {
     loading.value = false;
   }
@@ -253,7 +255,7 @@ const fetchClassesByGradeId = async (gradeId: string) => {
     }
   } catch (error) {
     classes.value = [];
-    dataService.createAlertMessage('Failed to fetch classes', 'error');
+    dataService.createAlertMessage(t('classes.errors.fetchFailed'), 'error');
   } finally {
     loading.value = false;
   }

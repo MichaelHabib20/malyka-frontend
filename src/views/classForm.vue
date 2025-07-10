@@ -10,8 +10,8 @@
                 <Input
                   id="class-name"
                   v-model="formData.name"
-                  label="Class Name"
-                  placeholder="Enter class name"
+                  :label="t('classes.form.className')"
+                  :placeholder="t('classes.form.classNamePlaceholder')"
                   leadingIcon="fa-solid fa-chalkboard"
                   :validation-rules="nameValidationRules"
                   @validation-change="handleNameValidation"
@@ -23,9 +23,9 @@
                 <Select
                   id="grade-select"
                   v-model="formData.gradeId"
-                  label="Grade"
+                  :label="t('classes.form.grade')"
                   :options="gradeOptions"
-                  placeholder="Select grade"
+                  :placeholder="t('classes.form.selectGrade')"
                   :validation-rules="['required']"
                   @validation-change="handleGradeValidation"
                 />
@@ -40,7 +40,7 @@
                   :disabled="isSubmitting"
                 >
                   <i class="fas fa-times me-1"></i>
-                  Cancel
+                  {{ t('students.form.cancel') }}
                 </button>
                 <button
                   type="submit"
@@ -49,7 +49,7 @@
                 >
                   <i v-if="isSubmitting" class="fas fa-spinner fa-spin me-1"></i>
                   <i v-else class="fas fa-save me-1"></i>
-                  {{ isSubmitting ? 'Saving...' : (isEditMode ? 'Update Class' : 'Create Class') }}
+                  {{ isSubmitting ? t('classes.form.saving') : (isEditMode ? t('classes.form.updateClass') : t('classes.form.createClass')) }}
                 </button>
               </div>
             </form>
@@ -63,11 +63,14 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { dataService } from '../services/dataContext'
 import Input from '../components/shared/input.vue'
 import Select from '../components/shared/select.vue'
 import type { Class } from '../interfaces/class'
 import type { Grade } from '../interfaces/grade'
+
+const { t } = useI18n();
 
 interface ValidationResult {
   isValid: boolean
@@ -119,11 +122,11 @@ const gradeOptions = computed(() => {
 })
 
 // Validation rules
-const nameValidationRules = [
+const nameValidationRules = computed(() => [
   'required',
-  { type: 'minLength', params: 2, message: 'Class name must be at least 2 characters' },
-  { type: 'maxLength', params: 100, message: 'Class name must be less than 100 characters' }
-]
+  { type: 'minLength', params: 2, message: t('classes.validation.nameMinLength') },
+  { type: 'maxLength', params: 100, message: t('classes.validation.nameMaxLength') }
+])
 
 // Methods
 const handleNameValidation = (validation: ValidationResult) => {
@@ -142,7 +145,7 @@ const fetchGrades = async () => {
       grades.value = response.data
     }
   } catch (error) {
-    dataService.createAlertMessage('Failed to load grades', 'error')
+    dataService.createAlertMessage(t('classes.errors.loadGradesFailed'), 'error')
   } finally {
     loading.value = false
   }
@@ -162,7 +165,7 @@ const fetchClass = async () => {
       }
     }
   } catch (error) {
-    dataService.createAlertMessage('Failed to load class data', 'error')
+    dataService.createAlertMessage(t('classes.errors.loadClassFailed'), 'error')
   }
 }
 
@@ -189,10 +192,10 @@ const handleSubmit = async () => {
       dataService.createAlertMessage(response.message, 'success')
       router.push('/grade-levels/classes')
     } else {
-      throw new Error('Failed to save class')
+      throw new Error(t('classes.errors.saveFailed'))
     }
   } catch (error) {
-    dataService.createAlertMessage(isEditMode.value ? 'Failed to update class' : 'Failed to create class', 'error')
+    dataService.createAlertMessage(isEditMode.value ? t('classes.errors.updateFailed') : t('classes.errors.createFailed'), 'error')
   } finally {
     isSubmitting.value = false
   }

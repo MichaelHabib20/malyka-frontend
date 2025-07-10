@@ -6,8 +6,11 @@ import Select from './select.vue';
 import type { Column } from '../../interfaces/column';
 import type { Props } from '../../interfaces/props';
 import type { CustomButton } from '../../interfaces/customButtons';
+import { useI18n } from 'vue-i18n';
 
 const router = useRouter();
+const { t } = useI18n();
+
 
 const props = withDefaults(defineProps<Props & {
   customButtons?: CustomButton[];
@@ -340,7 +343,7 @@ const getGradeChipClass = (gradeText: string) => {
           :disabled="button.disabled || button.loading"
         >
           <i :class="['fa-solid', button.icon]"></i>
-          {{ button.loading ? button.loadingText : button.label }}
+          {{ button.loading ? button.loadingText : t(button.label) }}
         </button>
         
         <!-- More dropdown for desktop -->
@@ -363,7 +366,7 @@ const getGradeChipClass = (gradeText: string) => {
               :disabled="button.disabled || button.loading"
             >
               <i :class="['fa-solid', button.icon]"></i>
-              {{ button.loading ? button.loadingText : button.label }}
+              {{ button.loading ? button.loadingText : t(button.label) }}
             </button>
           </div>
         </div>
@@ -397,7 +400,7 @@ const getGradeChipClass = (gradeText: string) => {
             :disabled="customButtons[0].disabled || customButtons[0].loading"
           >
             <i :class="['fa-solid', customButtons[0].icon]"></i>
-            {{ customButtons[0].loading ? customButtons[0].loadingText : customButtons[0].label }}
+            {{ customButtons[0].loading ? customButtons[0].loadingText : t(customButtons[0].label) }}
           </button>
 
           <!-- More dropdown for mobile -->
@@ -419,7 +422,7 @@ const getGradeChipClass = (gradeText: string) => {
                 :disabled="button.disabled || button.loading"
               >
                 <i :class="['fa-solid', button.icon]"></i>
-                {{ button.loading ? button.loadingText : button.label }}
+                {{ button.loading ? button.loadingText : t(button.label) }}
               </button>
             </div>
           </div>
@@ -433,7 +436,7 @@ const getGradeChipClass = (gradeText: string) => {
               v-model="localFilters[column.key]"
               :compact="true"
               :options="column.filterOptions || []"
-              :placeholder="`Filter by ${column.label}`"
+              :placeholder="t('datatable.filterBy', { label: column.label })"
               @update:modelValue="(val) => handleFilterChange(column.key, val)"
             />
           </template>
@@ -443,7 +446,7 @@ const getGradeChipClass = (gradeText: string) => {
               v-model="localFilters[column.key]"
               type="date"
               :compact="true"
-              :placeholder="`Filter by ${column.label}`"
+              :placeholder="t('datatable.filterBy', { label: column.label })"
               @update:modelValue="(val: any) => handleFilterChange(column.key, val)"
             />
           </template>
@@ -453,13 +456,13 @@ const getGradeChipClass = (gradeText: string) => {
               v-model="localFilters[column.key]"
               :type="column.filterType || 'text'"
               :compact="true"
-              :placeholder="`Filter by ${column.label}`"
+              :placeholder="t('datatable.filterBy', { label: column.label })"
               @update:modelValue="(val: any) => handleFilterChange(column.key, val)"
             />
           </template>
         </div>
         <button v-if="hasActiveFilters" class="reset-filters" @click="resetFilters">
-          Reset Filters
+          {{ t('datatable.resetFilters') }}
         </button>
       </div>
     </div>
@@ -467,7 +470,7 @@ const getGradeChipClass = (gradeText: string) => {
     <!-- Pagination at top -->
     <div class="pagination-top" v-if="totalPages > 1">
       <div class="pagination-info">
-        Showing {{ (currentPage - 1) * itemsPerPage + 1 }} to {{ Math.min(currentPage * itemsPerPage, totalItems) }} of {{ totalItems }} entries
+        {{ t('datatable.showingEntries', { from: (currentPage - 1) * itemsPerPage + 1, to: Math.min(currentPage * itemsPerPage, totalItems), total: totalItems }) }}
       </div>
       <div class="d-flex gap-2">
         <button 
@@ -475,7 +478,7 @@ const getGradeChipClass = (gradeText: string) => {
           @click="handlePageChange(currentPage - 1)"
           class="pagination-button"
         >
-          Previous
+          {{ t('datatable.previous') }}
         </button>
         <button 
           v-for="page in totalPages" 
@@ -490,7 +493,7 @@ const getGradeChipClass = (gradeText: string) => {
           @click="handlePageChange(currentPage + 1)"
           class="pagination-button"
         >
-          Next
+          {{ t('datatable.next') }}
         </button>
       </div>
     </div>
@@ -535,7 +538,6 @@ const getGradeChipClass = (gradeText: string) => {
                 </template>
                 <template v-else-if="column.type === 'date'">
                   <span class="d-block fit-width"  >
-                    <!-- {{ getNestedValue(row, column.key) }} -->
                     {{ formatDate(getNestedValue(row, column.key), column.dateFormat) ? formatDate(getNestedValue(row, column.key), column.dateFormat) : '-' }}
                   </span>
                 </template>
@@ -561,7 +563,7 @@ const getGradeChipClass = (gradeText: string) => {
                       ]"
                     >
                       <i :class="getNestedValue(row, column.key) ? 'fa-solid fa-check' : 'fa-solid fa-times'"></i>
-                      {{ getNestedValue(row, column.key) ? 'Present' : 'Absent' }}
+                      {{ getNestedValue(row, column.key) ? t('datatable.present') : t('datatable.absent') }}
                     </span>
                 </template>
                 <template v-else-if="column.type === 'percentage'">
@@ -578,7 +580,7 @@ const getGradeChipClass = (gradeText: string) => {
                   <span 
                     class="clickable-number"
                     @click="handleNumberClick(column.key, getNestedValue(row, column.nestedStructureForClickableNumber!), row)"
-                    :title="column.tooltip || `Click to view details for ${getNestedValue(row, column.key)}`"
+                    :title="column.tooltip || t('datatable.clickToViewDetails', { value: getNestedValue(row, column.key) })"
                   >
                     {{ getNestedValue(row, column.key) }}
                     <i class="fa-solid fa-external-link-alt clickable-icon"></i>
@@ -604,7 +606,7 @@ const getGradeChipClass = (gradeText: string) => {
                     <a 
                       :href="`tel:${getNestedValue(row, column.key)}`"
                       class="phone-chip btn btn-sm btn-outline-success text-decoration-none"
-                      :title="`Call ${getNestedValue(row, column.key)}`"
+                      :title="t('datatable.call', { value: getNestedValue(row, column.key) })"
                     >
                       <i class="fa-solid fa-phone me-1" v-if="getNestedValue(row, column.key)"></i>
                       {{ getNestedValue(row, column.key) }}
@@ -653,7 +655,7 @@ const getGradeChipClass = (gradeText: string) => {
                       class="action-button"
                       :style="{ color: action.color }"
                       @click="handleAction(action.label, row)"
-                      :title="action.label"
+                      :title="t(action.label)"
                     >
                       <i :class="['icon', action.icon]"></i>
                     </button>
@@ -664,12 +666,12 @@ const getGradeChipClass = (gradeText: string) => {
           </template>
           <tr v-else-if="loading">
             <td :colspan="columns.length" class="text-center py-4 text-muted">
-              Loading...
+              {{ t('datatable.loading') }}
             </td>
           </tr>
           <tr v-else>
             <td :colspan="columns.length" class="text-center py-4 text-muted">
-              No data available
+              {{ t('datatable.noData') }}
             </td>
           </tr>
         </tbody>

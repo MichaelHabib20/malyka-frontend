@@ -1,9 +1,12 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 // import Navbar from './Navbar.vue';
 // import Sidebar from './Sidebar.vue';
 import Navbar from '../layout/Navbar.vue';
 import Sidebar from '../layout/Sidebar.vue';
+
+const { locale } = useI18n();
 
 const isSidebarCollapsed = ref(false);
 
@@ -13,6 +16,11 @@ const isMobile = computed(() => {
     return window.innerWidth <= 768;
   }
   return false;
+});
+
+// RTL detection
+const isRTL = computed(() => {
+  return locale.value === 'ar';
 });
 
 const toggleSidebar = () => {
@@ -35,7 +43,10 @@ const handleOverlayClick = () => {
 </script>
 
 <template>
-  <div class="dashboard-layout" :class="{ 'sidebar-collapsed': isSidebarCollapsed }">
+  <div class="dashboard-layout" :class="{ 
+    'sidebar-collapsed': isSidebarCollapsed,
+    'rtl': isRTL 
+  }">
     <Sidebar 
       :is-collapsed="isSidebarCollapsed"
       @expand-sidebar="expandSidebar"
@@ -68,6 +79,12 @@ const handleOverlayClick = () => {
   position: relative;
   overflow: hidden;
 }
+
+/* RTL Support */
+.dashboard-layout.rtl {
+  flex-direction: row-reverse;
+}
+
 @media (max-width:768px) {
   .dashboard-layout {
     max-width: 100% !important;
@@ -83,6 +100,12 @@ const handleOverlayClick = () => {
   transition: width 0.3s ease;
 }
 
+/* RTL Sidebar positioning */
+.dashboard-layout.rtl .sidebar {
+  left: auto;
+  right: 0;
+}
+
 .main-content {
   flex: 1;
   margin-left: 220px;
@@ -93,11 +116,25 @@ const handleOverlayClick = () => {
   max-width: 100% !important;
 }
 
-.main-content.sidebar-collapsed {
+/* RTL Main content positioning */
+.dashboard-layout.rtl .main-content {
+  margin-left: 0;
+  margin-right: 220px;
+}
 
+.main-content.sidebar-collapsed {
   margin-left: 80px;
   @media (max-width:768px) {
     margin-left: 0;
+  }
+}
+
+/* RTL Collapsed sidebar positioning */
+.dashboard-layout.rtl .main-content.sidebar-collapsed {
+  margin-left: 0;
+  margin-right: 80px;
+  @media (max-width:768px) {
+    margin-right: 0;
   }
 }
 
@@ -140,8 +177,17 @@ const handleOverlayClick = () => {
     margin-left: 0;
   }
   
+  .dashboard-layout.rtl .main-content {
+    margin-right: 0;
+  }
+  
   .dashboard-layout.sidebar-collapsed .sidebar {
     transform: translateX(-100%);
+  }
+  
+  /* RTL mobile sidebar transform */
+  .dashboard-layout.rtl.sidebar-collapsed .sidebar {
+    transform: translateX(100%);
   }
   
   .mobile-overlay {

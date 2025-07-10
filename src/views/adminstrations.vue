@@ -6,14 +6,14 @@
                 @click="navigateToAdmins" 
                 :class="['btn', isAdminsActive ? 'btn-primary' : 'btn-outline-primary']"
             >
-                Admins
+                {{ $t('administration.admins') }}
             </button>
             <button 
                 v-if="authService.hasPermission('View Roles')"
                 @click="navigateToRoles" 
                 :class="['btn', isRolesActive ? 'btn-primary' : 'btn-outline-primary']"
             >
-                Roles
+                {{ $t('administration.roles') }}
             </button>
         </div>
         <div class="mb-3">
@@ -25,7 +25,9 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+// import { useI18n } from 'vue-i18n'
 import {authService} from '../services/authService'
+
 const route = useRoute()
 const router = useRouter()
 

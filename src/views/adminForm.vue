@@ -13,8 +13,8 @@
                     <Input
                       id="first-name"
                       v-model="formData.firstName"
-                      label="First Name"
-                      placeholder="Enter first name"
+                      :label="t('admins.form.firstName')"
+                      :placeholder="t('admins.form.firstNamePlaceholder')"
                       :validation-rules="nameValidationRules"
                       @validation-change="handleFirstNameValidation"
                     />
@@ -25,8 +25,8 @@
                     <Input
                       id="last-name"
                       v-model="formData.lastName"
-                      label="Last Name"
-                      placeholder="Enter last name"
+                      :label="t('admins.form.lastName')"
+                      :placeholder="t('admins.form.lastNamePlaceholder')"
                       :validation-rules="nameValidationRules"
                       @validation-change="handleLastNameValidation"
                     />
@@ -37,9 +37,9 @@
                     <Input
                       id="email"
                       v-model="formData.email"
-                      label="Email"
+                      :label="t('admins.form.email')"
                       type="email"
-                      placeholder="Enter email address"
+                      :placeholder="t('admins.form.emailPlaceholder')"
                       leadingIcon="fa-regular fa-envelope"
                       :validation-rules="emailValidationRules"
                       @validation-change="handleEmailValidation"
@@ -51,8 +51,8 @@
                     <Input
                       id="phone"
                       v-model="formData.phoneNumber"
-                      label="Phone Number"
-                      placeholder="Enter phone number"
+                      :label="t('admins.form.phoneNumber')"
+                      :placeholder="t('admins.form.phoneNumberPlaceholder')"
                       leadingIcon="fa-solid fa-phone"
                       :validation-rules="phoneValidationRules"
                       @validation-change="handlePhoneValidation"
@@ -64,9 +64,9 @@
                     <Input
                       id="password"
                       v-model="formData.password"
-                      label="Password"
+                      :label="t('admins.form.password')"
                       :type="passwordType"
-                      placeholder="Enter password"
+                      :placeholder="t('admins.form.passwordPlaceholder')"
                       trailingIcon="fa-regular fa-eye"
                       :is-trailing-icon-clickable="true"
                       @trailing-icon-click="togglePasswordVisibility"
@@ -84,7 +84,7 @@
                       :disabled="isSubmitting"
                     >
                       <i class="fas fa-times me-1"></i>
-                      Cancel
+                      {{ t('app.cancel') }}
                     </button>
                     <button
                       type="submit"
@@ -93,7 +93,7 @@
                     >
                       <i v-if="isSubmitting" class="fas fa-spinner fa-spin me-1"></i>
                       <i v-else class="fas fa-save me-1"></i>
-                      {{ isSubmitting ? 'Saving...' : (isEditMode ? 'Update Admin' : 'Create Admin') }}
+                      {{ isSubmitting ? t('admins.form.saving') : (isEditMode ? t('admins.form.updateAdmin') : t('admins.form.createAdmin')) }}
                     </button>
                   </div>
                 </form>
@@ -105,21 +105,21 @@
                   <div class="card-body">
                     <h6 class="card-title mb-3">
                       <i class="fas fa-user-tag me-2"></i>
-                      Role Assignment
+                      {{ t('admins.form.roleAssignment') }}
                     </h6>
                     <Select
                       id="role"
                       v-model="formData.roleId"
-                      label="Role"
+                      :label="t('admins.form.role')"
                       :options="roleOptions"
-                      placeholder="Select role"
+                      :placeholder="t('admins.form.selectRole')"
                       :validation-rules="['required']"
                       @validation-change="handleRoleValidation"
                     />
                     <div class="mt-3">
                       <small class="text-muted">
                         <i class="fas fa-info-circle me-1"></i>
-                        Select the appropriate role for this admin user. The role determines the user's permissions and access levels.
+                        {{ t('admins.form.roleDescription') }}
                       </small>
                     </div>
                   </div>
@@ -136,12 +136,14 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { dataService } from '../services/dataContext'
 import Input from '../components/shared/input.vue'
 import Select from '../components/shared/select.vue'
 import type { Role } from '../interfaces/roles'
 import type { Admin } from '../interfaces/admin'
 
+const { t } = useI18n();
 
 interface ValidationResult {
   isValid: boolean
@@ -216,35 +218,35 @@ const roleOptions = computed(() => {
 })
 
 // Validation rules
-const nameValidationRules = [
+const nameValidationRules = computed(() => [
   'required',
-  { type: 'minLength', params: 2, message: 'Name must be at least 2 characters' },
-  { type: 'maxLength', params: 50, message: 'Name must be less than 50 characters' }
-]
+  { type: 'minLength', params: 2, message: t('admins.validation.nameMinLength') },
+  { type: 'maxLength', params: 50, message: t('admins.validation.nameMaxLength') }
+])
 
-const emailValidationRules = [
+const emailValidationRules = computed(() => [
   'required',
   'email'
-]
+])
 
-const phoneValidationRules = [
+const phoneValidationRules = computed(() => [
   'required',
   { 
     type: 'pattern', 
     params: [/^\d{11}$/], 
-    message: 'Phone number must be 11 digits' 
+    message: t('admins.validation.phoneFormat') 
   }
-]
+])
 
-const passwordValidationRules = [
+const passwordValidationRules = computed(() => [
   'required',
-  { type: 'minLength', params: 8, message: 'Password must be at least 8 characters' },
+  { type: 'minLength', params: 8, message: t('admins.validation.passwordMinLength') },
   { 
     type: 'pattern', 
     params: [/^(?=.*[A-Za-z])(?=.*\d).{8,}$/], 
-    message: 'Password must contain at least one letter and one number'
+    message: t('admins.validation.passwordPattern')
   }
-]
+])
 
 // Methods
 const togglePasswordVisibility = () => {
@@ -283,7 +285,7 @@ const fetchRoles = async () => {
       roles.value = response.data.roles
     }
   } catch (error) {
-    dataService.createAlertMessage('Failed to load roles', 'error')
+    dataService.createAlertMessage(t('admins.errors.loadRolesFailed'), 'error')
   } finally {
     loading.value = false
   }
@@ -306,7 +308,7 @@ const fetchAdmin = async () => {
       }
     }
   } catch (error) {
-    dataService.createAlertMessage('Failed to load admin data', 'error')
+    dataService.createAlertMessage(t('admins.errors.loadAdminFailed'), 'error')
   }
 }
 
@@ -339,10 +341,10 @@ const handleSubmit = async () => {
       dataService.createAlertMessage(response.message, 'success')
       router.push('/adminstrations/admins')
     } else {
-      throw new Error('Failed to save admin')
+      throw new Error(t('admins.errors.saveFailed'))
     }
   } catch (error) {
-    dataService.createAlertMessage(isEditMode.value ? 'Failed to update admin' : 'Failed to create admin', 'error')
+    dataService.createAlertMessage(isEditMode.value ? t('admins.errors.updateFailed') : t('admins.errors.createFailed'), 'error')
   } finally {
     isSubmitting.value = false
   }

@@ -6,7 +6,7 @@
         :data="filteredData"
         :loading="loading"
         :search-query="searchQuery"
-        :search-placeholder="'Search by name, email, phone number'"
+        :search-placeholder="$t('admins.searchPlaceholder')"
         :custom-buttons="customButtons"
         :sort-by="sortBy"
         :sort-direction="sortDirection"
@@ -21,6 +21,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
+import { useI18n } from 'vue-i18n';
 import DataTable from '../components/shared/DataTable.vue';
 import type { Column } from '../interfaces/column';
 import type { CustomButton } from '../interfaces/customButtons';
@@ -31,6 +32,8 @@ import { useRouter } from 'vue-router';
 import type { Admin } from '../interfaces/admin';
 import { ElMessageBox } from 'element-plus';
 const router = useRouter();
+
+const { t } = useI18n();
 
 // Types
 
@@ -54,24 +57,24 @@ const columns = computed(() => {
   const baseColumns: Column[] = [
     {
       key: 'name',
-      label: 'Name',
+      label: t('admins.columns.name'),
       type: 'text',
       sortable: true,
       isMainColumn: true
     },
     {
       key: 'email',
-      label: 'Email',
+      label: t('admins.columns.email'),
       type: 'text'
     },
     {
       key: 'phoneNumber',
-      label: 'Phone Number',
+      label: t('admins.columns.phoneNumber'),
       type: 'text'
     },
     {
       key: 'roleName',
-      label: 'Role',
+      label: t('admins.columns.role'),
       type: 'text',
       isMainColumn: true
     }
@@ -81,11 +84,11 @@ const columns = computed(() => {
   if (authService.hasPermission('View admins') || authService.hasRole(1)) {
     baseColumns.push({
       key: 'actions',
-      label: 'Actions',
+      label: t('app.actions'),
       type: 'actions',
       actions: [
-        { icon: 'fa-regular fa-edit', label: 'Edit', color: '#3b82f6' },
-        { icon: 'fa-solid fa-trash', label: 'Delete', color: '#dc3545' }
+        { icon: 'fa-regular fa-edit', label: t('common.edit'), color: '#3b82f6' },
+        { icon: 'fa-solid fa-trash', label: t('common.delete'), color: '#dc3545' }
       ],
       align: 'center',
       width: '120px'
@@ -102,7 +105,7 @@ const customButtons = computed(() => {
       id: 'new-admin',
       permission: 'View admins',
       config: {
-        label: 'New Admin',
+        label: t('admins.buttons.newAdmin'),
         icon: 'fa-plus',
         variant: 'btn-primary'
       }
@@ -167,17 +170,17 @@ const handleButtonClick = ({ buttonId, button }: { buttonId: string; button: Cus
 
 const handleAction = async ({ action, row }: { action: string; row: any }) => {
   
-  if (action === 'Edit') {
+  if (action === t('common.edit')) {
     router.push(`/adminstrations/admins/edit/${row.id}`);
-  } else if (action === 'Delete') {
+  } else if (action === t('common.delete')) {
     try {
       // Show confirmation dialog
       await ElMessageBox.confirm(
-        `Are you sure you want to delete admin "${row.name}"? This action cannot be undone.`,
-        'Confirm Delete',
+        t('admins.deleteConfirmation', { name: row.name }),
+        t('admins.confirmDelete'),
         {
-          confirmButtonText: 'Delete',
-          cancelButtonText: 'Cancel',
+          confirmButtonText: t('common.delete'),
+          cancelButtonText: t('common.cancel'),
           type: 'warning',
           confirmButtonClass: 'btn-danger',
           cancelButtonClass: 'btn-secondary'
@@ -188,17 +191,17 @@ const handleAction = async ({ action, row }: { action: string; row: any }) => {
       const result = await dataService.createOnline(`/api/Admin/DeleteUser/${row.id}`, {});
       
       if (result && (result.httpStatus === 200 || result.httpStatus === 204)) {
-        dataService.createAlertMessage('Admin deleted successfully', 'success');
+        dataService.createAlertMessage(t('admins.deleteSuccess'), 'success');
         // Refresh the admins list
         await fetchAdmins();
       } else {
-        throw new Error(result?.message || 'Failed to delete admin');
+        throw new Error(result?.message || t('admins.deleteError'));
       }
     } catch (error) {
       if (error !== 'cancel') {
         // Only show error if it's not a cancellation
         dataService.createAlertMessage(
-          error instanceof Error ? error.message : 'Failed to delete admin', 
+          error instanceof Error ? error.message : t('admins.deleteError'), 
           'error'
         );
       }

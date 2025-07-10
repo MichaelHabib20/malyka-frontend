@@ -35,6 +35,7 @@ const routes = [
   {
     path: '/register',
     name: 'register',
+    
     component: studentForm,
     meta: { requiresAuth: false }
   },
@@ -50,13 +51,14 @@ const routes = [
       {
         path: 'dashboard',
         name: 'Dashboard',
-        meta: { title: 'Dashboard', requiresAuth: true, },
+        meta: { title: 'Dashboard', title_ar: 'لوحة التحكم', requiresAuth: true, },
         component: Dashboard
       },
       {
         path: 'attendance',
         name: 'Attendance',
         meta: { title: 'Record Attendance',
+                title_ar: 'تسجيل الحضور',
                 requiresAuth: true,
                 permissions :['Bc boys attendance','Bc girls attendance', 'kg1 boys attendance', 'Kg1 girls attendance', 'kg2 boys attendance', 'kg2 girls attendance',  'Prim1 boys attendance'],
                 rolesId : [1]
@@ -67,6 +69,7 @@ const routes = [
         path: 'attendance-history',
         name: 'AttendanceHistory',
         meta: { title: 'Attendance History',
+                title_ar: 'سجل الحضور',
              requiresAuth: true, requiredNetwork : true,
              permissions :['View bc boys attendance','View bc girls attendance', 'View kg1 boys attendance', 'View Kg1 girls attendance', 'View Kg2 boys attendance', 'View kg2 girls attendance',  'View Prim1 boys attendance'],
              rolesId : [1]
@@ -77,6 +80,7 @@ const routes = [
         path : 'adminstrations',
         name : 'Adminstrations',
         meta : { title : 'Adminstrations',
+                title_ar: 'الإدارة',
                 requiresAuth : true ,
                 requiredNetwork : true,
                 rolesId : [1]
@@ -87,6 +91,7 @@ const routes = [
             path : 'admins',
             name : 'Admins',
             meta : { title : 'Admins',
+                    title_ar: 'المديرين',
                     requiresAuth : true,
                     requiredNetwork : true,
                     permissions : ['View admins'],
@@ -98,6 +103,7 @@ const routes = [
             path : 'roles',
             name : 'Roles',
             meta : { title : 'Roles',  
+                    title_ar: 'الأدوار',
                     requiresAuth : true,
                     requiredNetwork : true,
                     permissions : ['View roles'],
@@ -109,6 +115,7 @@ const routes = [
             path : 'roles/create',
             name : 'CreateRole',
             meta : { title : 'New Role',
+                    title_ar: 'إضافة الأدوار',
                     requiresAuth : true,
                     requiredNetwork : true,
                     permissions : ['view roles'],
@@ -120,6 +127,7 @@ const routes = [
             path : 'roles/edit/:id',
             name : 'EditRole',
             meta : { title : 'Edit Role',
+                    title_ar: 'تعديل الأدوار',
                     requiresAuth : true,
                     requiredNetwork : true,
                     permissions : ['view roles'],
@@ -131,6 +139,7 @@ const routes = [
             path : 'admins/create',
             name : 'CreateAdmin',
             meta : { title : 'New Admin',
+                    title_ar: 'إضافة المديرين',
                     requiresAuth : true,
                     requiredNetwork : true,
                     permissions : ['view admins'],
@@ -142,6 +151,7 @@ const routes = [
             path : 'admins/edit/:id',
             name : 'EditAdmin',
             meta : { title : 'Edit Admin',
+                    title_ar: 'تعديل المديرين',
                     requiresAuth : true,
                     requiredNetwork : true,
                     permissions : ['view admins'],
@@ -154,49 +164,65 @@ const routes = [
       {
         path: 'grade-levels',
         name: 'GradeLevels',
-        meta: { title: 'Grade Levels', requiresAuth: true },
+        meta: { title: 'Grade Levels',
+                title_ar: 'مستويات المرحلة',
+                requiresAuth: true },
         component: GradeLevels,
         children: [
           {
             path: 'grades',
             name: 'Grades',
-            meta: { title: 'Grades', requiresAuth: true },
+            meta: { title: 'Grades',
+                    title_ar: 'المراحل',
+                    requiresAuth: true },
             component: Grades
           },
           {
             path: 'classes',
             name: 'Classes',
-            meta: { title: 'Classes', requiresAuth: true },
+            meta: { title: 'Classes',
+                    title_ar: 'الفصول',
+                    requiresAuth: true },
             component: Classes
           },
           {
             path: 'classes/:gradeId',
             name: 'ClassesByGrade',
-            meta: { title: 'Classes', requiresAuth: true },
+            meta: { title: 'Classes',
+                    title_ar: 'الفصول',
+                    requiresAuth: true },
             component: Classes
           },
           {
             path: 'classes/create',
             name: 'CreateClass',
-            meta: { title: 'Create Class', requiresAuth: true },
+            meta: { title: 'Create Class',
+                    title_ar: 'إضافة الفصول',
+                    requiresAuth: true },
             component: ClassForm
           },
           {
             path: 'classes/edit/:id',
             name: 'EditClass',
-            meta: { title: 'Edit Class', requiresAuth: true },
+            meta: { title: 'Edit Class',
+                    title_ar: 'تعديل الفصول',
+                    requiresAuth: true },
             component: ClassForm
           },
           {
             path: 'grades/create',
             name: 'CreateGrade',
-            meta: { title: 'Create Grade', requiresAuth: true },
+            meta: { title: 'Create Grade',
+                    title_ar: 'إضافة المراحل',
+                    requiresAuth: true },
             component: GradeForm
           },
           {
             path: 'grades/edit/:id',
             name: 'EditGrade',
-            meta: { title: 'Edit Grade', requiresAuth: true },
+            meta: { title: 'Edit Grade',
+                    title_ar: 'تعديل المراحل',
+                    requiresAuth: true },
             component: GradeForm
           }
         ]
@@ -204,43 +230,57 @@ const routes = [
       {
         path: 'students',
         name: 'Students',
-        meta: { title: 'Students', requiresAuth: true },
+        meta: { title: 'Students',
+                title_ar: 'الطلاب',
+                requiresAuth: true },
         component: Students
       },
       {
         path: 'students/:id',
         name: 'StudentView',
-        meta: { title: 'Student View', requiresAuth: true },
+        meta: { title: 'Student View',
+                title_ar: 'عرض الطلاب',
+                requiresAuth: true },
         component: Students
       },
       {
         path: 'students/create',
         name: 'CreateStudent',
-        meta: { title: 'Create Student', requiresAuth: true },
+        meta: { title: 'Create Student',
+                title_ar: 'إضافة الطلاب',
+                requiresAuth: true },
         component:  studentForm
       },
       {
         path: 'students/edit/:id',
         name: 'EditStudent',
-        meta: { title: 'Edit Student', requiresAuth: true },
+        meta: { title: 'Edit Student',
+                title_ar: 'تعديل الطلاب',
+                requiresAuth: true },
         component: studentForm
       },
       {
         path: 'students/view/:id',
         name: 'ViewStudent',
-        meta: { title: 'View Student', requiresAuth: true },
+        meta: { title: 'View Student',
+                title_ar: 'عرض الطلاب',
+                requiresAuth: true },
         component: StudentView
       },
       {
         path: 'register-students',
         name: 'RegisterStudents',
-        meta: { title: 'Register Students', requiresAuth: true },
+        meta: { title: 'Register Students',
+                title_ar: 'تسجيل الطلاب',
+                requiresAuth: true },
         component: registerKids
       },
       {
         path: 'events/enrollments',
         name: 'EventEnrollments',
-        meta: { title: 'Event Enrollments', requiresAuth: true },
+          meta: { title: 'Event Enrollments',
+                title_ar: 'تسجيل الطلاب في الفعاليات',
+                requiresAuth: true },
         component: eventEnrollments
       },
       {

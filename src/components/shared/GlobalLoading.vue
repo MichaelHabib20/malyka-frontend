@@ -6,7 +6,7 @@
         <div class="spinner"></div>
         
         <!-- Loading text -->
-        <p class="loading-text">Loading...</p>
+        <p class="loading-text">{{ t('globalLoading.loading') }}</p>
       </div>
     </div>
   </Transition>
@@ -14,7 +14,9 @@
 
 <script setup lang="ts">
 import { loadingService } from '../../services/loadingService';
+import { useI18n } from 'vue-i18n';
 
+const { t } = useI18n();
 const isLoading = loadingService.getLoadingState()
 </script>
 

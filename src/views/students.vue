@@ -7,7 +7,7 @@
         :disabled="!selectedRows.length"
       >
         <i class="fa fa-download"></i>
-        Export
+        {{ $t('common.export') }}
       </button>
       <button
         class="btn btn-info d-flex align-items-center gap-1"
@@ -15,7 +15,7 @@
         :disabled="!selectedRows.length"
       >
         <i class="fa fa-id-card"></i>
-        Print Cards
+        {{ $t('students.printCards') }}
       </button>
       <button
         class="btn btn-danger d-flex align-items-center gap-1"
@@ -23,10 +23,10 @@
         @click="handleBulkDelete"
       >
         <i class="fa fa-trash"></i>
-        Delete Selected
+        {{ $t('students.deleteSelected') }}
       </button>
       <span v-if="selectedRows.length" class="selected-count-badge">
-        {{ selectedRows.length }} selected
+        {{ $t('students.selectedCount', { count: selectedRows.length }) }}
       </span>
     </div>
     <DataTable
@@ -34,7 +34,7 @@
       :data="filteredData"
       :loading="loading"
       :search-query="searchQuery"
-      :search-placeholder="'Search by name, code, or phone'"
+      :search-placeholder="$t('students.searchPlaceholder')"
       :custom-buttons="customButtons"
       :sort-by="sortBy"
       :sort-direction="sortDirection"
@@ -52,6 +52,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
+import { useI18n } from 'vue-i18n';
 import DataTable from '../components/shared/DataTable.vue';
 import type { Column } from '../interfaces/column';
 import type { CustomButton } from '../interfaces/customButtons';
@@ -66,7 +67,8 @@ import JsBarcode from 'jsbarcode';
 // import { AmiriFont } from '../assets/fonts/Amiri-normal.js';
 
 const router = useRouter();
-const route = useRoute()
+const route = useRoute();
+const { t } = useI18n();
 
 // Static student data
 const staticStudents: Student[] = [];
@@ -84,14 +86,14 @@ const columns = computed(() => {
   const baseColumns: Column[] = [
     {
       key: 'kid.code',
-      label: 'Code',
+      label: t('students.columns.code'),
       type: 'code',
       sortable: true,
       width: '80px'
     },
     {
       key: 'kid.name',
-      label: 'Name',
+      label: t('students.columns.name'),
       type: 'text',
       align: 'right',
       sortable: true,
@@ -99,21 +101,21 @@ const columns = computed(() => {
     },
     {
       key: 'kid.grade.name',
-      label: 'Grade',
+      label: t('students.columns.grade'),
       type: 'grade-chip',
       align: 'center',
       sortable: false
     },
     {
       key: 'kid.class.name',
-      label: 'Class',
+      label: t('students.columns.class'),
       type: 'text',
       align: 'center',
       sortable: true
     },
     {
       key: 'kid.area',
-      label: 'Area',
+      label: t('students.columns.area'),
       type: 'text',
       align: 'center',
       sortable: false
@@ -121,14 +123,14 @@ const columns = computed(() => {
 
     {
       key: 'kid.whatsapp',
-      label: 'Contact',
+      label: t('students.columns.contact'),
       type: 'phone-chip',
       align: 'center',
       sortable: false
     },
     {
       key: 'kid.birthDate',
-      label: 'Birth Date',
+      label: t('students.columns.birthDate'),
       type: 'date',
       dateFormat: 'short',
       align: 'center',
@@ -136,14 +138,14 @@ const columns = computed(() => {
     },
     {
       key: 'isPresentOnLastSession',
-      label: 'Last Session',
+      label: t('students.columns.lastSession'),
       type: 'attendance-status',
       align: 'center',
       sortable: false
     },
     {
       key: 'attendancePercentage',
-      label: 'Attendance',
+      label: t('students.columns.attendance'),
       type: 'percentage',
       align: 'center',
       sortable: false
@@ -154,12 +156,12 @@ const columns = computed(() => {
   if (authService.hasPermission('View students') || authService.hasRole(1)) {
     baseColumns.push({
       key: 'actions',
-      label: 'Actions',
+      label: t('app.actions'),
       type: 'actions',
       actions: [
-        { icon: 'fa-regular fa-eye', label: 'View', color: '#10b981' },
-        { icon: 'fa-regular fa-edit', label: 'Edit', color: '#3b82f6' },
-        { icon: 'fa-solid fa-trash', label: 'Delete', color: '#dc3545' }
+        { icon: 'fa-regular fa-eye', label: t('common.view'), color: '#10b981' },
+        { icon: 'fa-regular fa-edit', label: t('common.edit'), color: '#3b82f6' },
+        // { icon: 'fa-solid fa-trash', label: t('common.delete'), color: '#dc3545' }
       ],
       align: 'center',
       width: '120px'
@@ -176,7 +178,7 @@ const customButtons = computed(() => {
       id: 'new-student',
       permission: 'View students',
       config: {
-        label: 'New Student',
+        label: t('students.newStudent'),
         icon: 'fa-plus',
         variant: 'btn-primary'
       }
@@ -245,19 +247,19 @@ const handleButtonClick = ({ buttonId, button }: { buttonId: string; button: Cus
 };
 
 const handleAction = async ({ action, row }: { action: string; row: any }) => {
-  if (action === 'View') {
+  if (action === t('common.view')) {
     router.push(`/students/view/${row.kid.id}`);
-  } else if (action === 'Edit') {
+  } else if (action === t('common.edit')) {
     router.push(`/students/edit/${row.kid.id}`);
-  } else if (action === 'Delete') {
+  } else if (action === t('common.delete')) {
     try {
       // Show confirmation dialog
       await ElMessageBox.confirm(
-        `Are you sure you want to delete student "${row.name}"? This action cannot be undone.`,
-        'Confirm Delete',
+        t('students.confirmDelete', { name: row.name }),
+        t('common.confirmDelete'),
         {
-          confirmButtonText: 'Delete',
-          cancelButtonText: 'Cancel',
+          confirmButtonText: t('common.delete'),
+          cancelButtonText: t('common.cancel'),
           type: 'warning',
           confirmButtonClass: 'btn-danger',
           cancelButtonClass: 'btn-secondary'
@@ -266,10 +268,10 @@ const handleAction = async ({ action, row }: { action: string; row: any }) => {
       
       // User confirmed, proceed with deletion (for now just remove from local data)
       students.value = students.value.filter(s => s.id !== row.id);
-      dataService.createAlertMessage('Student deleted successfully', 'success');
+      dataService.createAlertMessage(t('students.deleteSuccess'), 'success');
     } catch (error) {
       if (error !== 'cancel') {
-        dataService.createAlertMessage('Failed to delete student', 'error');
+        dataService.createAlertMessage(t('students.deleteError'), 'error');
       }
     }
   }
@@ -287,11 +289,11 @@ const handleBulkDelete = async () => {
   if (!selectedRows.value.length) return;
   try {
     await ElMessageBox.confirm(
-      `Are you sure you want to delete ${selectedRows.value.length} selected students? This action cannot be undone.`,
-      'Confirm Bulk Delete',
+      t('students.confirmBulkDelete', { count: selectedRows.value.length }),
+      t('common.confirmDelete'),
       {
-        confirmButtonText: 'Delete',
-        cancelButtonText: 'Cancel',
+        confirmButtonText: t('common.delete'),
+        cancelButtonText: t('common.cancel'),
         type: 'warning',
         confirmButtonClass: 'btn-danger',
         cancelButtonClass: 'btn-secondary'
@@ -300,10 +302,10 @@ const handleBulkDelete = async () => {
     // Remove selected students from the list
     students.value = students.value.filter(s => !selectedRows.value.some(sel => sel.id === s.id));
     selectedRows.value = [];
-    dataService.createAlertMessage('Selected students deleted successfully', 'success');
+    dataService.createAlertMessage(t('students.bulkDeleteSuccess'), 'success');
   } catch (error) {
     if (error !== 'cancel') {
-      dataService.createAlertMessage('Failed to delete selected students', 'error');
+      dataService.createAlertMessage(t('students.bulkDeleteError'), 'error');
     }
   }
 };
@@ -314,19 +316,19 @@ const handleAddStudent = () => {
 
 const handleExport = () => {
   // Export logic here (CSV, Excel, etc.)
-  dataService.createAlertMessage('Export feature coming soon!', 'info');
+  dataService.createAlertMessage(t('students.exportComingSoon'), 'info');
 };
 
 const placeholderImage = '/vite.svg'; // Use vite.svg as placeholder
 
 const handlePrintCards = async () => {
   if (!selectedRows.value.length) {
-    dataService.createAlertMessage('يرجى تحديد الطلاب أولاً', 'warning');
+    dataService.createAlertMessage(t('students.selectStudentsFirst'), 'warning');
     return;
   }
 
   const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: [85, 54] }); // ID card size
-  doc.addFileToVFS('Amiri-Regular.ttf', AmiriFont);
+  // doc.addFileToVFS('Amiri-Regular.ttf', AmiriFont);
   doc.addFont('Amiri-Regular.ttf', 'Amiri', 'normal');
   doc.setFont('Amiri');
 
@@ -405,11 +407,8 @@ const handleGetStudentById = async (id: string) => {
 }
 
 const getStudents = async () => {
-  console.log('hana')
   const response : any = await dataService.fetchOnline(`/api/KidsRegistration/GetKids`)
-  console.log(response)
   students.value = response.data.kids
-  console.log(students)
 }
 
 // Lifecycle

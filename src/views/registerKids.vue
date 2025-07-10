@@ -7,7 +7,7 @@
         :disabled="!selectedRows.length"
       >
         <i class="fa fa-download"></i>
-        Export
+        {{ $t('registerKids.buttons.export') }}
       </button>
       <button
         class="btn btn-success d-flex align-items-center gap-1"
@@ -15,7 +15,7 @@
         :disabled="!selectedRows.length"
       >
         <i class="fa fa-check"></i>
-        Approve Selected
+        {{ $t('registerKids.buttons.approveSelected') }}
       </button>
       <button
         class="btn btn-warning d-flex align-items-center gap-1"
@@ -23,7 +23,7 @@
         :disabled="!selectedRows.length"
       >
         <i class="fa fa-times"></i>
-        Reject Selected
+        {{ $t('registerKids.buttons.rejectSelected') }}
       </button>
       <button
         class="btn btn-danger d-flex align-items-center gap-1"
@@ -31,10 +31,10 @@
         @click="handleBulkDelete"
       >
         <i class="fa fa-trash"></i>
-        Delete Selected
+        {{ $t('registerKids.buttons.deleteSelected') }}
       </button>
       <span v-if="selectedRows.length" class="selected-count-badge">
-        {{ selectedRows.length }} selected
+        {{ $t('registerKids.selectedCount', { count: selectedRows.length }) }}
       </span>
     </div>
     <DataTable
@@ -42,7 +42,7 @@
       :data="filteredData"
       :loading="loading"
       :search-query="searchQuery"
-      :search-placeholder="'Search by name, code'"
+      :search-placeholder="$t('registerKids.searchPlaceholder')"
       :custom-buttons="customButtons"
       :sort-by="sortBy"
       :sort-direction="sortDirection"
@@ -60,6 +60,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
+import { useI18n } from 'vue-i18n';
 import DataTable from '../components/shared/DataTable.vue';
 import type { Column } from '../interfaces/column';
 import type { CustomButton } from '../interfaces/customButtons';
@@ -71,6 +72,7 @@ import { useRouter } from 'vue-router';
 import { ElMessageBox } from 'element-plus';
 
 const router = useRouter();
+const { t } = useI18n();
 
 // Reactive data
 const registerKids = ref<RegisterKid[]>([]);
@@ -85,14 +87,14 @@ const columns = computed(() => {
   const baseColumns: Column[] = [
     {
       key: 'kid.code',
-      label: 'Code',
+      label: t('registerKids.columns.code'),
       type: 'code',
       sortable: true,
       width: '80px'
     },
     {
       key: 'kid.name',
-      label: 'Name',
+      label: t('registerKids.columns.name'),
       type: 'text',
       align: 'right',
       sortable: true,
@@ -100,21 +102,21 @@ const columns = computed(() => {
     },
     {
       key: 'kid.grade.name',
-      label: 'Grade',
+      label: t('registerKids.columns.grade'),
       type: 'grade-chip',
       align: 'center',
       sortable: false
     },
     {
       key: 'kid.class.name',
-      label: 'Class',
+      label: t('registerKids.columns.class'),
       type: 'text',
       align: 'center',
       sortable: true
     },
     {
       key: 'kid.registrationDate',
-      label: 'Registration Date',
+      label: t('registerKids.columns.registrationDate'),
       type: 'date',
       dateFormat: 'short',
       align: 'center',
@@ -122,8 +124,15 @@ const columns = computed(() => {
     },
     {
       key: 'kid.whatsapp',
-      label: 'Contact',
+      label: t('registerKids.columns.contact'),
       type: 'phone-chip',
+      align: 'center',
+      sortable: false
+    },
+    {
+      key: 'attendanceCount',
+      label: t('registerKids.columns.attendanceCount'),
+      type: 'text',
       align: 'center',
       sortable: false
     }
@@ -133,12 +142,12 @@ const columns = computed(() => {
   if (authService.hasPermission('View register kids') || authService.hasRole(1)) {
     baseColumns.push({
       key: 'actions',
-      label: 'Actions',
+      label: t('app.actions'),
       type: 'actions',
       actions: [
-        { icon: 'fa-regular fa-eye', label: 'View', color: '#10b981' },
-        { icon: 'fa-regular fa-edit', label: 'Edit', color: '#3b82f6' },
-        { icon: 'fa-solid fa-trash', label: 'Delete', color: '#dc3545' }
+        { icon: 'fa-regular fa-eye', label: t('common.view'), color: '#10b981' },
+        { icon: 'fa-regular fa-edit', label: t('common.edit'), color: '#3b82f6' },
+        // { icon: 'fa-solid fa-trash', label: t('common.delete'), color: '#dc3545' }
       ],
       align: 'center',
       width: '120px'
@@ -224,19 +233,19 @@ const handleButtonClick = ({ buttonId, button }: { buttonId: string; button: Cus
 };
 
 const handleAction = async ({ action, row }: { action: string; row: any }) => {
-  if (action === 'View') {
+  if (action === t('common.view')) {
     router.push(`/students/view/${row.kid.id}`);
-  } else if (action === 'Edit') {
+  } else if (action === t('common.edit')) {
     router.push(`/students/edit/${row.kid.id}`);
-  } else if (action === 'Delete') {
+  } else if (action === t('common.delete')) {
     try {
       // Show confirmation dialog
       await ElMessageBox.confirm(
-        `Are you sure you want to delete registration for "${row.kid.name}"? This action cannot be undone.`,
-        'Confirm Delete',
+        t('registerKids.deleteConfirmation', { name: row.kid.name }),
+        t('common.confirmDelete'),
         {
-          confirmButtonText: 'Delete',
-          cancelButtonText: 'Cancel',
+          confirmButtonText: t('common.delete'),
+          cancelButtonText: t('common.cancel'),
           type: 'warning',
           confirmButtonClass: 'btn-danger',
           cancelButtonClass: 'btn-secondary'
@@ -247,17 +256,17 @@ const handleAction = async ({ action, row }: { action: string; row: any }) => {
       const result = await dataService.createOnline(`/api/KidsRegistration/DeleteRegistration/${row.id}`, {});
       
       if (result && (result.httpStatus === 200 || result.statusCode === 200)) {
-        dataService.createAlertMessage('Registration deleted successfully', 'success');
+        dataService.createAlertMessage(t('registerKids.deleteSuccess'), 'success');
         // Refresh the registrations list
         await fetchRegisterKids();
       } else {
-        throw new Error(result?.message || 'Failed to delete registration');
+        throw new Error(result?.message || t('registerKids.deleteError'));
       }
     } catch (error) {
       if (error !== 'cancel') {
         // Only show error if it's not a cancellation
         dataService.createAlertMessage(
-          error instanceof Error ? error.message : 'Failed to delete registration', 
+          error instanceof Error ? error.message : t('registerKids.deleteError'), 
           'error'
         );
       }
@@ -277,11 +286,11 @@ const handleBulkDelete = async () => {
   if (!selectedRows.value.length) return;
   try {
     await ElMessageBox.confirm(
-      `Are you sure you want to delete ${selectedRows.value.length} selected registrations? This action cannot be undone.`,
-      'Confirm Bulk Delete',
+      t('registerKids.bulkDeleteConfirmation', { count: selectedRows.value.length }),
+      t('registerKids.confirmBulkDelete'),
       {
-        confirmButtonText: 'Delete',
-        cancelButtonText: 'Cancel',
+        confirmButtonText: t('common.delete'),
+        cancelButtonText: t('common.cancel'),
         type: 'warning',
         confirmButtonClass: 'btn-danger',
         cancelButtonClass: 'btn-secondary'
@@ -296,10 +305,10 @@ const handleBulkDelete = async () => {
     await Promise.all(deletePromises);
     selectedRows.value = [];
     await fetchRegisterKids();
-    dataService.createAlertMessage('Selected registrations deleted successfully', 'success');
+    dataService.createAlertMessage(t('registerKids.bulkDeleteSuccess'), 'success');
   } catch (error) {
     if (error !== 'cancel') {
-      dataService.createAlertMessage('Failed to delete selected registrations', 'error');
+      dataService.createAlertMessage(t('registerKids.bulkDeleteError'), 'error');
     }
   }
 };
@@ -308,11 +317,11 @@ const handleBulkApprove = async () => {
   if (!selectedRows.value.length) return;
   try {
     await ElMessageBox.confirm(
-      `Are you sure you want to approve ${selectedRows.value.length} selected registrations?`,
-      'Confirm Bulk Approve',
+      t('registerKids.bulkApproveConfirmation', { count: selectedRows.value.length }),
+      t('registerKids.confirmBulkApprove'),
       {
-        confirmButtonText: 'Approve',
-        cancelButtonText: 'Cancel',
+        confirmButtonText: t('registerKids.buttons.approve'),
+        cancelButtonText: t('common.cancel'),
         type: 'info',
         confirmButtonClass: 'btn-success',
         cancelButtonClass: 'btn-secondary'
@@ -327,10 +336,10 @@ const handleBulkApprove = async () => {
     await Promise.all(approvePromises);
     selectedRows.value = [];
     await fetchRegisterKids();
-    dataService.createAlertMessage('Selected registrations approved successfully', 'success');
+    dataService.createAlertMessage(t('registerKids.bulkApproveSuccess'), 'success');
   } catch (error) {
     if (error !== 'cancel') {
-      dataService.createAlertMessage('Failed to approve selected registrations', 'error');
+      dataService.createAlertMessage(t('registerKids.bulkApproveError'), 'error');
     }
   }
 };
@@ -339,11 +348,11 @@ const handleBulkReject = async () => {
   if (!selectedRows.value.length) return;
   try {
     await ElMessageBox.confirm(
-      `Are you sure you want to reject ${selectedRows.value.length} selected registrations?`,
-      'Confirm Bulk Reject',
+      t('registerKids.bulkRejectConfirmation', { count: selectedRows.value.length }),
+      t('registerKids.confirmBulkReject'),
       {
-        confirmButtonText: 'Reject',
-        cancelButtonText: 'Cancel',
+        confirmButtonText: t('registerKids.buttons.reject'),
+        cancelButtonText: t('common.cancel'),
         type: 'warning',
         confirmButtonClass: 'btn-warning',
         cancelButtonClass: 'btn-secondary'
@@ -358,17 +367,17 @@ const handleBulkReject = async () => {
     await Promise.all(rejectPromises);
     selectedRows.value = [];
     await fetchRegisterKids();
-    dataService.createAlertMessage('Selected registrations rejected successfully', 'success');
+    dataService.createAlertMessage(t('registerKids.bulkRejectSuccess'), 'success');
   } catch (error) {
     if (error !== 'cancel') {
-      dataService.createAlertMessage('Failed to reject selected registrations', 'error');
+      dataService.createAlertMessage(t('registerKids.bulkRejectError'), 'error');
     }
   }
 };
 
 const handleExport = () => {
   // Export logic here (CSV, Excel, etc.)
-  dataService.createAlertMessage('Export feature coming soon!', 'info');
+  dataService.createAlertMessage(t('registerKids.exportComingSoon'), 'info');
 };
 
 // Fetch register kids data
@@ -384,7 +393,7 @@ const fetchRegisterKids = async () => {
     }
   } catch (error) {
     registerKids.value = [];
-    dataService.createAlertMessage('Failed to fetch registrations', 'error');
+    dataService.createAlertMessage(t('registerKids.fetchError'), 'error');
   } finally {
     loading.value = false;
   }

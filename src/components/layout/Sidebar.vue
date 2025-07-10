@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import statusService from '../../services/statusService';
 import { dataService } from '../../services/dataContext';
 import { authService } from '../../services/authService';
 import type { NavItem } from '../../interfaces/NavItem';
 
+const { t, locale } = useI18n();
 
 const props = defineProps<{
   isCollapsed: boolean;
@@ -23,6 +25,11 @@ const currentRoute = computed(() => router.currentRoute.value.path);
 
 // Mobile detection
 const isMobile = ref(false);
+
+// RTL detection
+const isRTL = computed(() => {
+  return locale.value === 'ar';
+});
 
 const checkMobile = () => {
   isMobile.value = window.innerWidth <= 768;
@@ -57,9 +64,9 @@ const isParentActive = (item: NavItem) => {
   return false;
 };
 
-const navItems: NavItem[] = [
+const navItems = computed(() => [
   {
-    title: 'Dashboard',
+    title: t('navigation.dashboard'),
     icon: 'fa-solid fa-house',
     path: '/dashboard',
     isReady: () => {
@@ -69,14 +76,14 @@ const navItems: NavItem[] = [
     rolesId: [1]
   },
   {
-    title: 'Students',
+    title: t('navigation.students'),
     icon: 'fa-solid fa-user-graduate',
     path: '/students',
     permissions :['View students'],
     rolesId : [1],
     children: [
       {
-        title: 'Students',
+        title: t('navigation.students'),
         icon: 'fa-solid fa-user-graduate',
         path: '/students',
         permissions :['View students'],
@@ -86,7 +93,7 @@ const navItems: NavItem[] = [
         } 
       },
       {
-        title: 'Register Students',
+        title: t('students.registerStudents'),
         icon: 'fa-solid fa-user-graduate',
         path: '/register-students',
         permissions :['View students'],
@@ -98,18 +105,18 @@ const navItems: NavItem[] = [
     ]
   },
   {
-    title: 'Grade Levels',
+    title: t('navigation.gradeLevels'),
     icon: 'fa-solid fa-graduation-cap',
     children: [
       {
-        title: 'Grades',
+        title: t('navigation.grades'),
         icon: 'fa-solid fa-graduation-cap',
         path: '/grade-levels/grades',
         permissions: [''],
         rolesId: [1]
       },
       {
-        title: 'Classes',
+        title: t('navigation.classes'),
         icon: 'fa-solid fa-graduation-cap',
         path: '/grade-levels/classes',
         permissions: [''],
@@ -118,7 +125,7 @@ const navItems: NavItem[] = [
     ]
   },
   {
-    title: 'Attendance',
+    title: t('navigation.attendance'),
     icon: 'fa-solid fa-clipboard-user',
     permissions :['View bc boys attendance','View bc girls attendance',
     'View kg1 boys attendance', 'View Kg1 girls attendance',
@@ -130,13 +137,13 @@ const navItems: NavItem[] = [
     ],
     children: [
       {
-        title: 'Record',
+        title: t('attendance.record'),
         path: '/attendance',
         permissions :['Bc boys attendance','Bc girls attendance', 'kg1 boys attendance', 'Kg1 girls attendance', 'kg2 boys attendance', 'kg2 girls attendance',  'Prim1 boys attendance'],
         rolesId: [1]
       },
       {
-        title: 'History',
+        title: t('attendance.history'),
         path: '/attendance-history',
         permissions :['View bc boys attendance','View bc girls attendance', 'View kg1 boys attendance', 'View Kg1 girls attendance', 'View Kg2 boys attendance', 'View kg2 girls attendance',  'View Prim1 boys attendance'],
         rolesId : [1],
@@ -148,13 +155,13 @@ const navItems: NavItem[] = [
 
   },
   {
-    title: 'Administration',
+    title: t('navigation.administration'),
     icon: 'fa-solid fa-user-tie',
     permissions :['View admins','View roles'],
     rolesId : [1],
     children: [
     {
-        title: 'Admins',
+        title: t('navigation.admins'),
         icon: 'fa-solid fa-user-gear',
         path: '/adminstrations/admins',
         permissions :['View admins'],
@@ -164,7 +171,7 @@ const navItems: NavItem[] = [
         }
       },
       {
-        title: 'Roles',
+        title: t('navigation.roles'),
         icon: 'fa-solid fa-user-shield',
         path: '/adminstrations/roles',
         permissions :['View roles'],
@@ -177,14 +184,14 @@ const navItems: NavItem[] = [
     ]
   },
   {
-    title: 'Events',
+    title: t('navigation.events'),
     icon: 'fa-solid fa-calendar-days',
     path: '/events/enrollments',
     permissions :['View events'],
     rolesId : [1],
     children: [
       {
-        title: 'Enrollment',
+        title: t('events.enrollment'),
         path: '/events/enrollments',
         permissions :['View events'],
         rolesId : [1],
@@ -192,7 +199,7 @@ const navItems: NavItem[] = [
     ]
   }
 
-];
+]);
 
 const toggleItem = (title: string) => {
   if (expandedItems.value.has(title)) {
@@ -219,7 +226,7 @@ const navigateTo = (item: NavItem) => {
       }
     }
   } else {
-    dataService.createAlertMessage('You are offline, please check your internet connection', 'warning');
+    dataService.createAlertMessage(t('common.offlineMessage'), 'warning');
   }
 };
 
@@ -261,7 +268,7 @@ const isDataCached = (title: string) => {
 
 // Filter navigation items based on user permissions and roles
 const filteredNavItems = computed(() => {
-  return navItems.filter(item => {
+  return navItems.value.filter(item => {
     // If user has role ID 1, they have full access (super admin)
     if (authService.hasRole(1)) {
       return true;
@@ -328,11 +335,11 @@ const filteredNavItems = computed(() => {
 </script>
 
 <template>
-  <aside class="sidebar" :style="{ width: sidebarWidth }">
+  <aside class="sidebar" :class="{ 'rtl': isRTL }" :style="{ width: sidebarWidth }">
     <div class="sidebar-header">
       <!-- <img src="/vite.svg" alt="Logo" class="logo" v-if="!isCollapsed" />
       <img src="/vite.svg" alt="Logo" class="logo-small" v-else /> -->
-      <h2 v-if="!isCollapsed">Malika</h2>
+      <h2 v-if="!isCollapsed">{{ t('app.title') }}</h2>
       <h2 v-else>M</h2>
     </div>
     
@@ -349,7 +356,7 @@ const filteredNavItems = computed(() => {
           <template v-if="item.icon">
             <i :class="item.icon"></i>
           </template>
-          <span class="title ms-3" v-if="!isCollapsed">{{ item.title }}</span>
+          <span class="title" :class="{ 'ms-3': !isRTL, 'me-3': isRTL }" v-if="!isCollapsed">{{ item.title }}</span>
           <span 
             class="expand-icon" 
             v-if="item.children && !isCollapsed"
@@ -370,7 +377,7 @@ const filteredNavItems = computed(() => {
             :class="{ 'active': isActive(child.path) }"
             @click="navigateTo(child)"
           >
-            <span class="title">{{ child.title }}</span>
+            <span class="title">{{ child.title  }}</span>
           </div>
         </div>
       </div>
@@ -384,6 +391,11 @@ const filteredNavItems = computed(() => {
   box-shadow: 2px 0 5px rgba(0, 0, 0, 0.05);
   transition: width 0.3s ease;
   overflow-x: hidden;
+}
+
+/* RTL Sidebar shadow */
+.sidebar.rtl {
+  box-shadow: -2px 0 5px rgba(0, 0, 0, 0.05);
 }
 
 .sidebar-header {
@@ -446,6 +458,12 @@ const filteredNavItems = computed(() => {
   text-align: center;
 }
 
+/* RTL Icon positioning */
+.sidebar.rtl .icon {
+  margin-right: 0;
+  margin-left: 1rem;
+}
+
 .title {
   flex: 1;
   white-space: nowrap;
@@ -475,6 +493,11 @@ const filteredNavItems = computed(() => {
   
 }
 
+/* RTL Child item padding */
+.sidebar.rtl .nav-child-item {
+  padding: 0.5rem 3.5rem 0.5rem 1rem;
+}
+
 .nav-child-item:hover {
   background-color: #f8f9fa;
 }
@@ -494,12 +517,22 @@ const filteredNavItems = computed(() => {
   margin-right: 0.75rem;
 }
 
+/* RTL Child item icon */
+.sidebar.rtl .nav-child-item .icon {
+  margin-right: 0;
+  margin-left: 0.75rem;
+}
+
 /* Mobile responsive styles */
 @media (max-width: 768px) {
   .sidebar {
     width: 280px !important; /* Fixed width on mobile */
     max-width: 85vw;
     box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+  }
+  
+  .sidebar.rtl {
+    box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
   }
   
   .sidebar-header {
@@ -520,10 +553,19 @@ const filteredNavItems = computed(() => {
     min-height: 48px; /* Better touch target */
   }
   
+  .sidebar.rtl .nav-child-item {
+    padding: 0.75rem 3.5rem 0.75rem 1rem;
+  }
+  
   .icon {
     font-size: 1.5rem;
     margin-right: 1.25rem;
     min-width: 2rem;
+  }
+  
+  .sidebar.rtl .icon {
+    margin-right: 0;
+    margin-left: 1.25rem;
   }
   
   .title {
@@ -549,9 +591,18 @@ const filteredNavItems = computed(() => {
     padding: 0.625rem 1rem 0.625rem 3.5rem;
   }
   
+  .sidebar.rtl .nav-child-item {
+    padding: 0.625rem 3.5rem 0.625rem 1rem;
+  }
+  
   .icon {
     font-size: 1.375rem;
     margin-right: 1rem;
+  }
+  
+  .sidebar.rtl .icon {
+    margin-right: 0;
+    margin-left: 1rem;
   }
   
   .title {

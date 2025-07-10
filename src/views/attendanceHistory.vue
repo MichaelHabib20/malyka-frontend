@@ -8,7 +8,7 @@
           <!-- Date Range Type Selection -->
           <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap">
             <div class="filter-group">
-              <label class="form-label fw-semibold text-secondary mb-2">Date Range Type</label>
+              <label class="form-label fw-semibold text-secondary mb-2">{{ t('attendanceHistory.dateRangeType') }}</label>
               <div class="d-flex gap-4">
                 <div class="form-check">
                   <input 
@@ -20,7 +20,7 @@
                     @change="resetDates"
                   />
                   <label class="form-check-label" for="singleDate">
-                    Single Date
+                    {{ t('attendanceHistory.singleDate') }}
                   </label>
                 </div>
                 <div class="form-check">
@@ -33,7 +33,7 @@
                     @change="resetDates"
                   />
                   <label class="form-check-label" for="dateRange">
-                    Date Range
+                    {{ t('attendanceHistory.dateRange') }}
                   </label>
                 </div>
               </div>
@@ -46,16 +46,16 @@
               style="background: #f8fafc; font-size: 0.95rem;"
             >
               <span class="d-flex align-items-center gap-1 px-2 py-1 rounded-pill bg-success bg-opacity-10 text-success fw-semibold">
-                <i class="fa-solid fa-check-circle"></i> {{ presentCount }} <span class="d-none d-md-inline">Present</span>
+                <i class="fa-solid fa-check-circle"></i> {{ presentCount }} <span class="d-none d-md-inline">{{ t('attendanceHistory.present') }}</span>
               </span>
               <span class="d-flex align-items-center gap-1 px-2 py-1 rounded-pill bg-danger bg-opacity-10 text-danger fw-semibold">
-                <i class="fa-solid fa-times-circle"></i> {{ absentCount }} <span class="d-none d-md-inline">Absent</span>
+                <i class="fa-solid fa-times-circle"></i> {{ absentCount }} <span class="d-none d-md-inline">{{ t('attendanceHistory.absent') }}</span>
               </span>
               <span class="d-flex align-items-center gap-1 px-2 py-1 rounded-pill bg-primary bg-opacity-10 text-primary fw-semibold">
-                <i class="fa-solid fa-users"></i> {{ kids.length }} <span class="d-none d-md-inline">Total</span>
+                <i class="fa-solid fa-users"></i> {{ kids.length }} <span class="d-none d-md-inline">{{ t('attendanceHistory.total') }}</span>
               </span>
               <span class="d-flex align-items-center gap-1 px-2 py-1 rounded-pill bg-warning bg-opacity-10 text-warning fw-semibold">
-                <i class="fa-solid fa-percentage"></i> {{ attendanceRate }}% <span class="d-none d-md-inline">Rate</span>
+                <i class="fa-solid fa-percentage"></i> {{ attendanceRate }}% <span class="d-none d-md-inline">{{ t('attendanceHistory.rate') }}</span>
               </span>
             </div>
             
@@ -81,8 +81,8 @@
                   <DatePicker
                     id="single-date"
                     v-model="singleDate"
-                    label="Select Date"
-                    placeholder="Choose a date"
+                    :label="t('attendanceHistory.selectDate')"
+                    :placeholder="t('attendanceHistory.chooseDate')"
                     @update:modelValue="() => getKidsData('single')"
                   />
                 </div>
@@ -93,8 +93,8 @@
                     <DatePicker
                       id="start-date"
                       v-model="startDate"
-                      label="Start Date"
-                      placeholder="Start date"
+                      :label="t('attendanceHistory.startDate')"
+                      :placeholder="t('attendanceHistory.startDatePlaceholder')"
                       :max-date="startDateMaxDate"
                       @update:modelValue="() => getKidsData('start')"
                     />
@@ -103,8 +103,8 @@
                     <DatePicker
                       id="end-date"
                       v-model="endDate"
-                      label="End Date"
-                      placeholder="End date"
+                      :label="t('attendanceHistory.endDate')"
+                      :placeholder="t('attendanceHistory.endDatePlaceholder')"
                       :min-date="endDateMinDate"
                       @update:modelValue="() => getKidsData('end')"
                     />
@@ -135,7 +135,7 @@
         <!-- Loading State -->
         <div v-if="isLoading && kids.length === 0" class="card-body d-flex flex-column align-items-center justify-content-center py-5">
           <div class="loading-spinner mb-3"></div>
-          <p class="text-muted mb-0">Loading attendance data...</p>
+          <p class="text-muted mb-0">{{ t('attendanceHistory.loadingData') }}</p>
         </div>
 
         <!-- Empty State -->
@@ -143,12 +143,12 @@
           <div class="empty-icon mb-3">
             <i class="fa-solid fa-calendar-xmark"></i>
           </div>
-          <h4 class="fw-semibold text-secondary mb-2">No Attendance Data</h4>
+          <h4 class="fw-semibold text-secondary mb-2">{{ t('attendanceHistory.noAttendanceData') }}</h4>
           <p v-if="!isDateRangeEmpty" class="text-muted mb-0">
-            Select a date or date range to view attendance data.
+            {{ t('attendanceHistory.selectDateOrRange') }}
           </p>
           <p v-else class="text-muted mb-0">
-            No attendance data found for the selected date range.
+            {{ t('attendanceHistory.noAttendanceDataRange') }}
           </p>
         </div>
 
@@ -163,7 +163,7 @@
             :sort-direction="sortDirection"
             :filters="filters"
             :search-query="searchQuery"
-            :search-placeholder="'Search by kid\'s name or code...'"
+            :search-placeholder="t('attendanceHistory.searchPlaceholder')"
             @update:sort-by="handleSortBy"
             @update:sort-direction="handleSortDirection"
             @update:search-query="handleSearch"
@@ -178,13 +178,14 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import DatePicker from '../components/shared/datePicker.vue'
 import DataTable from '../components/shared/DataTable.vue'
 import type { Column } from '../interfaces/column'
 import { dataService } from '../services/dataContext';
-import { authService } from '../services/authService';
-import type { CustomButton } from '../interfaces/customButtons';
 import { createButtonsWithPermissions } from '../utils/simplePermissions';
+
+const { t } = useI18n();
 
 // Types
 interface Kid {
@@ -222,7 +223,7 @@ const tableButtons = computed(() => {
       id: 'export-attendance',
       permission: 'Export attendance',
       config: {
-        label: isExporting.value ? 'Exporting...' : 'Export Attendance',
+        label: isExporting.value ? t('attendanceHistory.exporting') : t('attendanceHistory.exportAttendance'),
         icon: isExporting.value ? 'fa-spinner fa-spin' : 'fa-download',
         variant: 'btn-primary',
         // onClick: exportAttendance,
@@ -236,21 +237,21 @@ const tableButtons = computed(() => {
 const tableColumns: Column[] = [
   {
     key: 'code',
-    label: 'Code',
+    label: t('attendanceHistory.columns.code'),
     type: 'code',
     sortable: true,
     align: 'left'
   },
   {
     key: 'name',
-    label: 'Name',
+    label: t('attendanceHistory.columns.name'),
     type: 'text',
     sortable: true,
     align: 'right'
   },
   {
         key: 'gradeName',
-        label: 'Grade',
+        label: t('attendanceHistory.columns.grade'),
         type: 'grade-chip',
         sortable: false,
         align: 'center',
@@ -258,7 +259,7 @@ const tableColumns: Column[] = [
       },
       {
         key: 'className',
-        label: 'Class',
+        label: t('attendanceHistory.columns.class'),
         type: 'text',
         sortable: false,
         align: 'center',
@@ -266,7 +267,7 @@ const tableColumns: Column[] = [
       },
   {
     key: 'isAdded',
-    label: 'Status',
+    label: t('attendanceHistory.columns.status'),
     type: 'attendance-status',
     sortable: true,
     align: 'center'
@@ -282,14 +283,14 @@ const dynamicTableColumns = computed(() => {
     const baseColumns: Column[] = [
       {
         key: 'code',
-        label: 'Code',
+        label: t('attendanceHistory.columns.code'),
         type: 'code',
         sortable: true,
         align: 'left'
       },
       {
         key: 'name',
-        label: 'Name',
+        label: t('attendanceHistory.columns.name'),
         type: 'text',
         sortable: true,
         align: 'right',
@@ -297,15 +298,15 @@ const dynamicTableColumns = computed(() => {
       },
       {
         key: 'gradeName',
-        label: 'Grade',
+        label: t('attendanceHistory.columns.grade'),
         type: 'grade-chip',
         sortable: false,
-        align: 'left',
+        align: 'center',
         isMainColumn: false
       },
       {
         key: 'className',
-        label: 'Class',
+        label: t('attendanceHistory.columns.class'),
         type: 'text',
         sortable: false,
         align: 'left',
@@ -334,7 +335,7 @@ const dynamicTableColumns = computed(() => {
       // Add percentage column as the last column
       baseColumns.push({
         key: 'percentage',
-        label: 'Attendance %',
+        label: t('attendanceHistory.columns.attendancePercentage'),
         type: 'percentage',
         sortable: true,
         align: 'center'
@@ -454,7 +455,7 @@ const validateDateRange = computed(() => {
   }
 
   if (endDate.value < startDate.value) {
-    dateValidationError.value = 'End date cannot be before start date'
+    dateValidationError.value = t('attendanceHistory.errors.endDateBeforeStart')
     isDateRangeValid.value = false
     return false
   }
@@ -527,7 +528,7 @@ const getKidsData = async (localDateType: 'single' | 'start' | 'end') => {
             }
         }
     } catch (error) {
-        console.error('Error fetching kids data:', error);
+        console.error(t('attendanceHistory.errors.fetchDataError'), error);
     }
 };
 

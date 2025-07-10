@@ -5,7 +5,7 @@
       :data="filteredData"
       :loading="loading"
       :search-query="searchQuery"
-      :search-placeholder="'Search by name'"
+      :search-placeholder="$t('grades.searchPlaceholder')"
       :custom-buttons="customButtons"
       :sort-by="sortBy"
       :sort-direction="sortDirection"
@@ -21,6 +21,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
+import { useI18n } from 'vue-i18n';
 import DataTable from '../components/shared/DataTable.vue';
 import type { Column } from '../interfaces/column';
 import type { CustomButton } from '../interfaces/customButtons';
@@ -32,6 +33,7 @@ import { useRouter } from 'vue-router';
 import { ElMessageBox } from 'element-plus';
 
 const router = useRouter();
+const { t } = useI18n();
 
 // Reactive data
 const grades = ref<Grade[]>([]);
@@ -45,14 +47,14 @@ const columns = computed(() => {
   const baseColumns: Column[] = [
     {
       key: 'grade.name',
-      label: 'Name',
+      label: t('grades.columns.name'),
       type: 'text',
       sortable: true,
       isMainColumn: true
     },
     {
       key: 'classesCount',
-      label: 'No. of Classes',
+      label: t('grades.columns.classesCount'),
       type: 'clickable-number',
       sortable: true,
       isMainColumn: false,
@@ -64,7 +66,7 @@ const columns = computed(() => {
     },
     {
       key: 'kidsCount',
-      label: 'No. of Kids',
+      label: t('grades.columns.kidsCount'),
       type: 'number',
       sortable: true,
       isMainColumn: false
@@ -75,11 +77,11 @@ const columns = computed(() => {
   if (authService.hasPermission('View grades') || authService.hasRole(1)) {
     baseColumns.push({
       key: 'actions',
-      label: 'Actions',
+      label: t('app.actions'),
       type: 'actions',
       actions: [
-        { icon: 'fa-regular fa-edit', label: 'Edit', color: '#3b82f6' },
-        { icon: 'fa-solid fa-trash', label: 'Delete', color: '#dc3545' }
+        { icon: 'fa-regular fa-edit', label: t('common.edit'), color: '#3b82f6' },
+        { icon: 'fa-solid fa-trash', label: t('common.delete'), color: '#dc3545' }
       ],
       align: 'center',
       width: '120px'
@@ -96,7 +98,7 @@ const customButtons = computed(() => {
       id: 'new-grade',
       permission: 'View grades',
       config: {
-        label: 'New Grade',
+        label: t('grades.buttons.newGrade'),
         icon: 'fa-plus',
         variant: 'btn-primary'
       }
@@ -161,17 +163,17 @@ const handleButtonClick = ({ buttonId, button }: { buttonId: string; button: Cus
 };
 
 const handleAction = async ({ action, row }: { action: string; row: any }) => {
-  if (action === 'Edit') {
+  if (action === t('common.edit')) {
     router.push(`/grade-levels/grades/edit/${row.grade.id}`);
-  } else if (action === 'Delete') {
+  } else if (action === t('common.delete')) {
     try {
       // Show confirmation dialog
       await ElMessageBox.confirm(
-        `Are you sure you want to delete grade "${row.grade.name}"? This action cannot be undone.`,
-        'Confirm Delete',
+        t('grades.deleteConfirmation', { name: row.grade.name }),
+        t('common.confirmDelete'),
         {
-          confirmButtonText: 'Delete',
-          cancelButtonText: 'Cancel',
+          confirmButtonText: t('common.delete'),
+          cancelButtonText: t('common.cancel'),
           type: 'warning',
           confirmButtonClass: 'btn-danger',
           cancelButtonClass: 'btn-secondary'
@@ -182,17 +184,17 @@ const handleAction = async ({ action, row }: { action: string; row: any }) => {
       const result = await dataService.createOnline(`/api/Grades/DeleteGrade/${row.grade.id}`, {});
       
       if (result && (result.httpStatus === 200 || result.httpStatus === 204)) {
-        dataService.createAlertMessage('Grade deleted successfully', 'success');
+        dataService.createAlertMessage(t('grades.deleteSuccess'), 'success');
         // Refresh the grades list
         await fetchGrades();
       } else {
-        throw new Error(result?.message || 'Failed to delete grade');
+        throw new Error(result?.message || t('grades.deleteError'));
       }
     } catch (error) {
       if (error !== 'cancel') {
         // Only show error if it's not a cancellation
         dataService.createAlertMessage(
-          error instanceof Error ? error.message : 'Failed to delete grade', 
+          error instanceof Error ? error.message : t('grades.deleteError'), 
           'error'
         );
       }
@@ -228,7 +230,7 @@ const fetchGrades = async () => {
     }
   } catch (error) {
     grades.value = [];
-    dataService.createAlertMessage('Failed to fetch grades', 'error');
+    dataService.createAlertMessage(t('grades.fetchError'), 'error');
   } finally {
     loading.value = false;
   }

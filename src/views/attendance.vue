@@ -2,12 +2,15 @@
 import { dataService } from '../services/dataContext';
 import { computed, onMounted } from 'vue';
 import { ref } from 'vue';
+import { useI18n } from 'vue-i18n';
 import DataTable from '../components/shared/DataTable.vue';
 import DatePicker from '../components/shared/datePicker.vue';
 import BarcodeScanner from '../components/shared/BarcodeScanner.vue';
 import type { Column } from '../interfaces/column';
 import { statusService } from '../services/statusService';
 import { offlineStore } from '../services/offlineStore';
+
+const { t } = useI18n();
 
 // Sample data
 const tableData : any = ref([]);
@@ -16,13 +19,13 @@ const tableData : any = ref([]);
 const columns: Column[] = [
   {     
     key: 'code', 
-    label: 'code', 
+    label: t('attendance.columns.code'), 
     type: 'code',
     sortable: true 
   },
   { 
     key: 'name', 
-    label: 'Name', 
+    label: t('attendance.columns.name'), 
     type: 'text',
     sortable: true,
     align: 'right',
@@ -30,7 +33,7 @@ const columns: Column[] = [
   },
   {
   key: 'gradeName',
-  label: 'Grade',
+  label: t('attendance.columns.grade'),
   type: 'grade-chip',
   sortable: false,
   align: 'center',
@@ -38,7 +41,7 @@ const columns: Column[] = [
   },
   {
   key: 'className',
-  label: 'Class',
+  label: t('attendance.columns.class'),
   type: 'text',
   sortable: false,
   align: 'center',
@@ -46,7 +49,7 @@ const columns: Column[] = [
   },
   { 
     key: 'isAdded', 
-    label: 'Attendance', 
+    label: t('attendance.columns.attendance'), 
     type: 'checkbox',
     sortable: false
   },
@@ -239,7 +242,7 @@ const getKidsData = async () => {
             tableData.value = result.data.kids ? result.data.kids : result.data
         }
     } catch (error) {
-        console.error('Error fetching kids data:', error)
+        console.error(t('attendance.errors.fetchDataError'), error)
     }
 }
 
@@ -255,7 +258,7 @@ onMounted(async () => {
   <div class="attendance-container">
     <div class="date-section">
       <div class="date-info">
-        <h2>Taking Attendance for</h2>
+        <h2>{{ t('attendance.takingAttendanceFor') }}</h2>
         <div class="date-display">{{ formattedDate }}</div>
         <div class="attendance-ratio">({{ attendanceStats.present }}/{{ attendanceStats.total }})</div>
       </div>
@@ -263,7 +266,7 @@ onMounted(async () => {
         <DatePicker
           v-model="selectedDate"
           id="attendance-date"
-          label="Change Date"
+          :label="t('attendance.changeDate')"
           :validation-rules="[]"
           :isNeedNetwork="true"
           @update:modelValue="handleDateChange"
@@ -286,7 +289,7 @@ onMounted(async () => {
         :sort-direction="sortDirection"
         :filters="filters"
         :search-query="searchQuery"
-        :search-placeholder="'Search by kid\'s name or code...'"
+        :search-placeholder="t('attendance.searchPlaceholder')"
         @update:sort-by="handleSortBy"
         @update:sort-direction="handleSortDirection"
         @update:search-query="handleSearch"

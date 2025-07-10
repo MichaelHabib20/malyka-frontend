@@ -263,7 +263,7 @@ export class DataService {
   }
     // New methods for online-only CRUD operations
     public async fetchOnline<T>(endpoint: string, params?: Record<string, any>): Promise<ApiResponse<T> | undefined> {
-      // loadingService.startLoading();
+      loadingService.startLoading();
       try {
         if (!this.isOnline) {
           this.createAlertMessage('You are currently offline. This action requires an internet connection.', 'warning');

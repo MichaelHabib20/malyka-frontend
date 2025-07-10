@@ -6,7 +6,7 @@
         :data="filteredData"
         :loading="loading"
         :search-query="searchQuery"
-        :search-placeholder="'Search roles...'"
+        :search-placeholder="$t('roles.searchPlaceholder')"
         :custom-buttons="customButtons"
         @update:search-query="handleSearch"
         @button-click="handleButtonClick"
@@ -17,6 +17,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
+import { useI18n } from 'vue-i18n';
 import DataTable from '../components/shared/DataTable.vue';
 import type { Column } from '../interfaces/column';
 import type { CustomButton } from '../interfaces/customButtons';
@@ -28,6 +29,8 @@ import { createButtonsWithPermissions } from '../utils/simplePermissions';
 import { ElMessageBox } from 'element-plus';
 const router = useRouter();
 
+const { t } = useI18n();
+
 // Reactive data
 const roles = ref<Role[]>([]);
 const loading = ref(false);
@@ -38,7 +41,7 @@ const columns = computed(() => {
   const baseColumns: Column[] = [
     {
       key: 'name',
-      label: 'Role Name',
+      label: t('roles.columns.name'),
       type: 'text',
       isMainColumn: true
     }
@@ -48,11 +51,11 @@ const columns = computed(() => {
   if (authService.hasPermission('View roles') || authService.hasPermission('View roles') || authService.hasRole(1)) {
     baseColumns.push({
       key: 'actions',
-      label: 'Actions',
+      label: t('app.actions'),
       type: 'actions',
       actions: [
-        { icon: 'fa-regular fa-edit', label: 'Edit', color: '#3b82f6' },
-        { icon: 'fa-solid fa-trash', label: 'Delete', color: '#ef4444' }
+        { icon: 'fa-regular fa-edit', label: t('common.edit'), color: '#3b82f6' },
+        { icon: 'fa-solid fa-trash', label: t('common.delete'), color: '#ef4444' }
       ],
       align: 'center',
       width: '120px'
@@ -69,7 +72,7 @@ const customButtons = computed(() => {
       id: 'new-role',
       permission: 'Add roles',
       config: {
-        label: 'New Role',
+        label: t('roles.buttons.newRole'),
         icon: 'fa-plus',
         variant: 'btn-primary'
       }
@@ -103,17 +106,17 @@ const handleButtonClick = ({ buttonId, button }: { buttonId: string; button: Cus
 };
 
 const handleAction = async ({ action, row }: { action: string; row: any }) => {
-  if (action === 'Edit') {
+  if (action === t('common.edit')) {
     router.push(`/adminstrations/roles/edit/${row.id}`);
-  } else if (action === 'Delete') {
+  } else if (action === t('common.delete')) {
     try {
       // Show confirmation dialog
       await ElMessageBox.confirm(
-        `Are you sure you want to delete role "${row.name}"? This action cannot be undone.`,
-        'Confirm Delete',
+        t('roles.deleteConfirmation', { name: row.name }),
+        t('common.confirmDelete'),
         {
-          confirmButtonText: 'Delete',
-          cancelButtonText: 'Cancel',
+          confirmButtonText: t('common.delete'),
+          cancelButtonText: t('common.cancel'),
           type: 'warning',
           confirmButtonClass: 'btn-danger',
           cancelButtonClass: 'btn-secondary'
@@ -126,7 +129,7 @@ const handleAction = async ({ action, row }: { action: string; row: any }) => {
       if (error !== 'cancel') {
         // Only show error if it's not a cancellation
         dataService.createAlertMessage(
-          error instanceof Error ? error.message : 'Failed to delete role', 
+          error instanceof Error ? error.message : t('roles.deleteError'), 
           'error'
         );
       }
@@ -143,14 +146,14 @@ const deleteRole = async (roleId: number) => {
     if (result && (result.httpStatus === 200 || result.Status === 200)) {
       // Remove the role from the local array
       roles.value = roles.value.filter(role => role.id !== roleId);
-      dataService.createAlertMessage('Role deleted successfully', 'success');
+      dataService.createAlertMessage(t('roles.deleteSuccess'), 'success');
     } else {
-      throw new Error(result?.message || 'Failed to delete role');
+      throw new Error(result?.message || t('roles.deleteError'));
     }
   } catch (error) {
     console.error('Error deleting role:', error);
     dataService.createAlertMessage(
-      error instanceof Error ? error.message : 'An error occurred while deleting the role.', 
+      error instanceof Error ? error.message : t('roles.deleteError'), 
       'error'
     );
   } finally {
@@ -171,6 +174,7 @@ const fetchRoles = async () => {
     }
   } catch (error) {
     roles.value = [];
+    dataService.createAlertMessage(t('roles.fetchError'), 'error');
   } finally {
     loading.value = false;
   }

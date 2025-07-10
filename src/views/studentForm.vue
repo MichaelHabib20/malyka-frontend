@@ -10,7 +10,7 @@
                 <div class="col-lg-8">
                   <h5 class="mb-4 text-primary">
                     <i class="fa-solid fa-user-graduate me-2"></i>
-                    Student Information
+                    {{ $t('students.form.studentInformation') }}
                   </h5>
                   
                   <!-- Basic Information Row -->
@@ -20,8 +20,8 @@
                         <Input
                           id="student-code"
                           v-model="formData.code"
-                          label="Student Code"
-                          placeholder="Enter student code"
+                          :label="$t('students.form.code')"
+                          :placeholder="$t('students.form.codePlaceholder')"
                           leadingIcon="fa-solid fa-id-card"
                           :validation-rules="['required', 'noConsecutiveSpaces']"
                           @validation-change="handleCodeValidation"
@@ -31,8 +31,8 @@
                         <Input
                           id="student-code"
                           v-model="formData.verificationCode"
-                          label="Verification Code"
-                          placeholder="Enter verification code"
+                          :label="$t('students.form.verificationCode')"
+                          :placeholder="$t('students.form.verificationCodePlaceholder')"
                           leadingIcon="fa-solid fa-id-card"
                           :validation-rules="['required', 'noConsecutiveSpaces']"
                           @validation-change="handleCodeValidation"
@@ -44,8 +44,8 @@
                         <Input
                           id="student-name"
                           v-model="formData.name"
-                          label="Student Name"
-                          placeholder="Enter student name"
+                          :label="$t('students.form.fullName')"
+                          :placeholder="$t('students.form.fullNamePlaceholder')"
                           leadingIcon="fa-solid fa-user"
                           :validation-rules="nameValidationRules"
                           @validation-change="handleNameValidation"
@@ -61,8 +61,8 @@
                         <Input
                           id="national-id"
                           v-model="formData.nationalId"
-                          label="National ID"
-                          placeholder="Enter national ID"
+                          :label="$t('students.form.nationalId')"
+                          :placeholder="$t('students.form.nationalIdPlaceholder')"
                           leadingIcon="fa-solid fa-id-badge"
                           :validation-rules="['required', 'idOrPhone', 'noEnglishLetters']"
                           @validation-change="handleNationalIdValidation"
@@ -74,9 +74,9 @@
                         <Select
                           id="gender-select"
                           v-model="formData.gender"
-                          label="Gender"
+                          :label="$t('students.form.gender')"
                           :options="genderOptions"
-                          placeholder="Select gender"
+                          :placeholder="$t('students.form.selectGender')"
                           :validation-rules="['required']"
                           @validation-change="handleGenderValidation"
                         />
@@ -91,9 +91,9 @@
                         <Input
                           id="birth-date"
                           v-model="formData.birthDate"
-                          label="Birth Date"
+                          :label="$t('students.form.birthDate')"
                           type="date"
-                          placeholder="Select birth date"
+                          :placeholder="$t('students.form.selectBirthDate')"
                           leadingIcon="fa-solid fa-calendar"
                           :validation-rules="['required']"
                           @validation-change="handleBirthDateValidation"
@@ -109,9 +109,9 @@
                         <Select
                           id="grade-select"
                           v-model="formData.gradeId"
-                          label="Grade"
+                          :label="$t('students.form.grade')"
                           :options="gradeOptions"
-                          placeholder="Select grade"
+                          :placeholder="$t('students.form.selectGrade')"
                           :validation-rules="['required']"
                           @validation-change="handleGradeValidation"
                         />
@@ -122,9 +122,9 @@
                         <Select
                           id="class-select"
                           v-model="formData.classId"
-                          label="Class"
+                          :label="$t('students.form.class')"
                           :options="classOptions"
-                          placeholder="Select class"
+                          :placeholder="$t('students.form.selectClass')"
                           :validation-rules="['required']"
                           @validation-change="handleClassValidation"
                         />
@@ -135,7 +135,7 @@
                   <!-- Contact Information Section -->
                   <h6 class="mb-3 text-secondary mt-4">
                     <i class="fa-solid fa-phone me-2"></i>
-                    Contact Information
+                    {{ $t('students.form.contactInfo') }}
                   </h6>
 
                   <div class="row">
@@ -145,8 +145,8 @@
                           id="whatsapp-number"
                           v-model="formData.whatsapp"
                           :validation-rules="phoneValidationRules"
-                          label="Whatsapp Number"
-                          placeholder="Enter whatsapp number"
+                          :label="$t('students.form.whatsapp')"
+                          :placeholder="$t('students.form.whatsappPlaceholder')"
                           leadingIcon="fa-solid fa-phone"
                         />
                       </div>
@@ -156,8 +156,8 @@
                         <Input
                           id="mother-mobile"
                           v-model="formData.momMob"
-                          label="Mother Mobile"
-                          placeholder="Enter mother's mobile"
+                          :label="$t('students.form.motherMobile')"
+                          :placeholder="$t('students.form.motherMobilePlaceholder')"
                           leadingIcon="fa-solid fa-mobile-alt"
                           :validation-rules="phoneValidationRules"
                           @validation-change="handleMotherMobileValidation"
@@ -172,8 +172,8 @@
                         <Input
                           id="father-mobile"
                           v-model="formData.dadMob"
-                          label="Father Mobile"
-                          placeholder="Enter father's mobile"
+                          :label="$t('students.form.fatherMobile')"
+                          :placeholder="$t('students.form.fatherMobilePlaceholder')"
                           leadingIcon="fa-solid fa-mobile-alt"
                           :validation-rules="phoneValidationRules"
                           @validation-change="handleFatherMobileValidation"
@@ -185,7 +185,7 @@
                   <!-- Address Information Section -->
                   <h6 class="mb-3 text-secondary mt-4">
                     <i class="fa-solid fa-map-marker-alt me-2"></i>
-                    Address Information
+                    {{ $t('students.form.addressInfo') }}
                   </h6>
 
                   <div class="row">
@@ -194,8 +194,8 @@
                         <Input
                           id="main-street"
                           v-model="formData.mainStreet"
-                          label="Main Street"
-                          placeholder="Enter main street"
+                          :label="$t('students.form.mainStreet')"
+                          :placeholder="$t('students.form.mainStreetPlaceholder')"
                           :validation-rules="['required', 'noEnglishLetters']"
                           leadingIcon="fa-solid fa-road"
                         />
@@ -206,8 +206,8 @@
                         <Input
                           id="sub-street"
                           v-model="formData.sideStreet"
-                          label="Sub Street"
-                          placeholder="Enter Sub street"
+                          :label="$t('students.form.sideStreet')"
+                          :placeholder="$t('students.form.sideStreetPlaceholder')"
                           :validation-rules="['noEnglishLetters']"
                           leadingIcon="fa-solid fa-road"
                         />
@@ -221,8 +221,8 @@
                         <Input
                           id="area"
                           v-model="formData.area"
-                          label="Area"
-                          placeholder="Enter area"
+                          :label="$t('students.form.area')"
+                          :placeholder="$t('students.form.areaPlaceholder')"
                           :validation-rules="['required', 'noEnglishLetters']"
                           leadingIcon="fa-solid fa-map-marker-alt"
                         />
@@ -233,8 +233,8 @@
                         <Input
                           id="floor"
                           v-model="formData.floor"
-                          label="Floor"
-                          placeholder="Enter floor"
+                          :label="$t('students.form.floor')"
+                          :placeholder="$t('students.form.floorPlaceholder')"
                           :validation-rules="['required', 'noEnglishLetters']"
                           leadingIcon="fa-solid fa-building"
                         />
@@ -245,8 +245,8 @@
                         <Input
                           id="apartment"
                           v-model="formData.apartmentNumber"
-                          label="Apartment"
-                          placeholder="Enter apartment"
+                          :label="$t('students.form.apartmentNumber')"
+                          :placeholder="$t('students.form.apartmentNumberPlaceholder')"
                           leadingIcon="fa-solid fa-home"
                           :validation-rules="['required', 'noEnglishLetters']"
                         />
@@ -261,7 +261,7 @@
                     <div class="card-body">
                       <h6 class="mb-3 text-secondary">
                         <i class="fa-solid fa-info-circle me-2"></i>
-                        Additional Information
+                        {{ $t('students.form.additionalInfo') }}
                       </h6>
 
                       <!-- Student Photo Upload -->
@@ -269,17 +269,17 @@
                         <ImageUploader
                           v-model="formData.photo"
                           id="student-photo"
-                          label="Student Photo"
+                          :label="$t('students.form.photo')"
                           :max-size="2 * 1024 * 1024"
                           :min-width="200"
                           :min-height="200"
                           :max-width="800"
                           :max-height="800"
-                          upload-title="Upload Student Photo"
-                          upload-subtitle="JPG, PNG or WebP format, square aspect ratio recommended"
+                          :upload-title="$t('students.form.uploadPhoto')"
+                          :upload-subtitle="$t('students.form.uploadPhotoSubtitle')"
                           :show-image-info="true"
                           :compact="true"
-                          help-text="Maximum 2MB, minimum 200x200px, maximum 800x800px"
+                          :help-text="$t('students.form.photoHelpText')"
                           @validation-change="handlePhotoValidation"
                           @file-selected="handlePhotoSelected"
                           @file-removed="handlePhotoRemoved"
@@ -297,11 +297,11 @@
                           />
                           <label class="form-check-label" for="siblings" >
                             <i class="fa-solid fa-users me-2"></i>
-                            Brothers
+                            {{ $t('students.form.siblings') }}
                           </label>
                         </div>
                         <small class="form-text text-muted">
-                          Check if the student is brothers 
+                          {{ $t('students.form.siblingsHelp') }}
                         </small>
                       </div>
 
@@ -309,17 +309,17 @@
                       <div class="mb-4">
                         <label for="notes" class="form-label">
                           <i class="fa-solid fa-sticky-note me-2"></i>
-                          Notes
+                          {{ $t('students.form.notes') }}
                         </label>
                         <textarea
                           id="notes"
                           v-model="formData.landmark"
                           class="form-control"
                           rows="6"
-                          placeholder="Enter additional notes about the student..."
+                          :placeholder="$t('students.form.notesPlaceholder')"
                         ></textarea>
                         <small class="form-text text-muted">
-                          Any additional information or special requirements
+                          {{ $t('students.form.notesHelp') }}
                         </small>
                       </div>
                     </div>
@@ -336,7 +336,7 @@
                   :disabled="isSubmitting"
                 >
                   <i class="fas fa-times me-1"></i>
-                  Cancel
+                  {{ $t('students.form.cancel') }}
                 </button>
                 <button
                   type="submit"
@@ -345,7 +345,7 @@
                 >
                   <i v-if="isSubmitting" class="fas fa-spinner fa-spin me-1"></i>
                   <i v-else class="fas fa-save me-1"></i>
-                  {{ isSubmitting ? 'Saving...' : (isEditMode ? 'Update Student' : 'Create Student') }}
+                  {{ isSubmitting ? $t('common.saving') : (isEditMode ? $t('students.form.update') : $t('students.form.save')) }}
                 </button>
               </div>
             </form>
@@ -358,6 +358,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import { dataService } from '../services/dataContext'
 import Input from '../components/shared/input.vue'
@@ -366,6 +367,8 @@ import ImageUploader from '../components/shared/imageUploader.vue'
 import type { Student } from '../interfaces/student'
 import type { Grade } from '../interfaces/grade'
 import type { Class } from '../interfaces/class'
+
+const { t } = useI18n()
 
 interface ValidationResult {
   isValid: boolean
@@ -481,8 +484,8 @@ const isFormValid = computed(() => {
 })
 
 const genderOptions = computed(() => [
-  { label: 'Male', value: 'male' },
-  { label: 'Female', value: 'female' }
+  { label: t('app.male'), value: 'male' },
+  { label: t('app.female'), value: 'female' }
 ])
 
 const gradeOptions = computed(() => {
@@ -500,23 +503,22 @@ const classOptions = computed(() => {
 })
 
 // Validation rules
-const nameValidationRules = [
+const nameValidationRules = computed(() => [
   'required',
   'fourWords',
   'noEnglishLetters',
-  { type: 'minLength', params: 2, message: 'Name must be at least 2 characters' },
-  { type: 'maxLength', params: 100, message: 'Name must be less than 100 characters' },
-  
-]
+  { type: 'minLength', params: 2, message: t('students.validation.nameMinLength') },
+  { type: 'maxLength', params: 100, message: t('students.validation.nameMaxLength') },
+])
 
-const phoneValidationRules = [
+const phoneValidationRules = computed(() => [
   'noEnglishLetters',
   { 
     type: 'pattern', 
     params: [/^\d{11}$/], 
-    message: 'Phone number must be 11 digits' 
+    message: t('students.validation.phoneFormat') 
   }
-]
+])
 
 // Methods
 const handleCodeValidation = (validation: ValidationResult) => {
@@ -557,7 +559,7 @@ const handleFatherMobileValidation = (validation: ValidationResult) => {
 
 const handlePhotoValidation = (validation: ValidationResult) => {
   if (!validation.isValid) {
-    dataService.createAlertMessage(`Photo validation failed: ${validation.errors.join(', ')}`, 'warning')
+    dataService.createAlertMessage(t('students.errors.photoValidationFailed', { errors: validation.errors.join(', ') }), 'warning')
   }
 }
 
@@ -576,7 +578,7 @@ const fetchGrades = async () => {
       grades.value = response.data
     }
   } catch (error) {
-    dataService.createAlertMessage('Failed to load grades', 'error')
+    dataService.createAlertMessage(t('students.errors.loadGradesFailed'), 'error')
   } finally {
     loading.value = false
   }
@@ -590,7 +592,7 @@ const fetchClasses = async () => {
       classes.value = response.data
     }
   } catch (error) {
-    dataService.createAlertMessage('Failed to load classes', 'error')
+    dataService.createAlertMessage(t('students.errors.loadClassesFailed'), 'error')
   } finally {
     loading.value = false
   }
@@ -635,7 +637,7 @@ const fetchStudent = async () => {
       // }
     }
   } catch (error) {
-    dataService.createAlertMessage('Failed to load student data', 'error')
+    dataService.createAlertMessage(t('students.errors.loadStudentFailed'), 'error')
   }
 }
 
@@ -693,7 +695,7 @@ const handleSubmit = async () => {
 
     }
   } catch (error) {
-    dataService.createAlertMessage(isEditMode.value ? 'Failed to update student' : 'Failed to create student', 'error')
+    dataService.createAlertMessage(isEditMode.value ? t('students.errors.updateFailed') : t('students.errors.createFailed'), 'error')
   } finally {
     isSubmitting.value = false
   }

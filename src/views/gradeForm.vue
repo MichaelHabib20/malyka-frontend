@@ -10,8 +10,8 @@
                 <Input
                   id="grade-name"
                   v-model="formData.name"
-                  label="Grade Name"
-                  placeholder="Enter grade name"
+                  :label="t('grades.form.gradeName')"
+                  :placeholder="t('grades.form.gradeNamePlaceholder')"
                   leadingIcon="fa-solid fa-graduation-cap"
                   :validation-rules="nameValidationRules"
                   @validation-change="handleNameValidation"
@@ -28,7 +28,7 @@
                   :disabled="isSubmitting"
                 >
                   <i class="fas fa-times me-1"></i>
-                  Cancel
+                  {{ t('app.cancel') }}
                 </button>
                 <button
                   type="submit"
@@ -37,7 +37,7 @@
                 >
                   <i v-if="isSubmitting" class="fas fa-spinner fa-spin me-1"></i>
                   <i v-else class="fas fa-save me-1"></i>
-                  {{ isSubmitting ? 'Saving...' : (isEditMode ? 'Update Grade' : 'Create Grade') }}
+                  {{ isSubmitting ? t('grades.form.saving') : (isEditMode ? t('grades.form.updateGrade') : t('grades.form.createGrade')) }}
                 </button>
               </div>
             </form>
@@ -51,9 +51,12 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { dataService } from '../services/dataContext'
 import Input from '../components/shared/input.vue'
 import type { Grade } from '../interfaces/grade'
+
+const { t } = useI18n();
 
 interface ValidationResult {
   isValid: boolean
@@ -92,11 +95,11 @@ const isFormValid = computed(() => {
 })
 
 // Validation rules
-const nameValidationRules = [
+const nameValidationRules = computed(() => [
   'required',
-  { type: 'minLength', params: 2, message: 'Grade name must be at least 2 characters' },
-  { type: 'maxLength', params: 100, message: 'Grade name must be less than 100 characters' }
-]
+  { type: 'minLength', params: 2, message: t('grades.validation.nameMinLength') },
+  { type: 'maxLength', params: 100, message: t('grades.validation.nameMaxLength') }
+])
 
 // Methods
 const handleNameValidation = (validation: ValidationResult) => {
@@ -116,7 +119,7 @@ const fetchGrade = async () => {
           }
     }
   } catch (error) {
-    dataService.createAlertMessage('Failed to load grade data', 'error')
+    dataService.createAlertMessage(t('grades.errors.loadGradeFailed'), 'error')
   }
 }
 
@@ -142,10 +145,10 @@ const handleSubmit = async () => {
       dataService.createAlertMessage(response.message, 'success')
       router.push('/grade-levels/grades')
     } else {
-      throw new Error('Failed to save grade')
+      throw new Error(t('grades.errors.saveFailed'))
     }
   } catch (error) {
-    dataService.createAlertMessage(isEditMode.value ? 'Failed to update grade' : 'Failed to create grade', 'error')
+    dataService.createAlertMessage(isEditMode.value ? t('grades.errors.updateFailed') : t('grades.errors.createFailed'), 'error')
   } finally {
     isSubmitting.value = false
   }
