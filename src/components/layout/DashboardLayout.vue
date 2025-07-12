@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 // import Navbar from './Navbar.vue';
 // import Sidebar from './Sidebar.vue';
@@ -17,6 +17,13 @@ const isMobile = computed(() => {
   }
   return false;
 });
+
+// Initialize sidebar state based on screen size
+const initializeSidebarState = () => {
+  if (typeof window !== 'undefined') {
+    isSidebarCollapsed.value = window.innerWidth <= 768;
+  }
+};
 
 // RTL detection
 const isRTL = computed(() => {
@@ -40,6 +47,28 @@ const handleOverlayClick = () => {
     closeSidebar();
   }
 };
+
+// Handle window resize to update sidebar state
+const handleResize = () => {
+  if (isMobile.value) {
+    // Close sidebar on mobile
+    isSidebarCollapsed.value = true;
+  } else {
+    // On desktop, keep the current state or expand if it was collapsed due to mobile
+    // You can modify this behavior as needed
+  }
+};
+
+// Initialize sidebar state on mount
+onMounted(() => {
+  initializeSidebarState();
+  window.addEventListener('resize', handleResize);
+});
+
+// Clean up event listener
+onUnmounted(() => {
+  window.removeEventListener('resize', handleResize);
+});
 </script>
 
 <template>
