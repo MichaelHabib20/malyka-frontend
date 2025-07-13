@@ -272,6 +272,7 @@
     "deleteConfirmation": "هل أنت متأكد من حذف الفصل \"{name}\"؟ لا يمكن التراجع عن هذا الإجراء.",
     "deleteSuccess": "تم حذف الفصل بنجاح",
     "deleteError": "فشل في حذف الفصل",
+    "updateSuccess": "تم تحديث الفصل بنجاح",
     "form": {
       "className": "اسم الفصل",
       "classNamePlaceholder": "أدخل اسم الفصل",
@@ -315,6 +316,8 @@
     "deleteSuccess": "تم حذف المرحلة بنجاح",
     "deleteError": "فشل في حذف المرحلة",
     "fetchError": "فشل في جلب المراحل",
+    "updateSuccess": "تم تحديث المرحلة بنجاح",
+    "updateFailed": "فشل في تحديث المرحلة",
     "buttons": {
       "newGrade": "مرحلة جديدة"
     },
@@ -488,6 +491,7 @@
     "signUp": "إنشاء حساب"
   },
   "common": {
+    "no": "لا",
     "loading": "جاري التحميل...",
     "noData": "لا توجد بيانات متاحة",
     "errorLoading": "خطأ في تحميل البيانات",
@@ -528,6 +532,8 @@
     "idle": "خامل",
     "lastSync": "آخر مزامنة",
     "never": "أبداً",
+    "edit": "تعديل",
+    "delete": "حذف",
     "validation": {
       "required": "هذا الحقل مطلوب",
       "email": "يرجى إدخال عنوان بريد إلكتروني صحيح",
@@ -553,7 +559,11 @@
     "clickToViewDetails": "انقر لعرض التفاصيل لـ {value}",
     "call": "اتصل بـ {value}",
     "loading": "جاري التحميل...",
-    "noData": "لا توجد بيانات"
+    "noData": "لا توجد بيانات",
+    "clickToEdit": "انقر للتعديل",
+    "enterValue": "أدخل القيمة",
+    "save": "حفظ",
+    "cancel": "إلغاء"
   },
   "registerKids": {
     "title": "تسجيل الأطفال",
@@ -597,5 +607,21 @@
   "languages": {
     "en": "English",
     "ar": "العربية"
+  },
+  "validation": {
+    "phoneNoEnglish": "رقم الهاتف لا يجب أن يحتوي على حروف إنجليزية",
+    "required": "هذا الحقل مطلوب",
+    "email": "يرجى إدخال عنوان بريد إلكتروني صحيح",
+    "minLength": "الحد الأدنى للطول هو {min} أحرف",
+    "maxLength": "الحد الأقصى للطول هو {max} أحرف",
+    "min": "الحد الأدنى للقيمة هو {min}",
+    "max": "الحد الأقصى للقيمة هو {max}",
+    "invalidFormat": "تنسيق غير صحيح",
+    "fourWords": "يرجى إدخال أكثر من 4 أسماء، كل اسم على الأقل حرفين",
+    "noConsecutiveSpaces": "يرجى عدم إدخال أكثر من مسافتين متتاليتين",
+    "invalidValue": "قيمة غير صحيحة",
+    "idOrPhone": "يرجى إدخال رقم هاتف أو رقم هوية صحيح",
+    "noEnglishLetters": "يجب ألا يحتوي على حروف إنجليزية",
+    "studentAge": "عمر الطالب يجب أن يكون بين {min} و {max} سنوات"
   }
 } 

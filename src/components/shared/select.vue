@@ -100,6 +100,9 @@ const hasError = computed(() => errors.value.length > 0)
 const errorMessage = computed(() => errors.value[0] || '')
 
 const formattedOptions = computed(() => {
+  if (!Array.isArray(props.options)) {
+    return []
+  }
   return props.options.map(option => ({
     ...option,
     label: props.isDate && option.value instanceof Date
@@ -110,6 +113,10 @@ const formattedOptions = computed(() => {
 
 const displayValue = computed(() => {
   if (!props.modelValue) return props.placeholder
+  
+  if (!Array.isArray(props.options)) {
+    return props.placeholder
+  }
   
   const selectedOption = props.options.find(opt => opt.value === props.modelValue)
   if (!selectedOption) return props.placeholder

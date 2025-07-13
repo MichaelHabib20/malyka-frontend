@@ -177,8 +177,7 @@
       "birthDateRequired": "Birth date is required",
       "gradeRequired": "Grade is required",
       "classRequired": "Class is required",
-      "phoneFormat": "Phone number must be 11 digits",
-      "phoneNoEnglish": "Phone number should not contain English letters"
+      "phoneFormat": "Phone number must be 11 digits"
     },
     "errors": {
       "loadGradesFailed": "Failed to load grades",
@@ -272,6 +271,7 @@
     "deleteConfirmation": "Are you sure you want to delete class \"{name}\"? This action cannot be undone.",
     "deleteSuccess": "Class deleted successfully",
     "deleteError": "Failed to delete class",
+    "updateSuccess": "Class updated successfully",
     "form": {
       "className": "Class Name",
       "classNamePlaceholder": "Enter class name",
@@ -315,6 +315,8 @@
     "deleteSuccess": "Grade deleted successfully",
     "deleteError": "Failed to delete grade",
     "fetchError": "Failed to fetch grades",
+    "updateSuccess": "Grade updated successfully",
+    "updateFailed": "Failed to update grade",
     "buttons": {
       "newGrade": "New Grade"
     },
@@ -488,6 +490,7 @@
     "signUp": "Sign up"
   },
   "common": {
+    "no": "No",
     "loading": "Loading...",
     "noData": "No data available",
     "errorLoading": "Error loading data",
@@ -528,6 +531,8 @@
     "idle": "Idle",
     "lastSync": "Last Sync",
     "never": "Never",
+    "edit": "Edit",
+    "delete": "Delete",
     "validation": {
       "required": "This field is required",
       "email": "Please enter a valid email address",
@@ -553,7 +558,11 @@
     "clickToViewDetails": "Click to view details for {value}",
     "call": "Call {value}",
     "loading": "Loading...",
-    "noData": "No data available"
+    "noData": "No data available",
+    "clickToEdit": "Click to edit",
+    "enterValue": "Enter value",
+    "save": "Save",
+    "cancel": "Cancel"
   },
   "registerKids": {
     "title": "Register Kids",
@@ -597,5 +606,21 @@
   "languages": {
     "en": "English",
     "ar": "العربية"
+  },
+  "validation": {
+    "phoneNoEnglish": "Phone number should not contain English letters",
+    "required": "This field is required",
+    "email": "Please enter a valid email address",
+    "minLength": "Minimum length is {min} characters",
+    "maxLength": "Maximum length is {max} characters",
+    "min": "Minimum value is {min}",
+    "max": "Maximum value is {max}",
+    "invalidFormat": "Invalid format",
+    "fourWords": "Please enter more than 4 names, each with at least 2 characters",
+    "noConsecutiveSpaces": "Please do not enter more than 2 consecutive spaces",
+    "invalidValue": "Invalid value",
+    "idOrPhone": "Please enter either a 14-digit ID starting with 3 and containing birthday (YYMMDD), or a 7-digit number",
+    "noEnglishLetters": "English letters are not allowed",
+    "studentAge": "Student age must be between {min} and {max} years old"
   }
 } 

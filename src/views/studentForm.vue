@@ -95,7 +95,7 @@
                           type="date"
                           :placeholder="$t('students.form.selectBirthDate')"
                           leadingIcon="fa-solid fa-calendar"
-                          :validation-rules="['required']"
+                          :validation-rules="['required', 'studentAge']"
                           @validation-change="handleBirthDateValidation"
                         />
                       </div>
@@ -367,6 +367,7 @@ import ImageUploader from '../components/shared/imageUploader.vue'
 import type { Student } from '../interfaces/student'
 import type { Grade } from '../interfaces/grade'
 import type { Class } from '../interfaces/class'
+import { switchLanguage } from '../i18n'
 
 const { t } = useI18n()
 
@@ -603,7 +604,6 @@ const fetchStudent = async () => {
   
   try {
     const response: any = await dataService.fetchOnline<ApiResponse<Student>>(`/api/KidsRegistration/GetKidById/${studentId.value}`)
-      console.log(response)
     if (response && response.data) {
       const student : Student  = response.data.kid
       isNeedToResetClassId.value = false
@@ -685,7 +685,6 @@ const handleSubmit = async () => {
     } else {
       response  = await dataService.createOnline('/api/KidsRegistration/RegisterKid', payload)
     }
-    console.log(response)
     if (response && (response.statusCode === 200 || response.httpStatus === 200)) {
       dataService.createAlertMessage(response.message, 'success')
       router.push('/students')
@@ -704,7 +703,6 @@ const handleGetClassesByGradeId = async (gradeId: number) => {
   const response: any = await dataService.fetchOnline<ApiResponse<Class[]>>(`/api/Grades/GetClassByGradeId/${gradeId}`)
   if (response && response.data) {
     classes.value = response.data
-    console.log(classes.value)
   }
 }
 
@@ -771,6 +769,11 @@ const handleCancel = () => {
 
 // Lifecycle
 onMounted(async () => {
+  // Set language to Arabic if in register mode
+  if (isRegisterMode.value) {
+    switchLanguage('ar')
+  }
+  
   await Promise.all([fetchGrades(), fetchClasses()])
   if (isEditMode.value) {
     await fetchStudent()

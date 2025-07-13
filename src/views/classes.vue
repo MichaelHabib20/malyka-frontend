@@ -15,6 +15,7 @@
       @update:search-query="handleSearch"
       @button-click="handleButtonClick"
       @action="handleAction"
+      @cell-edit="handleCellEdit"
     />
   </div>
 </template>
@@ -50,7 +51,13 @@ const columns = computed(() => {
     {
       key: 'class.name',
       label: t('classes.columns.name'),
-      type: 'text',
+      type: 'editable',
+      editableType: 'text',
+      editablePlaceholder: 'Enter class name',
+      editableValidation: (value: string) => {
+        if (!value) return 'Class name is required';
+        return null;
+      },
       sortable: true,
       isMainColumn: true
     },
@@ -216,6 +223,8 @@ const handleAction = async ({ action, row }: { action: string; row: any }) => {
   }
 };
 
+
+
 const handleSortBy = (column: string) => {
   sortBy.value = column;
 };
@@ -260,6 +269,25 @@ const fetchClassesByGradeId = async (gradeId: string) => {
     loading.value = false;
   }
 }
+const handleCellEdit = async ({ column, value, row, originalValue }: { column: string; value: any; row: any; originalValue: any }) => {
+  console.log('Cell edited:', { column, value, row, originalValue });
+  if(value !== originalValue){
+    const modal : Class = {
+      ClassId: row.class.id,
+      name: value,
+      gradeId: row.class.gradeId
+    }
+    await updateClass(modal);
+  }
+};
+
+const updateClass = async (classData: Class) => {
+  const result: any = await dataService.createOnline(`/api/Grades/UpdateClass`, classData);
+  if (result && (result.httpStatus === 200 || result.statusCode === 200)) {
+    dataService.createAlertMessage(t('classes.updateSuccess'), 'success');
+    await fetchClasses();
+  }
+};
 
 // Lifecycle
 onMounted(() => {

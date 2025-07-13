@@ -94,7 +94,13 @@ const columns = computed(() => {
     {
       key: 'kid.name',
       label: t('students.columns.name'),
-      type: 'text',
+      type: 'editable',
+      editableType: 'text',
+      editablePlaceholder: 'Enter name',
+      editableValidation: (value: string) => {
+        if (!value) return 'Name is required';
+        return null;
+      },
       align: 'right',
       sortable: true,
       isMainColumn: true

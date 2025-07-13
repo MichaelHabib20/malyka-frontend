@@ -15,6 +15,7 @@
       @button-click="handleButtonClick"
       @action="handleAction"
       @number-click="handleNumberClick"
+      @cell-edit="handleCellEdit"
     />
   </div>
 </template>
@@ -48,7 +49,13 @@ const columns = computed(() => {
     {
       key: 'grade.name',
       label: t('grades.columns.name'),
-      type: 'text',
+      type: 'editable',
+      editableType: 'text',
+      editablePlaceholder: 'Enter grade name',
+      editableValidation: (value: string) => {
+        if (!value) return 'Grade name is required';
+        return null;
+      },
       sortable: true,
       isMainColumn: true
     },
@@ -214,6 +221,25 @@ const handleNumberClick = ({ column, value, row }: { column: string; value: any;
   // The automatic routing is already handled by the DataTable component
   console.log('Number clicked:', { column, value, row });
   // You can add additional logic here if needed
+};
+
+const handleCellEdit = ({ column, value, row, originalValue }: { column: string; value: any; row: any; originalValue: any }) => {
+  console.log('Cell edited:', { column, value, row, originalValue });
+  // updateGrade(row);
+  if(value !== originalValue){
+    const modal : Grade = {
+      id: row.grade.id,
+      name: value
+    }
+    updateGrade(modal);
+  }
+};
+const updateGrade = async (grade: Grade) => {
+  const result: any = await dataService.createOnline(`/api/Grades/UpdateGrade`, grade);
+  if (result && (result.httpStatus === 200 || result.statusCode === 200)) {
+    dataService.createAlertMessage(t('grades.updateSuccess'), 'success');
+    await fetchGrades();
+  }
 };
 
 

@@ -139,7 +139,7 @@
             :loading="isLoading" :sort-by="sortBy" :sort-direction="sortDirection" :filters="filters"
             :search-query="searchQuery" :search-placeholder="t('attendanceHistory.searchPlaceholder')"
             @update:sort-by="handleSortBy" @update:sort-direction="handleSortDirection"
-            @update:search-query="handleSearch" @buttonClick="handleButtonClick" />
+            @update:search-query="handleSearch" @update:filters="handleFilters" @buttonClick="handleButtonClick" />
         </div>
       </div>
     </div>
@@ -164,6 +164,11 @@ interface Kid {
   name: string
   isAdded: boolean
   date: string
+  gradeId?: number
+  gradeName?: string
+  className?: string
+  id?: number
+  percentage?: number
 }
 
 // Reactive data
@@ -175,6 +180,9 @@ const isLoading = ref(false)
 const isDateRangeEmpty = ref(false)
 const isExporting = ref(false)
 const kids = ref<Kid[]>([])
+
+// Grade data for filtering
+const grades = ref<{ id: number; name: string }[]>([])
 
 // Date validation state
 const dateValidationError = ref<string>('')
@@ -204,8 +212,26 @@ const tableButtons = computed(() => {
   ]);
 });
 
+// Grade filter options computed property
+const gradeFilterOptions = computed(() => {
+  try {
+    if (!Array.isArray(grades.value)) {
+      return []
+    }
+    const options = grades.value.map(grade => ({
+      label: grade.name,
+      value: grade.name
+    }))
+    console.log('Grade filter options:', options)
+    return options
+  } catch (error) {
+    console.error('Error creating grade filter options:', error)
+    return []
+  }
+})
+
 // Table columns configuration
-const tableColumns: Column[] = [
+const tableColumns = computed((): Column[] => [
   {
     key: 'code',
     label: t('attendanceHistory.columns.code'),
@@ -228,6 +254,7 @@ const tableColumns: Column[] = [
     align: 'center',
     filterable: true,
     filterType: 'select',
+    filterOptions: gradeFilterOptions.value,
     isMainColumn: false
   },
   {
@@ -245,12 +272,12 @@ const tableColumns: Column[] = [
     sortable: true,
     align: 'center'
   },
-]
+])
 
 // Dynamic table columns based on date type and data
 const dynamicTableColumns = computed(() => {
   if (dateType.value === 'single') {
-    return tableColumns;
+    return tableColumns.value;
   } else {
     // For date range, create dynamic columns
     const baseColumns: Column[] = [
@@ -275,6 +302,9 @@ const dynamicTableColumns = computed(() => {
         type: 'grade-chip',
         sortable: false,
         align: 'center',
+        filterable: true,
+        filterType: 'select',
+        filterOptions: gradeFilterOptions.value,
         isMainColumn: false
       },
       {
@@ -331,6 +361,13 @@ const filteredData = computed(() => {
       const fullName = item.name.toLowerCase();
       const fullNameMatch = fullName.includes(query);
       return codeMatch || fullNameMatch;
+    });
+  }
+
+  // Apply grade filter
+  if (filters.value.gradeName) {
+    result = result.filter((item: any) => {
+      return item.gradeName === filters.value.gradeName;
     });
   }
 
@@ -452,8 +489,30 @@ const resetDates = () => {
   startDate.value = undefined
   endDate.value = undefined
   kids.value = []
+  grades.value = []
   dateValidationError.value = ''
   isDateRangeValid.value = true
+}
+
+// Function to collect grade data from kids
+const collectGradeData = (kidsData: any[]) => {
+  const gradeMap = new Map<string, string>();
+  
+  kidsData.forEach(kid => {
+    if (kid.gradeName) {
+      // Use gradeId if available, otherwise use gradeName as the key
+      const key = kid.gradeId ? kid.gradeId.toString() : kid.gradeName;
+      gradeMap.set(key, kid.gradeName);
+    }
+  });
+  
+  // Convert map to array of grade objects
+  grades.value = Array.from(gradeMap.entries()).map(([id, name]) => ({
+    id: parseInt(id) || 0, // Convert to number if possible, otherwise use 0
+    name
+  }));
+  
+  console.log('Collected grades:', grades.value);
 }
 
 const getKidsData = async (localDateType: 'single' | 'start' | 'end') => {
@@ -494,7 +553,9 @@ const getKidsData = async (localDateType: 'single' | 'start' | 'end') => {
 
     if (result.httpStatus === 200 || result.status) {
       if (dateType.value === 'single') {
-        kids.value = result.data.kids ? result.data.kids : result.data;
+        const kidsData = result.data.kids ? result.data.kids : result.data;
+        kids.value = kidsData;
+        collectGradeData(kidsData);
       } else if (dateType.value === 'range') {
         isDateRangeEmpty.value = result.data.dailyAttendance.length === 0;
         handleDateRangeData(result.data.dailyAttendance, result.data.attendancePercentages);
@@ -508,6 +569,7 @@ const getKidsData = async (localDateType: 'single' | 'start' | 'end') => {
 const handleDateRangeData = (data: any[], attendancePercentages: any[]) => {
   if (!Array.isArray(data) || data.length === 0) {
     kids.value = [];
+    grades.value = [];
     return;
   }
 
@@ -555,6 +617,10 @@ const handleDateRangeData = (data: any[], attendancePercentages: any[]) => {
   });
 
   kids.value = processedKids;
+  
+  // Collect grade data from processed kids
+  collectGradeData(processedKids);
+  
   console.log(kids.value);
 };
 
@@ -625,6 +691,10 @@ const handleSearch = (query: string) => {
   searchQuery.value = query;
 };
 
+const handleFilters = (newFilters: Record<string, any>) => {
+  filters.value = newFilters;
+};
+
 // Watchers
 watch([singleDate, startDate, endDate], () => {
   if (hasValidDateSelection()) {
@@ -644,6 +714,17 @@ watch(dateType, () => {
   dateValidationError.value = ''
   isDateRangeValid.value = true
 })
+
+// Watch for kids data changes to reset filters
+watch(kids, () => {
+  // Reset filters when data changes to avoid showing empty results
+  filters.value = {}
+}, { deep: true })
+
+// Watch for grades changes to debug
+watch(grades, (newGrades) => {
+  console.log('Grades changed:', newGrades)
+}, { deep: true })
 
 // Lifecycle
 onMounted(() => {

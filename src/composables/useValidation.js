@@ -1,39 +1,40 @@
 import { ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 
-const validationRules = {
+const createValidationRules = (t) => ({
   required: (value) => ({
     isValid: value !== undefined && value !== null && value !== '',
-    message: 'This field is required'
+    message: t('validation.required')
   }),
   
   email: (value) => ({
     isValid: /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value),
-    message: 'Please enter a valid email address'
+    message: t('validation.email')
   }),
   
   minLength: (min) => (value) => ({
     isValid: value.length >= min,
-    message: `Minimum length is ${min} characters`
+    message: t('validation.minLength', { min })
   }),
   
   maxLength: (max) => (value) => ({
     isValid: value.length <= max,
-    message: `Maximum length is ${max} characters`
+    message: t('validation.maxLength', { max })
   }),
   
   min: (min) => (value) => ({
     isValid: Number(value) >= min,
-    message: `Minimum value is ${min}`
+    message: t('validation.min', { min })
   }),
   
   max: (max) => (value) => ({
     isValid: Number(value) <= max,
-    message: `Maximum value is ${max}`
+    message: t('validation.max', { max })
   }),
   
   pattern: (regex, message) => (value) => ({
     isValid: regex.test(value),
-    message: message || 'Invalid format'
+    message: message || t('validation.invalidFormat')
   }),
   
   fourWords: (value) => {
@@ -41,7 +42,7 @@ const validationRules = {
     const isValid = words.length >= 4 && words.every(word => word.length >= 2)
     return {
       isValid,
-      message: 'Please enter more than 4 names, each with at least 2 characters'
+      message: t('validation.fourWords')
     }
   },
   
@@ -53,18 +54,18 @@ const validationRules = {
     const hasConsecutiveSpaces = /\s{3,}/.test(value)
     return {
       isValid: !hasConsecutiveSpaces,
-      message: 'Please do not enter more than 2 consecutive spaces'
+      message: t('validation.noConsecutiveSpaces')
     }
   },
   
   custom: (validator, message) => (value) => ({
     isValid: validator(value),
-    message: message || 'Invalid value'
+    message: message || t('validation.invalidValue')
   }),
   
   // Custom validation for 14-digit ID starting with 3 and containing birthday, or 7-digit number
   idOrPhone: (value) => {
-    if (!value) return { isValid: false, message: 'This field is required' }
+    if (!value) return { isValid: false, message: t('validation.required') }
     
     const strValue = String(value).replace(/\s/g, '') // Remove spaces
     
@@ -90,7 +91,7 @@ const validationRules = {
     
     return { 
       isValid: false, 
-      message: 'Please enter either a 14-digit ID starting with 3 and containing birthday (YYMMDD), or a 7-digit number' 
+      message: t('validation.idOrPhone')
     }
   },
   
@@ -103,13 +104,38 @@ const validationRules = {
     
     return {
       isValid: !hasEnglishLetters,
-      message: 'English letters are not allowed'
+      message: t('validation.noEnglishLetters')
+    }
+  },
+  
+  // Age validation for students (3-8 years old)
+  studentAge: (value) => {
+    if (!value) return { isValid: false, message: t('validation.required') }
+    
+    const birthDate = new Date(value)
+    const today = new Date()
+    
+    // Calculate age
+    let age = today.getFullYear() - birthDate.getFullYear()
+    const monthDiff = today.getMonth() - birthDate.getMonth()
+    
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+      age--
+    }
+    
+    const isValid = age >= 3 && age <= 8
+    
+    return {
+      isValid,
+      message: t('validation.studentAge', { min: 3, max: 8 })
     }
   }
-}
+})
 
 export const useValidation = () => {
+  const { t } = useI18n()
   const errors = ref([])
+  const validationRules = createValidationRules(t)
   
   const validate = (value, rules = []) => {
     errors.value = []

@@ -45,12 +45,18 @@ const emit = defineEmits<{
   (e: 'buttonClick', payload: { buttonId: string; button: CustomButton }): void;
   (e: 'update:selectedRows', value: any[]): void;
   (e: 'numberClick', payload: { column: string; value: any; row: any }): void;
+  (e: 'cellEdit', payload: { column: string; value: any; row: any; originalValue: any }): void;
 }>();
 
 const localFilters = ref<Record<string, any>>({ ...props.filters });
 const localSearchQuery = ref(props.searchQuery);
 const searchInputRef = ref<HTMLInputElement | null | any>(null);
 const showMoreDropdown = ref(false);
+
+// Editable cell state
+const editingCell = ref<{ rowIndex: number; columnKey: string } | null>(null);
+const editingValue = ref<any>('');
+const editingError = ref<string | null>(null);
 
 // Row selection logic
 const selectedRows = ref<any[]>(props.selectedRows ? [...props.selectedRows] : []);
@@ -147,6 +153,69 @@ const handleNumberClick = (column: string, value: any, row: any) => {
     path = path.replace(':gradeId', String(value));
     router.push(path);
   }
+};
+
+// Editable cell functions
+const startEditing = (rowIndex: number, columnKey: string, value: any) => {
+  editingCell.value = { rowIndex, columnKey };
+  editingValue.value = value;
+  editingError.value = null;
+};
+
+const cancelEditing = () => {
+  editingCell.value = null;
+  editingValue.value = '';
+  editingError.value = null;
+  // console.log('cancelEditing', editingCell.value);
+};
+
+const saveEditing = () => {
+  const columnConfig = props.columns.find(col => col.key === editingCell.value?.columnKey);
+  
+  // Validate if validation function exists
+  if (columnConfig?.editableValidation) {
+    const error = columnConfig.editableValidation(editingValue.value);
+    if (error) {
+      editingError.value = error;
+      return;
+    }
+  }
+  
+  if (editingCell.value) {
+    const row = props.data[editingCell.value.rowIndex];
+    const originalValue = getNestedValue(row, editingCell.value.columnKey);
+    
+    emit('cellEdit', {
+      column: editingCell.value.columnKey,
+      value: editingValue.value,
+      row,
+      originalValue
+    });
+  }
+  
+  cancelEditing();
+};
+
+const handleEditKeydown = (event: KeyboardEvent) => {
+  if (event.key === 'Enter') {
+    event.preventDefault();
+    saveEditing();
+  } else if (event.key === 'Escape') {
+    event.preventDefault();
+    cancelEditing();
+  }
+};
+
+const handleEditBlur = (event: FocusEvent) => {
+  // Use setTimeout to allow click events on action buttons to fire first
+  setTimeout(() => {
+    // Check if the new focus target is within the editable cell
+    const target = event.relatedTarget as Element;
+    if (!target || !target.closest('.editable-cell')) {
+      // If clicking outside the editable cell, cancel the edit
+      cancelEditing();
+    }
+  }, 100);
 };
 
 const resetFilters = () => {
@@ -429,7 +498,7 @@ const getGradeChipClass = (gradeText: string) => {
         </div>
       </div>
 
-      <div class="d-flex flex-wrap gap-3 align-items-start">
+      <div class="d-flex flex-wrap gap-3 align-items-start mt-4">
         <div v-for="column in columns.filter(col => col.filterable)" :key="column.key" class="filter-item">
           <template v-if="column.filterType === 'select'">
             <Select
@@ -634,6 +703,72 @@ const getGradeChipClass = (gradeText: string) => {
                   />
                 </template>
 
+                <!-- Editable -->
+                <template v-else-if="column.type === 'editable'">
+                  <div class="editable-cell">
+                    <!-- Display mode -->
+                    <div 
+                      v-if="editingCell?.rowIndex !== index || editingCell?.columnKey !== column.key"
+                      class="editable-display"
+                      @click="startEditing(index, column.key, getNestedValue(row, column.key))"
+                      :title="t('datatable.clickToEdit')"
+                    >
+                      <span class="editable-value">{{ getNestedValue(row, column.key) || '-' }}</span>
+                      <i class="fa-solid fa-edit editable-icon"></i>
+                    </div>
+                    
+                    <!-- Edit mode -->
+                    <div v-else class="editable-edit">
+                      <div class="editable-input-container">
+                        <input
+                          v-if="column.editableType !== 'textarea'"
+                          v-model="editingValue"
+                          :type="column.editableType || 'text'"
+                          :placeholder="column.editablePlaceholder || t('datatable.enterValue')"
+                          class="editable-input"
+                          @click.stop
+                          @keydown="handleEditKeydown"
+                          @blur="handleEditBlur"
+                          ref="editingInputRef"
+                        />
+                        <textarea
+                          v-else
+                          v-model="editingValue"
+                          :placeholder="column.editablePlaceholder || t('datatable.enterValue')"
+                          class="editable-textarea"
+                          @click.stop
+                          @keydown="handleEditKeydown"
+                          @blur="handleEditBlur"
+                          rows="2"
+                        ></textarea>
+                        
+                        <!-- Error message -->
+                        <div v-if="editingError" class="editable-error">
+                          {{ editingError }}
+                        </div>
+                        
+                        <!-- Action buttons -->
+                        <div class="editable-actions">
+                          <button 
+                            class="editable-btn editable-btn-save"
+                            @click.stop="saveEditing"
+                            :title="t('datatable.save')"
+                          >
+                            <i class="fa-solid fa-check"></i>
+                          </button>
+                          <button 
+                            class="editable-btn editable-btn-cancel"
+                            @click.stop="cancelEditing"
+                            :title="t('datatable.cancel')"
+                          >
+                            <i class="fa-solid fa-times"></i>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </template>
+
                 <!-- Image -->
                 <template v-else-if="column.type === 'image'">
                   <img 
@@ -655,7 +790,7 @@ const getGradeChipClass = (gradeText: string) => {
                       class="action-button"
                       :style="{ color: action.color }"
                       @click="handleAction(action.label, row)"
-                      :title="t(action.label)"
+                      :title="action.label"
                     >
                       <i :class="['icon', action.icon]"></i>
                     </button>
@@ -1502,5 +1637,185 @@ const getGradeChipClass = (gradeText: string) => {
 .min-width-100{
   display: block;
   min-width: 100px;
+}
+
+/* Editable Cell Styles */
+.editable-cell {
+  position: relative;
+  width: 100%;
+}
+
+.editable-display {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.25rem 0.5rem;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-height: 32px;
+}
+
+.editable-display:hover {
+  background: #f8f9fa;
+  border-color: #dee2e6;
+}
+
+.editable-value {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.editable-icon {
+  font-size: 0.75rem;
+  color: #6c757d;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  margin-left: 0.5rem;
+}
+
+.editable-display:hover .editable-icon {
+  opacity: 1;
+}
+
+.editable-edit {
+  position: relative;
+  width: 100%;
+}
+
+.editable-input-container {
+  position: relative;
+  width: 100%;
+}
+
+.editable-input,
+.editable-textarea {
+  width: 100%;
+  padding: 0.375rem 0.75rem;
+  border: 2px solid #4f46e5;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  background: white;
+  transition: all 0.2s ease;
+}
+
+.editable-input:focus,
+.editable-textarea:focus {
+  outline: none;
+  border-color: #3730a3;
+  box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.2);
+}
+
+.editable-textarea {
+  resize: vertical;
+  min-height: 60px;
+  font-family: inherit;
+}
+
+.editable-error {
+  color: #dc3545;
+  font-size: 0.75rem;
+  margin-top: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  background: #f8d7da;
+  border: 1px solid #f5c6cb;
+  border-radius: 4px;
+}
+
+.editable-actions {
+  position: absolute;
+  top: 0;
+  right: 0;
+  display: flex;
+  gap: 0.25rem;
+  padding: 0.25rem;
+  background: white;
+  border-radius: 0 4px 4px 0;
+  border: 2px solid #4f46e5;
+  border-bottom: none;
+}
+
+.editable-btn {
+  width: 24px;
+  height: 24px;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  transition: all 0.2s ease;
+}
+
+.editable-btn-save {
+  background: #28a745;
+  color: white;
+}
+
+.editable-btn-save:hover {
+  background: #1e7e34;
+}
+
+.editable-btn-cancel {
+  background: #dc3545;
+  color: white;
+}
+
+.editable-btn-cancel:hover {
+  background: #c82333;
+}
+
+/* Responsive adjustments for editable cells */
+@media (max-width: 768px) {
+  .editable-display {
+    padding: 0.2rem 0.4rem;
+    min-height: 28px;
+  }
+  
+  .editable-input,
+  .editable-textarea {
+    padding: 0.3rem 0.6rem;
+    font-size: 0.85rem;
+  }
+  
+  .editable-actions {
+    position: static;
+    margin-top: 0.5rem;
+    justify-content: flex-end;
+    background: none;
+    border: none;
+    padding: 0;
+  }
+  
+  .editable-btn {
+    width: 28px;
+    height: 28px;
+    font-size: 0.8rem;
+  }
+  
+  .editable-error {
+    font-size: 0.7rem;
+    margin-top: 0.2rem;
+  }
+}
+
+/* Touch device optimizations for editable cells */
+@media (hover: none) and (pointer: coarse) {
+  .editable-display {
+    min-height: 44px;
+  }
+  
+  .editable-icon {
+    opacity: 0.5;
+  }
+  
+  .editable-btn {
+    min-width: 44px;
+    min-height: 44px;
+  }
 }
 </style> 

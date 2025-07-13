@@ -1,5 +1,6 @@
 export interface Class {
-  id: number;
+  id?: number;
+  ClassId?: number;
   name: string;
   description?: string;
   gradeId?: number;
