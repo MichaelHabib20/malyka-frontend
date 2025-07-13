@@ -184,6 +184,9 @@ const kids = ref<Kid[]>([])
 // Grade data for filtering
 const grades = ref<{ id: number; name: string }[]>([])
 
+// Class data for filtering (dependent on selected grade)
+const classes = ref<{ id: number; name: string; gradeName: string }[]>([])
+
 // Date validation state
 const dateValidationError = ref<string>('')
 const isDateRangeValid = ref(true)
@@ -230,6 +233,47 @@ const gradeFilterOptions = computed(() => {
   }
 })
 
+// Class filter options computed property (dependent on selected grade)
+const classFilterOptions = computed(() => {
+  try {
+    if (!Array.isArray(classes.value)) {
+      return []
+    }
+    
+    // If no grade is selected, show all classes
+    if (!filters.value.gradeName) {
+      const options = classes.value.map(cls => ({
+        label: cls.name,
+        value: cls.name
+      }))
+      console.log('All class filter options:', options)
+      return options
+    }
+    
+    // Filter classes based on selected grade
+    const filteredClasses = classes.value.filter(cls => cls.gradeName === filters.value.gradeName)
+    const options = filteredClasses.map(cls => ({
+      label: cls.name,
+      value: cls.name
+    }))
+    console.log('Filtered class options for grade', filters.value.gradeName, ':', options)
+    return options
+  } catch (error) {
+    console.error('Error creating class filter options:', error)
+    return []
+  }
+})
+
+// Attendance filter options computed property
+const attendanceFilterOptions = computed(() => {
+  const options = [
+    { label: t('attendanceHistory.present'), value: true },
+    { label: t('attendanceHistory.absent'), value: false }
+  ]
+  console.log('Attendance filter options:', options)
+  return options
+})
+
 // Table columns configuration
 const tableColumns = computed((): Column[] => [
   {
@@ -263,6 +307,9 @@ const tableColumns = computed((): Column[] => [
     type: 'text',
     sortable: false,
     align: 'center',
+    filterable: true,
+    filterType: 'select',
+    filterOptions: classFilterOptions.value,
     isMainColumn: false
   },
   {
@@ -270,7 +317,10 @@ const tableColumns = computed((): Column[] => [
     label: t('attendanceHistory.columns.status'),
     type: 'attendance-status',
     sortable: true,
-    align: 'center'
+    align: 'center',
+    filterable: true,
+    filterType: 'select',
+    filterOptions: attendanceFilterOptions.value
   },
 ])
 
@@ -313,6 +363,9 @@ const dynamicTableColumns = computed(() => {
         type: 'text',
         sortable: false,
         align: 'left',
+        filterable: true,
+        filterType: 'select',
+        filterOptions: classFilterOptions.value,
         isMainColumn: false
       },
 
@@ -331,7 +384,10 @@ const dynamicTableColumns = computed(() => {
           label: dateKey,
           type: 'attendance-status',
           sortable: true,
-          align: 'center'
+          align: 'center',
+          filterable: true,
+          filterType: 'select',
+          filterOptions: attendanceFilterOptions.value
         });
       });
 
@@ -368,6 +424,40 @@ const filteredData = computed(() => {
   if (filters.value.gradeName) {
     result = result.filter((item: any) => {
       return item.gradeName === filters.value.gradeName;
+    });
+  }
+
+  // Apply class filter
+  if (filters.value.className) {
+    result = result.filter((item: any) => {
+      return item.className === filters.value.className;
+    });
+  }
+
+  // Apply attendance filter
+  if (filters.value.isAdded !== undefined && filters.value.isAdded !== '') {
+    result = result.filter((item: any) => {
+      return item.isAdded === filters.value.isAdded;
+    });
+  }
+
+  // Apply date-specific attendance filters (for date range view)
+  if (dateType.value === 'range') {
+    const dateKeys = Object.keys(filters.value).filter(key => 
+      key !== 'gradeName' && 
+      key !== 'className' && 
+      key !== 'isAdded' && 
+      key !== 'code' && 
+      key !== 'name' &&
+      key !== 'percentage'
+    );
+    
+    dateKeys.forEach(dateKey => {
+      if (filters.value[dateKey] !== undefined && filters.value[dateKey] !== '') {
+        result = result.filter((item: any) => {
+          return item[dateKey] === filters.value[dateKey];
+        });
+      }
     });
   }
 
@@ -490,29 +580,47 @@ const resetDates = () => {
   endDate.value = undefined
   kids.value = []
   grades.value = []
+  classes.value = []
   dateValidationError.value = ''
   isDateRangeValid.value = true
 }
 
-// Function to collect grade data from kids
-const collectGradeData = (kidsData: any[]) => {
+// Function to collect grade and class data from kids
+const collectFilterData = (kidsData: any[]) => {
   const gradeMap = new Map<string, string>();
+  const classMap = new Map<string, { name: string; gradeName: string }>();
   
   kidsData.forEach(kid => {
+    // Collect grade data
     if (kid.gradeName) {
-      // Use gradeId if available, otherwise use gradeName as the key
       const key = kid.gradeId ? kid.gradeId.toString() : kid.gradeName;
       gradeMap.set(key, kid.gradeName);
     }
+    
+    // Collect class data
+    if (kid.className && kid.gradeName) {
+      const classKey = `${kid.className}-${kid.gradeName}`;
+      classMap.set(classKey, {
+        name: kid.className,
+        gradeName: kid.gradeName
+      });
+    }
   });
   
-  // Convert map to array of grade objects
+  // Convert maps to arrays
   grades.value = Array.from(gradeMap.entries()).map(([id, name]) => ({
-    id: parseInt(id) || 0, // Convert to number if possible, otherwise use 0
+    id: parseInt(id) || 0,
     name
   }));
   
+  classes.value = Array.from(classMap.values()).map((cls, index) => ({
+    id: index + 1,
+    name: cls.name,
+    gradeName: cls.gradeName
+  }));
+  
   console.log('Collected grades:', grades.value);
+  console.log('Collected classes:', classes.value);
 }
 
 const getKidsData = async (localDateType: 'single' | 'start' | 'end') => {
@@ -555,7 +663,7 @@ const getKidsData = async (localDateType: 'single' | 'start' | 'end') => {
       if (dateType.value === 'single') {
         const kidsData = result.data.kids ? result.data.kids : result.data;
         kids.value = kidsData;
-        collectGradeData(kidsData);
+        collectFilterData(kidsData);
       } else if (dateType.value === 'range') {
         isDateRangeEmpty.value = result.data.dailyAttendance.length === 0;
         handleDateRangeData(result.data.dailyAttendance, result.data.attendancePercentages);
@@ -570,6 +678,7 @@ const handleDateRangeData = (data: any[], attendancePercentages: any[]) => {
   if (!Array.isArray(data) || data.length === 0) {
     kids.value = [];
     grades.value = [];
+    classes.value = [];
     return;
   }
 
@@ -618,8 +727,8 @@ const handleDateRangeData = (data: any[], attendancePercentages: any[]) => {
 
   kids.value = processedKids;
   
-  // Collect grade data from processed kids
-  collectGradeData(processedKids);
+  // Collect grade and class data from processed kids
+  collectFilterData(processedKids);
   
   console.log(kids.value);
 };
@@ -718,13 +827,35 @@ watch(dateType, () => {
 // Watch for kids data changes to reset filters
 watch(kids, () => {
   // Reset filters when data changes to avoid showing empty results
-  filters.value = {}
+  // Keep grade and class filters but reset attendance filters
+  const currentFilters = { ...filters.value };
+  filters.value = {
+    gradeName: currentFilters.gradeName || '',
+    className: currentFilters.className || ''
+    // Reset attendance filters (isAdded and date-specific filters)
+  };
 }, { deep: true })
 
 // Watch for grades changes to debug
 watch(grades, (newGrades) => {
   console.log('Grades changed:', newGrades)
 }, { deep: true })
+
+// Watch for grade filter changes to reset class filter
+watch(() => filters.value.gradeName, (newGrade, oldGrade) => {
+  if (newGrade !== oldGrade) {
+    // Reset class filter when grade changes
+    filters.value.className = ''
+    console.log('Grade filter changed to:', newGrade, '- Class filter reset')
+  }
+})
+
+// Watch for attendance filter changes to debug
+watch(() => filters.value.isAdded, (newAttendance, oldAttendance) => {
+  if (newAttendance !== oldAttendance) {
+    console.log('Attendance filter changed to:', newAttendance)
+  }
+})
 
 // Lifecycle
 onMounted(() => {
