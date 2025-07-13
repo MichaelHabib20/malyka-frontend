@@ -19,10 +19,10 @@
                 <i class="fa-solid fa-edit"></i>
                 {{ $t('common.edit') }}
               </button>
-              <button class="btn btn-danger d-flex align-items-center gap-2" @click="handleDelete">
+              <!-- <button class="btn btn-danger d-flex align-items-center gap-2" @click="handleDelete">
                 <i class="fa-solid fa-trash"></i>
                 {{ $t('common.delete') }}
-              </button>
+              </button> -->
             </div>
           </div>
         </div>
@@ -185,10 +185,10 @@
     </div>
 
     <!-- Follow-up Section -->
-    <FollowUpSection 
+    <!-- <FollowUpSection 
       :studentId="student.id" 
       @followUpAdded="handleFollowUpAdded"
-    />
+    /> -->
 
     <!-- Confirmation Modal for Delete -->
     <div class="modal fade" :class="{ show: showDeleteModal }" :style="{ display: showDeleteModal ? 'block' : 'none' }" 

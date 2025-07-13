@@ -180,15 +180,15 @@ const columns = computed(() => {
 // Custom buttons
 const customButtons = computed(() => {
   return createButtonsWithPermissions([
-    {
-      id: 'new-student',
-      permission: 'View students',
-      config: {
-        label: t('students.newStudent'),
-        icon: 'fa-plus',
-        variant: 'btn-primary'
-      }
-    }
+    // {
+    //   id: 'new-student',
+    //   permission: 'View students',
+    //   config: {
+    //     label: t('students.newStudent'),
+    //     icon: 'fa-plus',
+    //     variant: 'btn-primary'
+    //   }
+    // }
   ]);
 });
 
