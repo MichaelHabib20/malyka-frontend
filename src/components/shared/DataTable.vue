@@ -12,6 +12,14 @@ const router = useRouter();
 const { t } = useI18n();
 
 
+/**
+ * DataTable Component Props
+ * 
+ * @param rowKey - Property to use as unique identifier for rows. 
+ *                 Can be a nested property like 'kid.id' or simple like 'id'.
+ *                 Defaults to 'id'. If the property doesn't exist, falls back to JSON.stringify(row).
+ *                 Required for proper row selection functionality.
+ */
 const props = withDefaults(defineProps<Props & {
   customButtons?: CustomButton[];
   selectedRows?: any[];
@@ -28,7 +36,8 @@ const props = withDefaults(defineProps<Props & {
   searchPlaceholder: 'Search...',
   customButtons: () => [],
   removeLeadingZero: false,
-  showSelection: false
+  showSelection: false,
+  rowKey: 'id'
 });
 
 const emit = defineEmits<{
@@ -267,11 +276,15 @@ onUnmounted(() => {
 });
 
 const isRowSelected = (row: any) => {
-  return selectedRows.value.some(r => r.id === row.id);
+  const rowKey = props.rowKey || 'id';
+  const rowIdentifier = getRowIdentifier(row, rowKey);
+  return selectedRows.value.some(r => getRowIdentifier(r, rowKey) === rowIdentifier);
 };
 
 const toggleRowSelection = (row: any) => {
-  const idx = selectedRows.value.findIndex(r => r.id === row.id);
+  const rowKey = props.rowKey || 'id';
+  const rowIdentifier = getRowIdentifier(row, rowKey);
+  const idx = selectedRows.value.findIndex(r => getRowIdentifier(r, rowKey) === rowIdentifier);
   if (idx === -1) {
     selectedRows.value.push(row);
   } else {
@@ -282,26 +295,56 @@ const toggleRowSelection = (row: any) => {
 
 const isAllPageSelected = computed(() => {
   if (!props.data.length) return false;
-  return props.data.every(row => selectedRows.value.some(r => r.id === row.id));
+  const rowKey = props.rowKey || 'id';
+  return props.data.every(row => {
+    const rowIdentifier = getRowIdentifier(row, rowKey);
+    return selectedRows.value.some(r => getRowIdentifier(r, rowKey) === rowIdentifier);
+  });
 });
 
 const toggleSelectAllPage = () => {
+  const rowKey = props.rowKey || 'id';
   if (isAllPageSelected.value) {
     // Unselect all rows on this page
-    selectedRows.value = selectedRows.value.filter(r => !props.data.some(row => row.id === r.id));
+    selectedRows.value = selectedRows.value.filter(r => {
+      const rIdentifier = getRowIdentifier(r, rowKey);
+      return !props.data.some(row => getRowIdentifier(row, rowKey) === rIdentifier);
+    });
   } else {
     // Add all rows on this page
-    const newRows = props.data.filter(row => !selectedRows.value.some(r => r.id === row.id));
+    const newRows = props.data.filter(row => {
+      const rowIdentifier = getRowIdentifier(row, rowKey);
+      return !selectedRows.value.some(r => getRowIdentifier(r, rowKey) === rowIdentifier);
+    });
     selectedRows.value = [...selectedRows.value, ...newRows];
   }
   emit('update:selectedRows', [...selectedRows.value]);
 };
+
+const isIndeterminate = computed(() => {
+  const rowKey = props.rowKey || 'id';
+  const selectedCount = props.data.filter(row => 
+    selectedRows.value.some(r => getRowIdentifier(r, rowKey) === getRowIdentifier(row, rowKey))
+  ).length;
+  return selectedCount > 0 && selectedCount < props.data.length;
+});
 
 // Utility function to get nested object values
 const getNestedValue = (obj: any, path: string) => {
   return path.split('.').reduce((current, key) => {
     return current && current[key] !== undefined ? current[key] : null;
   }, obj);
+};
+
+// Utility function to get unique identifier for a row
+const getRowIdentifier = (row: any, rowKey: string) => {
+  const value = getNestedValue(row, rowKey);
+  // If the value exists and is not null/undefined, use it
+  if (value !== null && value !== undefined && value !== '') {
+    return value;
+  }
+  // Fallback: create a unique identifier based on row content
+  return JSON.stringify(row);
 };
 
 // Function to format dates
@@ -573,7 +616,12 @@ const getGradeChipClass = (gradeText: string) => {
         <thead>
           <tr>
             <th v-if="showSelection" style="width: 40px;">
-              <input type="checkbox" :checked="isAllPageSelected" @change="toggleSelectAllPage" />
+              <input
+                type="checkbox"
+                :checked="isAllPageSelected"
+                :indeterminate="isIndeterminate"
+                @change="toggleSelectAllPage"
+              />
             </th>
             <th 
               v-for="column in columns" 

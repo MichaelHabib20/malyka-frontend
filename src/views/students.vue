@@ -40,6 +40,7 @@
       :sort-direction="sortDirection"
       :selected-rows="selectedRows"
       :show-selection="true"
+      row-key="kid.id"
       @update:sort-by="handleSortBy"
       @update:sort-direction="handleSortDirection"
       @update:search-query="handleSearch"

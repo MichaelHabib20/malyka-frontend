@@ -14,4 +14,5 @@ export interface Props {
   searchPlaceholder?: string;
   selectedRows?: any[];
   showSelection?: boolean;
+  rowKey?: string; // Property to use as unique identifier for rows
 }
