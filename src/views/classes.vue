@@ -85,7 +85,7 @@ const columns = computed(() => {
       isMainColumn: true
     },
     {
-      key: 'grade.name',
+      key: 'gradeName',
       label: t('classes.columns.grade'),
       type: 'text',
       sortable: true,

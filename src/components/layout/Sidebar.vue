@@ -104,26 +104,7 @@ const navItems = computed(() => [
       }
     ]
   },
-  {
-    title: t('navigation.gradeLevels'),
-    icon: 'fa-solid fa-graduation-cap',
-    children: [
-      {
-        title: t('navigation.grades'),
-        icon: 'fa-solid fa-graduation-cap',
-        path: '/grade-levels/grades',
-        permissions: [''],
-        rolesId: [1]
-      },
-      {
-        title: t('navigation.classes'),
-        icon: 'fa-solid fa-graduation-cap',
-        path: '/grade-levels/classes',
-        permissions: [''],
-        rolesId: [1]
-      }
-    ]
-  },
+
   {
     title: t('navigation.attendance'),
     icon: 'fa-solid fa-clipboard-user',
@@ -181,6 +162,26 @@ const navItems = computed(() => [
         }
       }
 
+    ]
+  },
+  {
+    title: t('navigation.gradeLevels'),
+    icon: 'fa-solid fa-graduation-cap',
+    children: [
+      {
+        title: t('navigation.grades'),
+        icon: 'fa-solid fa-graduation-cap',
+        path: '/grade-levels/grades',
+        permissions: [''],
+        rolesId: [1]
+      },
+      {
+        title: t('navigation.classes'),
+        icon: 'fa-solid fa-graduation-cap',
+        path: '/grade-levels/classes',
+        permissions: [''],
+        rolesId: [1]
+      }
     ]
   },
   {

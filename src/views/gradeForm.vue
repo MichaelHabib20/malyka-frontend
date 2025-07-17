@@ -18,6 +18,19 @@
                 />
               </div>
 
+              <!-- Arabic Name Input -->
+              <div class="mb-4">
+                <Input
+                  id="grade-ar-name"
+                  v-model="formData.arName"
+                  :label="t('grades.form.arName')"
+                  :placeholder="t('grades.form.arNamePlaceholder')"
+                  leadingIcon="fa-solid fa-language"
+                  :validation-rules="arNameValidationRules"
+                  @validation-change="handleArNameValidation"
+                />
+              </div>
+
 
               <!-- Form Actions -->
               <div class="d-flex justify-content-end gap-2 pt-3 border-top">
@@ -78,12 +91,14 @@ const router = useRouter()
 // Reactive data
 const formData = ref<Grade>({
   id: 0,
-  name: ''
+  name: '',
+  arName: ''
 })
 
 const loading = ref(false)
 const isSubmitting = ref(false)
 const nameValidation = ref<ValidationResult>({ isValid: false, errors: [] })
+const arNameValidation = ref<ValidationResult>({ isValid: false, errors: [] })
 
 // Computed properties
 const isEditMode = computed(() => route.name === 'EditGrade')
@@ -91,7 +106,9 @@ const gradeId = computed(() => route.params.id as string)
 
 const isFormValid = computed(() => {
   return nameValidation.value.isValid &&
-         formData.value.name.trim() !== ''
+         formData.value.name.trim() !== '' &&
+         arNameValidation.value.isValid &&
+         formData.value.arName?.trim() !== ''
 })
 
 // Validation rules
@@ -101,9 +118,19 @@ const nameValidationRules = computed(() => [
   { type: 'maxLength', params: 100, message: t('grades.validation.nameMaxLength') }
 ])
 
+const arNameValidationRules = computed(() => [
+  'required',
+  { type: 'minLength', params: 2, message: t('grades.validation.arNameMinLength') },
+  { type: 'maxLength', params: 100, message: t('grades.validation.arNameMaxLength') }
+])
+
 // Methods
 const handleNameValidation = (validation: ValidationResult) => {
   nameValidation.value = validation
+}
+
+const handleArNameValidation = (validation: ValidationResult) => {
+  arNameValidation.value = validation
 }
 
 const fetchGrade = async () => {
@@ -115,7 +142,8 @@ const fetchGrade = async () => {
       const grade = response.data
       formData.value = {
         id: grade.grade.id,
-        name: grade.grade.name
+        name: grade.grade.name,
+        arName: grade.grade.arName || ''
           }
     }
   } catch (error) {
@@ -131,6 +159,7 @@ const handleSubmit = async () => {
   try {
     let payload: any = {
       Name: formData.value.name.trim(),
+      ArName: formData.value.arName?.trim() || '',
     }
 
     let response

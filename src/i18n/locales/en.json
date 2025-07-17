@@ -275,6 +275,8 @@
     "form": {
       "className": "Class Name",
       "classNamePlaceholder": "Enter class name",
+      "arName": "Arabic Name",
+      "arNamePlaceholder": "Enter Arabic name",
       "grade": "Grade",
       "selectGrade": "Select grade",
       "createClass": "Create Class",
@@ -283,7 +285,9 @@
     },
     "validation": {
       "nameMinLength": "Class name must be at least 2 characters",
-      "nameMaxLength": "Class name must be less than 100 characters"
+      "nameMaxLength": "Class name must be less than 100 characters",
+      "arNameMinLength": "Arabic name must be at least 2 characters",
+      "arNameMaxLength": "Arabic name must be less than 100 characters"
     },
     "buttons": {
       "newClass": "New Class"
@@ -328,13 +332,17 @@
     "form": {
       "gradeName": "Grade Name",
       "gradeNamePlaceholder": "Enter grade name",
+      "arName": "Arabic Name",
+      "arNamePlaceholder": "Enter Arabic name",
       "createGrade": "Create Grade",
       "updateGrade": "Update Grade",
       "saving": "Saving..."
     },
     "validation": {
       "nameMinLength": "Grade name must be at least 2 characters",
-      "nameMaxLength": "Grade name must be less than 100 characters"
+      "nameMaxLength": "Grade name must be less than 100 characters",
+      "arNameMinLength": "Arabic name must be at least 2 characters",
+      "arNameMaxLength": "Arabic name must be less than 100 characters"
     },
     "errors": {
       "loadGradeFailed": "Failed to load grade data",

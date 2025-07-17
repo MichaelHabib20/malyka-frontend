@@ -276,6 +276,8 @@
     "form": {
       "className": "اسم الفصل",
       "classNamePlaceholder": "أدخل اسم الفصل",
+      "arName": "الاسم العربي",
+      "arNamePlaceholder": "أدخل الاسم العربي",
       "grade": "المرحلة",
       "selectGrade": "اختر المرحلة",
       "createClass": "إنشاء فصل",
@@ -284,7 +286,9 @@
     },
     "validation": {
       "nameMinLength": "اسم الفصل يجب أن يكون على الأقل حرفين",
-      "nameMaxLength": "اسم الفصل يجب أن يكون أقل من 100 حرف"
+      "nameMaxLength": "اسم الفصل يجب أن يكون أقل من 100 حرف",
+      "arNameMinLength": "الاسم العربي يجب أن يكون على الأقل حرفين",
+      "arNameMaxLength": "الاسم العربي يجب أن يكون أقل من 100 حرف"
     },
     "buttons": {
       "newClass": "فصل جديد"
@@ -329,13 +333,17 @@
     "form": {
       "gradeName": "اسم المرحلة",
       "gradeNamePlaceholder": "أدخل اسم المرحلة",
+      "arName": "الاسم العربي",
+      "arNamePlaceholder": "أدخل الاسم العربي",
       "createGrade": "إنشاء مرحلة",
       "updateGrade": "تحديث المرحلة",
       "saving": "جاري الحفظ..."
     },
     "validation": {
       "nameMinLength": "اسم المرحلة يجب أن يكون على الأقل حرفين",
-      "nameMaxLength": "اسم المرحلة يجب أن يكون أقل من 100 حرف"
+      "nameMaxLength": "اسم المرحلة يجب أن يكون أقل من 100 حرف",
+      "arNameMinLength": "الاسم العربي يجب أن يكون على الأقل حرفين",
+      "arNameMaxLength": "الاسم العربي يجب أن يكون أقل من 100 حرف"
     },
     "errors": {
       "loadGradeFailed": "فشل في تحميل بيانات المرحلة",
