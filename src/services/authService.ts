@@ -8,6 +8,7 @@ interface User {
   PermissionName?: string | string[];
   exp?: number;
   iat?: number;
+  isGoogleAuth?: boolean; // Add this property
 }
 
 class AuthService {
@@ -38,7 +39,7 @@ class AuthService {
     return AuthService.instance;
   }
 
-  public setToken(token: string): void {
+  public setToken(token: string, isGoogleAuth: boolean = false): void {
     try {
       // Validate token format before storing
       if (!token || typeof token !== 'string' || !token.includes('.')) {
@@ -46,7 +47,9 @@ class AuthService {
       }
       
       const decoded = jwtDecode<User>(token);
+      decoded.isGoogleAuth = isGoogleAuth; // Set the flag
       localStorage.setItem('authToken', token);
+      localStorage.setItem('isGoogleAuth', isGoogleAuth ? '1' : '0');
       this.currentUser = decoded;
     } catch (error) {
       console.error('Error setting token:', error);
@@ -66,6 +69,7 @@ class AuthService {
 
   public clearUser(): void {
     localStorage.removeItem('authToken');
+    localStorage.removeItem('isGoogleAuth');
     this.currentUser = null;
   }
 
@@ -102,6 +106,12 @@ class AuthService {
   public hasRole(roleId: number): boolean {
     if (!this.currentUser || !this.currentUser.RoleId) return false;
     return Number(this.currentUser.RoleId) === roleId;
+  }
+
+  public getIsGoogleAuth(): boolean {
+    if (this.currentUser && this.currentUser.isGoogleAuth) return true;
+    // fallback to localStorage for reloads
+    return localStorage.getItem('isGoogleAuth') === '1';
   }
 }
 

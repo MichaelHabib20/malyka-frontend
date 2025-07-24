@@ -1,14 +1,14 @@
 <template>
   <div class="card-body container">
     <div v-if="selectedRows.length" class="mb-3 d-flex align-items-center gap-2 modern-toolbar">
-      <button
+      <!-- <button
         class="btn btn-outline-secondary d-flex align-items-center gap-1"
         @click="handleExport"
         :disabled="!selectedRows.length"
       >
         <i class="fa fa-download"></i>
-        {{ $t('common.export') }}
-      </button>
+        {{ $t('students.exportStudents') }}
+      </button> -->
       <button
         class="btn btn-info d-flex align-items-center gap-1"
         @click="handlePrintCards"
@@ -16,14 +16,6 @@
       >
         <i class="fa fa-id-card"></i>
         {{ $t('students.printCards') }}
-      </button>
-      <button
-        class="btn btn-danger d-flex align-items-center gap-1"
-        :disabled="!selectedRows.length"
-        @click="handleBulkDelete"
-      >
-        <i class="fa fa-trash"></i>
-        {{ $t('students.deleteSelected') }}
       </button>
       <span v-if="selectedRows.length" class="selected-count-badge">
         {{ $t('students.selectedCount', { count: selectedRows.length }) }}
@@ -334,75 +326,167 @@ const handlePrintCards = async () => {
     return;
   }
 
-  const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: [85, 54] }); // ID card size
-  // doc.addFileToVFS('Amiri-Regular.ttf', AmiriFont);
-  doc.addFont('Amiri-Regular.ttf', 'Amiri', 'normal');
-  doc.setFont('Amiri');
+  try {
+    // Card and page layout
+    const cardWidth = 85;
+    const cardHeight = 60;
+    const cardsPerRow = 2;
+    const cardsPerCol = 4;
+    const cardsPerPage = cardsPerRow * cardsPerCol;
+    const pageWidth = 210;
+    const pageHeight = 297;
+    const cardSpacingX = 8;
+    const cardSpacingY = 10;
+    const margin = 15;
 
-  const cardWidth = 85;
-  const cardHeight = 54;
+    // Calculate grid starting position (top-right aligned)
+    const gridWidth = (cardsPerRow * cardWidth) + ((cardsPerRow - 1) * cardSpacingX);
+    const gridHeight = (cardsPerCol * cardHeight) + ((cardsPerCol - 1) * cardSpacingY);
+    const startX = pageWidth - margin - gridWidth;
+    const startY = margin;
 
-  for (let i = 0; i < selectedRows.value.length; i++) {
-    if (i > 0) doc.addPage([cardWidth, cardHeight], 'landscape');
-    const student = selectedRows.value[i];
+    const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
 
-    // Draw card border
-    doc.setDrawColor(180);
-    doc.setLineWidth(0.5);
-    doc.rect(2, 2, cardWidth - 4, cardHeight - 4, 'S');
-
-    // Generate barcode as data URL
-    const barcodeCanvas = document.createElement('canvas');
-    JsBarcode(barcodeCanvas, student.code, { format: 'CODE128', width: 1.2, height: 14, displayValue: false });
-    const barcodeDataUrl = barcodeCanvas.toDataURL('image/png');
-
-    // Student photo or placeholder
-    const photoUrl = student.photo || placeholderImage;
-    let photoDataUrl = photoUrl;
-    if (!photoUrl.startsWith('data:')) {
-      photoDataUrl = await new Promise(resolve => {
-        const img = new window.Image();
-        img.crossOrigin = 'Anonymous';
-        img.onload = function() {
-          const canvas = document.createElement('canvas');
-          canvas.width = 24;
-          canvas.height = 24;
-          const ctx = canvas.getContext('2d');
-          ctx?.drawImage(img, 0, 0, 24, 24);
-          resolve(canvas.toDataURL('image/png'));
-        };
-        img.src = photoUrl;
-      });
+    // Try to load Arabic font
+    try {
+      // @ts-ignore
+      const { LamaSansFont } = await import('../assets/fonts/lama-sans.js');
+      doc.addFileToVFS('LamaSans-Regular.otf', LamaSansFont);
+      doc.addFont('LamaSans-Regular.otf', 'LamaSans', 'normal');
+      doc.setFont('LamaSans');
+      console.log('hna')
+    } catch (fontError) {
+      try {
+        // Fallback to Amiri if Lama Sans fails
+        // @ts-ignore
+        const { AmiriFont } = await import('../assets/fonts/Amiri-normal.js');
+        doc.addFileToVFS('Amiri-Regular.ttf', AmiriFont);
+        doc.addFont('Amiri-Regular.ttf', 'Amiri', 'normal');
+        doc.setFont('Amiri');
+        console.log('hna')
+      } catch (amiriError) {
+        console.warn('Both Lama Sans and Amiri font loading failed, using default font:', amiriError);
+        doc.setFont('helvetica');
+        console.log('hna')
+      }
     }
 
-    // Address in Arabic
-    const address = `${student.sideStreet || ''}، ${student.mainStreet || ''}، ${student.area || ''}، ${student.floor || ''}، ${student.apartmentNumber || ''}`;
-    const name = student.name;
-    const phone = student.momMob || student.dadMob || student.homePhone || '';
+    let cardsOnCurrentPage = 0;
+    for (let i = 0; i < selectedRows.value.length; i++) {
+      // New page if needed
+      if (cardsOnCurrentPage >= cardsPerPage) {
+        doc.addPage();
+        cardsOnCurrentPage = 0;
+      }
 
-    // Layout coordinates
-    const padding = 6;
-    // Barcode at top left
-    doc.addImage(barcodeDataUrl, 'PNG', padding, padding, 28, 10);
-    // Name at top right (large, bold)
-    doc.setFont('Amiri', 'normal');
-    doc.setFontSize(14);
-    doc.text(name, cardWidth - padding, padding + 8, { align: 'right' });
+      // Grid position
+      const row = Math.floor(cardsOnCurrentPage / cardsPerRow);
+      const col = cardsOnCurrentPage % cardsPerRow;
+      const cardX = startX + col * (cardWidth + cardSpacingX);
+      const cardY = startY + row * (cardHeight + cardSpacingY);
 
-    // Photo below barcode
-    doc.addImage(photoDataUrl, 'PNG', padding, padding + 14, 24, 24);
+      // Draw card border (single clean border)
+      doc.setDrawColor(0, 0, 0);
+      doc.setLineWidth(0.9);
+      doc.rect(cardX, cardY, cardWidth, cardHeight, 'S');
 
-    // Info to the right of photo
-    doc.setFont('Amiri', 'normal');
-    doc.setFontSize(10);
-    let infoX = padding + 26;
-    let infoY = padding + 18;
-    doc.text(`الهاتف: ${phone}`, cardWidth - padding, infoY, { align: 'right' });
-    infoY += 8;
-    doc.text(`العنوان: ${address}`, cardWidth - padding, infoY, { align: 'right', maxWidth: cardWidth - infoX - padding });
+      const studentData = selectedRows.value[i].kid;
+
+      // Generate barcode
+      try {
+        const barcodeCanvas = document.createElement('canvas');
+        JsBarcode(barcodeCanvas, studentData.code, {
+          format: 'CODE128',
+          width: 1.8,
+          height: 25,
+          displayValue: false,
+          margin: 0
+        });
+        const barcodeDataUrl = barcodeCanvas.toDataURL('image/png');
+        
+        // Position barcode at top-left
+        const barcodeW = 35;
+        const barcodeH = 12;
+        const barcodeX = cardX + 2;
+        const barcodeY = cardY + 2;
+        doc.addImage(barcodeDataUrl, 'PNG', barcodeX, barcodeY, barcodeW, barcodeH);
+      } catch (barcodeError) {
+        console.warn('Barcode generation failed:', barcodeError);
+      }
+
+      // Student ID number (top-right, large and prominent)
+      doc.setFontSize(14);
+      doc.setTextColor(220, 53, 69); // Red color like in image
+      doc.text(`الرقم: ${studentData.code}`, cardX + cardWidth - 2, cardY + 8, { align: 'right' });
+
+      // Student information section
+      const infoStartY = cardY + 18;
+      let currentY = infoStartY;
+
+      // Set font for all text
+      doc.setTextColor(0, 0, 0);
+      doc.setFontSize(10);
+
+      // Helper function to add a field
+      function addField(label: string, value: string, y: number) {
+        if (value) {
+          // Create the full text with label and value on same line
+          const fullText = `${label}: ${value}`;
+          doc.setFontSize(12);
+          
+          // Split text to fit card width, keeping Arabic text properly aligned
+          const textLines = doc.splitTextToSize(fullText, cardWidth - 6);
+          let currentLineY = y;
+          
+          for (let line of textLines) {
+            doc.text(line, cardX + cardWidth - 3, currentLineY, { align: 'right' });
+            currentLineY += 4;
+          }
+          
+          return currentLineY - y + 2; // Return height used
+        }
+        return 0;
+      }
+
+      // Student name
+      const nameHeight = addField('الاسم', studentData.name, currentY);
+      currentY += nameHeight;
+
+      // Address
+      const addressParts = [
+        studentData.buildingNumber,
+        studentData.sideStreet,
+        studentData.mainStreet,
+        studentData.area
+      ].filter(Boolean);
+      
+      if (addressParts.length > 0) {
+        const address = addressParts.join('، ');
+        const addressHeight = addField('العنوان', address, currentY);
+        currentY += addressHeight;
+      }
+
+      // Phone number
+      const phone = studentData.whatsapp || studentData.momMob || studentData.dadMob || '';
+      if (phone) {
+        const phoneHeight = addField('التليفون', phone, currentY);
+        currentY += phoneHeight;
+      }
+
+      // // Birth date (if available)
+      // if (studentData.birthDate) {
+      //   const birthDate = new Date(studentData.birthDate).toLocaleDateString('ar-EG');
+      //   addField('تاريخ الميلاد', birthDate, currentY);
+      // }
+
+      cardsOnCurrentPage++;
+    }
+
+    doc.save('student-cards.pdf');
+  } catch (error) {
+    console.error('Error generating PDF:', error);
+    dataService.createAlertMessage(t('students.pdfGenerationError') || 'Error generating PDF', 'error');
   }
-
-  doc.save('student-cards.pdf');
 };
 
 const handleGetStudentById = async (id: string) => {

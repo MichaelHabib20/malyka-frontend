@@ -5,7 +5,7 @@ import { statusService } from './statusService';
 import { loadingService } from './loadingService';
 import { ElMessage } from 'element-plus'
 // Base API URL configuration
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://forsa.runasp.net';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://kenzprogram.premiumasp.net';
 
 // Generic interface for API response
 interface ApiResponse<T> {

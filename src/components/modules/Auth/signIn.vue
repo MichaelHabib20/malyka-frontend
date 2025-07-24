@@ -144,7 +144,7 @@ const loginWithEmail = async () => {
             <div v-else class="loading-spinner"></div>
           </button>
         </form>
-
+<!-- 
         <div class="divider">
           <span>{{ t('auth.orContinueWith') }}</span>
         </div>
@@ -156,7 +156,7 @@ const loginWithEmail = async () => {
         >
           <img src="https://www.google.com/favicon.ico" alt="Google" class="google-icon" />
           <span>{{ t('auth.signInWithGoogle') }}</span>
-        </button>
+        </button> -->
 
         <!-- <p class="sign-up-prompt">
           {{ t('auth.dontHaveAccount') }} <a href="#" class="sign-up-link">{{ t('auth.signUp') }}</a>

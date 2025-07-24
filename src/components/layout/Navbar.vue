@@ -8,6 +8,9 @@ import { offlineStore } from '../../services/offlineStore';
 import { authService } from '../../services/authService';
 import { dataService } from '../../services/dataContext';
 import LanguageSwitcher from '../shared/LanguageSwitcher.vue'
+import { auth, provider } from '../../firebase';
+import { signInWithPopup } from 'firebase/auth';
+import { useGoogleAuth } from '../../composables/useGoogleAuth';
 
 const { t, locale } = useI18n();
 
@@ -22,6 +25,22 @@ const user = ref<any>({
   name: '',
   email: ''
 })
+const { isGoogleSignedIn, googleUser, signInWithGoogle, signOutGoogle } = useGoogleAuth();
+
+const loginWithGoogle = async () => {
+  try {
+    const result = await signInWithPopup(auth, provider);
+    // You may want to send result.user info to your backend to get a JWT
+    // For now, we'll use a placeholder token (replace with real backend call)
+    console.log(result);
+    const fakeJwt = 'FAKE.JWT.TOKEN'; // TODO: Replace with real backend call
+    authService.setToken(fakeJwt, true);
+    user.value = authService.getUser();
+  } catch (err) {
+    console.error('Google sign-in error:', err);
+    // Optionally show error to user
+  }
+};
 const syncStatus = ref<SyncStatus>({
   isCurrentlySyncing: offlineStore.isCurrentlySyncing,
   lastSuccessfulSync: offlineStore.lastSuccessfulSync
@@ -95,11 +114,40 @@ defineEmits<{
         </div>
       </div>
       <LanguageSwitcher />
+      <div v-if="!isGoogleSignedIn">
+        <button class="google-icon-btn" title="Sign in with Google" @click="signInWithGoogle">
+          <svg class="google-icon-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="32" height="32">
+            <g>
+              <circle cx="24" cy="24" r="24" fill="#fff"/>
+              <path d="M43.6 20.5h-1.8V20H24v8h11.2c-1.5 4-5.2 6.9-9.2 6.9-5.5 0-10-4.5-10-10s4.5-10 10-10c2.4 0 4.6.8 6.3 2.2l6.1-6.1C33.7 7.6 29.1 6 24 6 13.5 6 5 14.5 5 25s8.5 19 19 19c9.5 0 18-7.5 18-18 0-1.2-.1-2.1-.4-3.5z" fill="#fbbc05"/>
+              <path d="M6.3 14.7l6.6 4.8C14.5 16.1 18.9 13 24 13c2.4 0 4.6.8 6.3 2.2l6.1-6.1C33.7 7.6 29.1 6 24 6c-7.1 0-13.2 3.7-16.7 8.7z" fill="#ea4335"/>
+              <path d="M24 44c5.1 0 9.7-1.7 13.3-4.7l-6.1-5c-1.7 1.3-3.9 2.1-6.2 2.1-4-0.1-7.5-2.7-8.9-6.3l-6.6 5.1C10.8 40.3 16.9 44 24 44z" fill="#34a853"/>
+              <path d="M43.6 20.5h-1.8V20H24v8h11.2c-0.7 2-2.1 3.7-3.9 4.9l6.1 5C41.7 36.2 44 31.9 44 27c0-1.2-.1-2.1-.4-3.5z" fill="#4285f4"/>
+            </g>
+          </svg>
+        </button>
+      </div>
+      <div v-else class="google-signedin-indicator" title="Signed in with Google">
+        <div class="google-icon-btn google-signedin" @click="signOutGoogle" style="cursor:pointer;">
+          <img v-if="googleUser && googleUser.photoURL" :src="googleUser.photoURL" class="google-avatar" alt="Google Avatar" />
+          <svg v-else class="google-icon-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="32" height="32">
+            <g>
+              <circle cx="24" cy="24" r="24" fill="#fff"/>
+              <path d="M43.6 20.5h-1.8V20H24v8h11.2c-1.5 4-5.2 6.9-9.2 6.9-5.5 0-10-4.5-10-10s4.5-10 10-10c2.4 0 4.6.8 6.3 2.2l6.1-6.1C33.7 7.6 29.1 6 24 6 13.5 6 5 14.5 5 25s8.5 19 19 19c9.5 0 18-7.5 18-18 0-1.2-.1-2.1-.4-3.5z" fill="#fbbc05"/>
+              <path d="M6.3 14.7l6.6 4.8C14.5 16.1 18.9 13 24 13c2.4 0 4.6.8 6.3 2.2l6.1-6.1C33.7 7.6 29.1 6 24 6c-7.1 0-13.2 3.7-16.7 8.7z" fill="#ea4335"/>
+              <path d="M24 44c5.1 0 9.7-1.7 13.3-4.7l-6.1-5c-1.7 1.3-3.9 2.1-6.2 2.1-4-0.1-7.5-2.7-8.9-6.3l-6.6 5.1C10.8 40.3 16.9 44 24 44z" fill="#34a853"/>
+              <path d="M43.6 20.5h-1.8V20H24v8h11.2c-0.7 2-2.1 3.7-3.9 4.9l6.1 5C41.7 36.2 44 31.9 44 27c0-1.2-.1-2.1-.4-3.5z" fill="#4285f4"/>
+            </g>
+          </svg>
+          <span class="google-checkmark">
+            <svg width="18" height="18" viewBox="0 0 18 18"><circle cx="9" cy="9" r="9" fill="#34a853"/><polyline points="5,10 8,13 13,6" fill="none" stroke="#fff" stroke-width="2"/></svg>
+          </span>
+        </div>
+      </div>
       <div class="dropdown">
         <a class="btn dropdown-toggle" role="button" data-bs-toggle="dropdown" aria-expanded="false">
           {{ user.Name }}
         </a>
-
         <ul class="dropdown-menu">
           <!-- <li><span class="dropdown-item">{{ user.email }}</span></li>
           <li><hr class="dropdown-divider"></li> -->
@@ -250,6 +298,61 @@ defineEmits<{
   padding: 12px;
   color: #2c3e50;
   font-size: 0.9rem;
+}
+
+.google-icon-btn {
+  background: #fff;
+  border: none;
+  border-radius: 50%;
+  box-shadow: 0 2px 8px rgba(60,60,60,0.08);
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: box-shadow 0.2s, transform 0.2s;
+  padding: 0;
+}
+.google-icon-btn:hover {
+  box-shadow: 0 4px 16px rgba(66,133,244,0.18);
+  transform: translateY(-2px) scale(1.07);
+}
+.google-icon-svg {
+  width: 32px;
+  height: 32px;
+  display: block;
+}
+
+.google-signedin-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.google-signedin {
+  position: relative;
+  border: 2px solid #34a853;
+}
+.google-checkmark {
+  position: absolute;
+  bottom: -4px;
+  right: -4px;
+  background: #fff;
+  border-radius: 50%;
+  box-shadow: 0 1px 4px rgba(60,60,60,0.10);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+}
+
+.google-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  display: block;
 }
 
 @media (max-width: 600px) {
