@@ -42,7 +42,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
-import { useValidation } from '../../composables/useValidation'
+import { useValidation, type ValidationRule } from '../../composables/useValidation'
 
 interface Option {
   label: string
@@ -158,7 +158,8 @@ const selectOption = (value: string | number | Date) => {
 }
 
 const validateInput = (value: string | number | Date) => {
-  const validationResult = validate(value, props.validationRules)
+  const validationResult = validate(value, props.validationRules as ValidationRule[])
+  console.log(validationResult)
   emit('validation-change', {
     isValid: !hasError.value,
     errors: errors.value

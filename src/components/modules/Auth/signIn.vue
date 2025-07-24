@@ -1,8 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { signInWithPopup } from 'firebase/auth';
-import { auth, provider } from '../../../firebase';
 import { useRouter } from 'vue-router';
 import { dataService } from '../../../services/dataContext';
 import { authService } from '../../../services/authService';
@@ -14,20 +12,20 @@ const password = ref('');
 const loading = ref(false);
 const error = ref('');
 
-const loginWithGoogle = async () => {
-  try {
-    loading.value = true;
-    error.value = '';
-    const result = await signInWithPopup(auth, provider);
-    const user = result.user;
-    router.push('/');
-  } catch (err: any) {
-    error.value = err.message;
-    console.error('Google sign-in error:', err.message);
-  } finally {
-    loading.value = false;
-  }
-};
+// const loginWithGoogle = async () => {
+//   try {
+//     loading.value = true;
+//     error.value = '';
+//     const result = await signInWithPopup(auth, provider);
+//     const user = result.user;
+//     router.push('/');
+//   } catch (err: any) {
+//     error.value = err.message;
+//     console.error('Google sign-in error:', err.message);
+//   } finally {
+//     loading.value = false;
+//   }
+// };
 
 const loginWithEmail = async () => {
   if (!email.value || !password.value) {

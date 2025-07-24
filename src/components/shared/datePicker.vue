@@ -104,7 +104,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
-import { useValidation } from '../../composables/useValidation'
+import { useValidation, type ValidationRule } from '../../composables/useValidation'
 import statusService from '../../services/statusService'
 import { dataService } from '../../services/dataContext'
 
@@ -221,6 +221,7 @@ const formatDate = (date: Date): string => {
 
 const handleInput = (event: Event) => {
   const value = (event.target as HTMLInputElement).value
+  console.log(value)
   // Only allow manual input if you want to support it
   // Otherwise, this can be removed since the input is readonly
 }
@@ -317,7 +318,8 @@ const clearDate = () => {
 }
 
 const validateInput = (value: Date | null) => {
-  const validationResult = validate(value, props.validationRules)
+  const validationResult = validate(value, props.validationRules as ValidationRule[])
+  console.log(validationResult)
   emit('validation-change', {
     isValid: !hasError.value,
     errors: errors.value

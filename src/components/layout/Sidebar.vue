@@ -263,9 +263,9 @@ const handleNavigation = (item: NavItem) => {
   }
 };
 
-const isDataCached = (title: string) => {
-  return false;
-}
+// const isDataCached = (title: string) => {
+//   return false;
+// }
 
 // Filter navigation items based on user permissions and roles
 const filteredNavItems = computed(() => {

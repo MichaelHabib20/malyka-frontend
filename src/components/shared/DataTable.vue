@@ -150,9 +150,9 @@ const handleNumberClick = (column: string, value: any, row: any) => {
       ? columnConfig.routeConfig 
       : columnConfig.routeConfig.path;
     
-    const routeParams = typeof columnConfig.routeConfig === 'string'
-      ? { id: value }
-      : columnConfig.routeConfig.params ? columnConfig.routeConfig.params(row, value) : { id: value };
+    // const routeParams = typeof columnConfig.routeConfig === 'string'
+    //   ? { id: value }
+    //   : columnConfig.routeConfig.params ? columnConfig.routeConfig.params(row, value) : { id: value };
     
     // Simple path replacement for navigation
     let path = routePath;

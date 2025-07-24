@@ -1,14 +1,6 @@
 <template>
   <div class="card-body container">
     <div v-if="selectedRows.length" class="mb-3 d-flex align-items-center gap-2 modern-toolbar">
-      <!-- <button
-        class="btn btn-outline-secondary d-flex align-items-center gap-1"
-        @click="handleExport"
-        :disabled="!selectedRows.length"
-      >
-        <i class="fa fa-download"></i>
-        {{ $t('students.exportStudents') }}
-      </button> -->
       <button
         class="btn btn-info d-flex align-items-center gap-1"
         @click="handlePrintCards"
@@ -240,6 +232,7 @@ const handleSearch = (query: string) => {
 };
 
 const handleButtonClick = ({ buttonId, button }: { buttonId: string; button: CustomButton }) => {
+  console.log(button)
   if (buttonId === 'new-student') {
     router.push('/students/create');
   }
@@ -284,41 +277,41 @@ const handleSortDirection = (direction: 'asc' | 'desc') => {
   sortDirection.value = direction;
 };
 
-const handleBulkDelete = async () => {
-  if (!selectedRows.value.length) return;
-  try {
-    await ElMessageBox.confirm(
-      t('students.confirmBulkDelete', { count: selectedRows.value.length }),
-      t('common.confirmDelete'),
-      {
-        confirmButtonText: t('common.delete'),
-        cancelButtonText: t('common.cancel'),
-        type: 'warning',
-        confirmButtonClass: 'btn-danger',
-        cancelButtonClass: 'btn-secondary'
-      }
-    );
-    // Remove selected students from the list
-    students.value = students.value.filter(s => !selectedRows.value.some(sel => sel.id === s.id));
-    selectedRows.value = [];
-    dataService.createAlertMessage(t('students.bulkDeleteSuccess'), 'success');
-  } catch (error) {
-    if (error !== 'cancel') {
-      dataService.createAlertMessage(t('students.bulkDeleteError'), 'error');
-    }
-  }
-};
+// const handleBulkDelete = async () => {
+//   if (!selectedRows.value.length) return;
+//   try {
+//     await ElMessageBox.confirm(
+//       t('students.confirmBulkDelete', { count: selectedRows.value.length }),
+//       t('common.confirmDelete'),
+//       {
+//         confirmButtonText: t('common.delete'),
+//         cancelButtonText: t('common.cancel'),
+//         type: 'warning',
+//         confirmButtonClass: 'btn-danger',
+//         cancelButtonClass: 'btn-secondary'
+//       }
+//     );
+//     // Remove selected students from the list
+//     students.value = students.value.filter(s => !selectedRows.value.some(sel => sel.id === s.id));
+//     selectedRows.value = [];
+//     dataService.createAlertMessage(t('students.bulkDeleteSuccess'), 'success');
+//   } catch (error) {
+//     if (error !== 'cancel') {
+//       dataService.createAlertMessage(t('students.bulkDeleteError'), 'error');
+//     }
+//   }
+// };
 
-const handleAddStudent = () => {
-  router.push('/students/create');
-};
+// const handleAddStudent = () => {
+//   router.push('/students/create');
+// };
 
-const handleExport = () => {
-  // Export logic here (CSV, Excel, etc.)
-  dataService.createAlertMessage(t('students.exportComingSoon'), 'info');
-};
+// const handleExport = () => {
+//   // Export logic here (CSV, Excel, etc.)
+//   dataService.createAlertMessage(t('students.exportComingSoon'), 'info');
+// };
 
-const placeholderImage = '/vite.svg'; // Use vite.svg as placeholder
+// const placeholderImage = '/vite.svg'; // Use vite.svg as placeholder
 
 const handlePrintCards = async () => {
   if (!selectedRows.value.length) {
@@ -334,14 +327,14 @@ const handlePrintCards = async () => {
     const cardsPerCol = 4;
     const cardsPerPage = cardsPerRow * cardsPerCol;
     const pageWidth = 210;
-    const pageHeight = 297;
+    // const pageHeight = 297;
     const cardSpacingX = 8;
     const cardSpacingY = 10;
     const margin = 15;
 
     // Calculate grid starting position (top-right aligned)
     const gridWidth = (cardsPerRow * cardWidth) + ((cardsPerRow - 1) * cardSpacingX);
-    const gridHeight = (cardsPerCol * cardHeight) + ((cardsPerCol - 1) * cardSpacingY);
+    // const gridHeight = (cardsPerCol * cardHeight) + ((cardsPerCol - 1) * cardSpacingY);
     const startX = pageWidth - margin - gridWidth;
     const startY = margin;
 

@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { AxiosResponse, AxiosError } from 'axios';
+import type { AxiosError } from 'axios';
 import { offlineStore } from './offlineStore';
 import { statusService } from './statusService';
 import { loadingService } from './loadingService';

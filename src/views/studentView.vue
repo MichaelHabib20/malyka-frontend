@@ -220,7 +220,7 @@ import { ref, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
 import type { Student } from '../interfaces/student';
-import FollowUpSection from './FollowUpSection.vue';
+// import FollowUpSection from './FollowUpSection.vue';
 import { useRoute } from 'vue-router';
 import { dataService } from '../services/dataContext';
 
@@ -275,9 +275,9 @@ const handleEdit = () => {
   router.push(`/students/edit/${student.value?.id}`);
 };
 
-const handleDelete = () => {
-  showDeleteModal.value = true;
-};
+// const handleDelete = () => {
+//   showDeleteModal.value = true;
+// };
 
 const closeDeleteModal = () => {
   showDeleteModal.value = false;
@@ -289,9 +289,9 @@ const confirmDelete = () => {
   router.push('/students');
 };
 
-const handleFollowUpAdded = () => {
-  // Handle follow-up added event
-};
+// const handleFollowUpAdded = () => {
+//   // Handle follow-up added event
+// };
 
 const handleGetStudentById = async (id: string) => {
   const response : any = await dataService.fetchOnline(`/api/KidsRegistration/GetKidById/${id}`)

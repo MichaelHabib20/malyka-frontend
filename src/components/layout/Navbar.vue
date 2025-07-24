@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, onMounted, watch } from 'vue';
+import { computed, ref, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import type { SyncStatus } from '../../interfaces/syncStatus';
@@ -8,8 +8,6 @@ import { offlineStore } from '../../services/offlineStore';
 import { authService } from '../../services/authService';
 import { dataService } from '../../services/dataContext';
 import LanguageSwitcher from '../shared/LanguageSwitcher.vue'
-import { auth, provider } from '../../firebase';
-import { signInWithPopup } from 'firebase/auth';
 import { useGoogleAuth } from '../../composables/useGoogleAuth';
 
 const { t, locale } = useI18n();
@@ -27,20 +25,20 @@ const user = ref<any>({
 })
 const { isGoogleSignedIn, googleUser, signInWithGoogle, signOutGoogle } = useGoogleAuth();
 
-const loginWithGoogle = async () => {
-  try {
-    const result = await signInWithPopup(auth, provider);
-    // You may want to send result.user info to your backend to get a JWT
-    // For now, we'll use a placeholder token (replace with real backend call)
-    console.log(result);
-    const fakeJwt = 'FAKE.JWT.TOKEN'; // TODO: Replace with real backend call
-    authService.setToken(fakeJwt, true);
-    user.value = authService.getUser();
-  } catch (err) {
-    console.error('Google sign-in error:', err);
-    // Optionally show error to user
-  }
-};
+// const loginWithGoogle = async () => {
+//   try {
+//     const result = await signInWithPopup(auth, provider);
+//     // You may want to send result.user info to your backend to get a JWT
+//     // For now, we'll use a placeholder token (replace with real backend call)
+//     console.log(result);
+//     const fakeJwt = 'FAKE.JWT.TOKEN'; // TODO: Replace with real backend call
+//     authService.setToken(fakeJwt, true);
+//     user.value = authService.getUser();
+//   } catch (err) {
+//     console.error('Google sign-in error:', err);
+//     // Optionally show error to user
+//   }
+// };
 const syncStatus = ref<SyncStatus>({
   isCurrentlySyncing: offlineStore.isCurrentlySyncing,
   lastSuccessfulSync: offlineStore.lastSuccessfulSync

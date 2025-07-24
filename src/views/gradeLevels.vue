@@ -26,11 +26,9 @@
 import { useRouter } from 'vue-router'
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
-import { useI18n } from 'vue-i18n'
 
 const route = useRoute()
 const router = useRouter()
-const { t } = useI18n()
 
 const isGradesActive = computed(() => route.name === 'Grades' || route.name === 'CreateGrade' || route.name === 'EditGrade')
 const isClassesActive = computed(() => route.name === 'Classes' || route.name === 'CreateClass' || route.name === 'EditClass' || route.name === 'ClassesByGrade')

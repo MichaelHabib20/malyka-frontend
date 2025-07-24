@@ -90,7 +90,7 @@ interface ValidationResult {
   errors: string[]
 }
 
-interface ApiResponse<T> {
+interface ApiResponse<_T> {
   data: {
     class?: Class
     grades?: Grade[]

@@ -150,7 +150,7 @@ interface ValidationResult {
   errors: string[]
 }
 
-interface ApiResponse<T> {
+interface ApiResponse<_T> {
   data: {
     roles?: Role[]
     admin?: Admin

@@ -24,7 +24,6 @@ import { ref, computed, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import DataTable from '../components/shared/DataTable.vue';
 import type { Column } from '../interfaces/column';
-import type { CustomButton } from '../interfaces/customButtons';
 import { dataService } from '../services/dataContext';
 import { authService } from '../services/authService';
 import { createButtonsWithPermissions } from '../utils/simplePermissions';
@@ -160,7 +159,7 @@ const handleSearch = (query: string) => {
   searchQuery.value = query;
 };
 
-const handleButtonClick = ({ buttonId, button }: { buttonId: string; button: CustomButton }) => {
+const handleButtonClick = ({ buttonId }: { buttonId: string }) => {
   if (buttonId === 'new-admin') {
     router.push('/adminstrations/admins/create');
     // TODO: Implement new role creation logic

@@ -143,7 +143,7 @@ const handleSearch = (query: string) => {
   searchQuery.value = query;
 };
 
-const handleEnterKey = async (value: boolean) => {
+const handleEnterKey = async (_value: boolean) => {
   
   // Get the first row from filtered data
   const firstRow = filteredData.value[0];
@@ -209,6 +209,7 @@ const handleCheckboxChange = async (payload: { column: string; value: boolean; r
         attendanceDate: formattedDate
     }
     const result : any = await dataService.post('/api/TestKidsAtt/PostKidAtt', modal)
+    console.log(result)
 
   // handle update cached data
   if(!isOnline.value){

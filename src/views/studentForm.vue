@@ -376,7 +376,7 @@ interface ValidationResult {
   errors: string[]
 }
 
-interface ApiResponse<T> {
+interface ApiResponse<_T> {
   data: {
     student?: Student
     grades?: Grade[]
@@ -565,6 +565,7 @@ const handlePhotoValidation = (validation: ValidationResult) => {
 }
 
 const handlePhotoSelected = (file: File) => {
+  console.log(file)
 }
 
 const handlePhotoRemoved = () => {
@@ -727,22 +728,22 @@ watch(() => formData.value.gradeId, async (newGradeId, oldGradeId) => {
 })
 
 // Helper function to convert file to base64
-const fileToBase64 = (file: File): Promise<string> => {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader()
-    reader.readAsDataURL(file)
-    reader.onload = () => {
-      if (typeof reader.result === 'string') {
-        // Remove the data URL prefix (e.g., "data:image/jpeg;base64,")
-        const base64 = reader.result.split(',')[1]
-        resolve(base64)
-      } else {
-        reject(new Error('Failed to convert file to base64'))
-      }
-    }
-    reader.onerror = () => reject(new Error('Failed to read file'))
-  })
-}
+// const fileToBase64 = (file: File): Promise<string> => {
+//   return new Promise((resolve, reject) => {
+//     const reader = new FileReader()
+//     reader.readAsDataURL(file)
+//     reader.onload = () => {
+//       if (typeof reader.result === 'string') {
+//         // Remove the data URL prefix (e.g., "data:image/jpeg;base64,")
+//         const base64 = reader.result.split(',')[1]
+//         resolve(base64)
+//       } else {
+//         reject(new Error('Failed to convert file to base64'))
+//       }
+//     }
+//     reader.onerror = () => reject(new Error('Failed to read file'))
+//   })
+// }
 
 // Helper function to convert ISO date string to YYYY-MM-DD format for date input
 const formatDateForInput = (dateString: string): string => {

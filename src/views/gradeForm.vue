@@ -76,7 +76,7 @@ interface ValidationResult {
   errors: string[]
 }
 
-interface ApiResponse<T> {
+interface ApiResponse<_T> {
   data: {
     grade?: Grade
   }
@@ -95,7 +95,6 @@ const formData = ref<Grade>({
   arName: ''
 })
 
-const loading = ref(false)
 const isSubmitting = ref(false)
 const nameValidation = ref<ValidationResult>({ isValid: false, errors: [] })
 const arNameValidation = ref<ValidationResult>({ isValid: false, errors: [] })

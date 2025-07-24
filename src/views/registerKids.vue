@@ -228,6 +228,7 @@ const handleSearch = (query: string) => {
 };
 
 const handleButtonClick = ({ buttonId, button }: { buttonId: string; button: CustomButton }) => {
+  console.log(button)
   if (buttonId === 'new-registration') {
     router.push('/register-kids/create');
   }

@@ -25,7 +25,6 @@ import { ref, computed, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import DataTable from '../components/shared/DataTable.vue';
 import type { Column } from '../interfaces/column';
-import type { CustomButton } from '../interfaces/customButtons';
 import type { Grade } from '../interfaces/grade';
 import { dataService } from '../services/dataContext';
 import { authService } from '../services/authService';
@@ -68,7 +67,7 @@ const columns = computed(() => {
       nestedStructureForClickableNumber: 'grade.id',
       routeConfig: {
         path: '/grade-levels/classes/:gradeId',
-        params: (row: any, value: any) => ({ gradeId: row.grade.id })
+        params: (row: any, _value: any) => ({ gradeId: row.grade.id })
       }
     },
     {
@@ -163,7 +162,7 @@ const handleSearch = (query: string) => {
   searchQuery.value = query;
 };
 
-const handleButtonClick = ({ buttonId, button }: { buttonId: string; button: CustomButton }) => {
+const handleButtonClick = ({ buttonId }: { buttonId: string }) => {
   if (buttonId === 'new-grade') {
     router.push('/grade-levels/grades/create');
   }

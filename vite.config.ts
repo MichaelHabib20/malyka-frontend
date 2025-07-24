@@ -36,7 +36,8 @@ export default defineConfig({
             urlPattern: /\/api\/.*/,
             handler: 'NetworkFirst',
           }
-        ]
+        ],
+        maximumFileSizeToCacheInBytes: 5 * 1024 * 1024 // 5 MB
       }
       
     })
