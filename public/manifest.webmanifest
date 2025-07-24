@@ -1,0 +1,22 @@
+{
+    "name": "Malyka",
+    "short_name": "Malyka",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#ffffff",
+    "theme_color": "#42b983",
+    "lang": "en",
+    "scope": "/malyka-frontend/",
+    "icons": [
+        {
+            "src": "pwa-icon-192.png",
+            "sizes": "42x42",
+            "type": "image/png"
+        },
+        {
+            "src": "pwa-icon-512.png",
+            "sizes": "42x42",
+            "type": "image/png"
+        }
+    ]
+} 
