@@ -868,7 +868,7 @@ const getGradeChipClass = (gradeText: string) => {
 .data-table-container {
   /* background: white; */
   border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  /* box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); */
 }
 
 .search-section {
@@ -1140,7 +1140,7 @@ const getGradeChipClass = (gradeText: string) => {
     margin: 0;
     border-radius: 0;
     box-shadow: none;
-    border: 1px solid #eee;
+    /* border: 1px solid #eee; */
   }
 
   .search-section {

@@ -135,6 +135,27 @@ const navItems = computed(() => [
     ]
 
   },
+
+  {
+    title: t('navigation.gradeLevels'),
+    icon: 'fa-solid fa-graduation-cap',
+    children: [
+      {
+        title: t('navigation.grades'),
+        icon: 'fa-solid fa-graduation-cap',
+        path: '/grade-levels/grades',
+        permissions: [''],
+        rolesId: [1]
+      },
+      {
+        title: t('navigation.classes'),
+        icon: 'fa-solid fa-graduation-cap',
+        path: '/grade-levels/classes',
+        permissions: [''],
+        rolesId: [1]
+      }
+    ]
+  },
   {
     title: t('navigation.administration'),
     icon: 'fa-solid fa-user-tie',
@@ -164,41 +185,21 @@ const navItems = computed(() => [
 
     ]
   },
-  {
-    title: t('navigation.gradeLevels'),
-    icon: 'fa-solid fa-graduation-cap',
-    children: [
-      {
-        title: t('navigation.grades'),
-        icon: 'fa-solid fa-graduation-cap',
-        path: '/grade-levels/grades',
-        permissions: [''],
-        rolesId: [1]
-      },
-      {
-        title: t('navigation.classes'),
-        icon: 'fa-solid fa-graduation-cap',
-        path: '/grade-levels/classes',
-        permissions: [''],
-        rolesId: [1]
-      }
-    ]
-  },
-  {
-    title: t('navigation.events'),
-    icon: 'fa-solid fa-calendar-days',
-    path: '/events/enrollments',
-    permissions :['View events'],
-    rolesId : [1],
-    children: [
-      {
-        title: t('events.enrollment'),
-        path: '/events/enrollments',
-        permissions :['View events'],
-        rolesId : [1],
-      }
-    ]
-  }
+  // {
+  //   title: t('navigation.events'),
+  //   icon: 'fa-solid fa-calendar-days',
+  //   path: '/events/enrollments',
+  //   permissions :['View events'],
+  //   rolesId : [1],
+  //   children: [
+  //     {
+  //       title: t('events.enrollment'),
+  //       path: '/events/enrollments',
+  //       permissions :['View events'],
+  //       rolesId : [1],
+  //     }
+  //   ]
+  // }
 
 ]);
 

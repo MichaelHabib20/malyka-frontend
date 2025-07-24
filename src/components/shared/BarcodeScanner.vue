@@ -237,12 +237,18 @@ const startScanner = async () => {
       (result: Result | null, error: any) => {
         if (result && result.getText() !== lastScannedCode.value) {
           const code = result.getText();
-          console.log('Barcode detected:', code);
-          lastScannedCode.value = code;
+          // Remove leading zero if code is 5 digits and starts with zero
+          let processedCode = code;
+          if (/^0\d{4}$/.test(code)) {
+            processedCode = code.slice(1);
+          }
+          console.log('Barcode detected:', processedCode);
+          lastScannedCode.value = processedCode;
           
           // Call the parent callback
           if (props.onCodeScanned) {
-            props.onCodeScanned(code);
+            console.log('Calling onCodeScanned with code:', processedCode);
+            props.onCodeScanned(processedCode);
           }
           
           // Show notification for a short time

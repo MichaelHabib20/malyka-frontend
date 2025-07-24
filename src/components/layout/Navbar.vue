@@ -8,7 +8,7 @@ import { offlineStore } from '../../services/offlineStore';
 import { authService } from '../../services/authService';
 import { dataService } from '../../services/dataContext';
 import LanguageSwitcher from '../shared/LanguageSwitcher.vue'
-import { useGoogleAuth } from '../../composables/useGoogleAuth';
+// import { useGoogleAuth } from '../../composables/useGoogleAuth';
 
 const { t, locale } = useI18n();
 
@@ -23,7 +23,7 @@ const user = ref<any>({
   name: '',
   email: ''
 })
-const { isGoogleSignedIn, googleUser, signInWithGoogle, signOutGoogle } = useGoogleAuth();
+// const { isGoogleSignedIn, googleUser, signInWithGoogle, signOutGoogle } = useGoogleAuth();
 
 // const loginWithGoogle = async () => {
 //   try {
@@ -103,7 +103,7 @@ defineEmits<{
         <span v-if="pendingRequestCount > 0">🟠 {{ t('common.pending') }}</span>
         <span v-else-if="!isOnline">🔴 {{ t('app.offline') }}</span>
         <span v-else>🟢 {{ t('app.online') }}</span>
-        <div v-if="isStatusDropdownOpen" class="status-dropdown">
+        <div v-if="isStatusDropdownOpen" :class="['status-dropdown', { 'status-dropdown-ar': locale === 'ar' }]">
           <div class="status-dropdown-content">
             <span>{{ t('common.requests') }}: {{ pendingRequestCount  }}</span>
             <span>{{ t('common.syncStatus') }}: {{ syncStatus.isCurrentlySyncing ? t('common.syncing') : t('common.idle') }}</span>
@@ -112,7 +112,7 @@ defineEmits<{
         </div>
       </div>
       <LanguageSwitcher />
-      <div v-if="!isGoogleSignedIn">
+      <!-- <div v-if="!isGoogleSignedIn">
         <button class="google-icon-btn" title="Sign in with Google" @click="signInWithGoogle">
           <svg class="google-icon-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="32" height="32">
             <g>
@@ -141,7 +141,7 @@ defineEmits<{
             <svg width="18" height="18" viewBox="0 0 18 18"><circle cx="9" cy="9" r="9" fill="#34a853"/><polyline points="5,10 8,13 13,6" fill="none" stroke="#fff" stroke-width="2"/></svg>
           </span>
         </div>
-      </div>
+      </div> -->
       <div class="dropdown">
         <a class="btn dropdown-toggle" role="button" data-bs-toggle="dropdown" aria-expanded="false">
           {{ user.Name }}
@@ -290,6 +290,9 @@ defineEmits<{
   z-index: 1000;
   min-width: 150px;
   width: 240px;
+}
+.status-dropdown-ar {
+  left: -102px !important;
 }
 
 .status-dropdown-content {

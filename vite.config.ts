@@ -3,6 +3,8 @@ import vue from '@vitejs/plugin-vue'
 import { VitePWA } from 'vite-plugin-pwa'
 
 export default defineConfig({
+    // this commented out because it was causing the app to not work on the server
+  // base: '/',
   base: '/malyka-frontend/',
   plugins: [
     vue(),

@@ -4,7 +4,6 @@ import { ElMessage } from 'element-plus'
 import signIn from './components/modules/Auth/signIn.vue'
 import DashboardLayout from './components/layout/DashboardLayout.vue'
 import Dashboard from './views/Dashboard.vue'
-import HelloWorld from './components/HelloWorld.vue'
 import { authService } from './services/authService'
 import { statusService } from './services/statusService'
 import Attendance from './views/attendance.vue'
@@ -283,19 +282,14 @@ const routes = [
                 requiresAuth: true },
         component: eventEnrollments
       },
-      {
-        path: 'ziko',
-        name: 'ziko',
-        meta: { requiresAuth: true },
-        component: HelloWorld
-      }
     ]
   }
 ]
 
 const router = createRouter({
-  history: createWebHashHistory(), // use createWebHashHistory() if you prefer hash mode
-  
+  // this commented out because it was causing the app to not work on the server
+    history: createWebHashHistory(), // use createWebHashHistory() if you prefer hash mode
+  // history: createWebHistory(),
   routes,
 })
 
