@@ -3,7 +3,7 @@ import vue from '@vitejs/plugin-vue'
 import { VitePWA } from 'vite-plugin-pwa'
 
 export default defineConfig({
-  base: process.env.NODE_ENV === 'production' ? '/malyka-frontend/' : '/',
+  base: '/malyka-frontend/',
   plugins: [
     vue(),
     VitePWA({
@@ -13,7 +13,7 @@ export default defineConfig({
       manifest: {
         name: 'Malyka',
         short_name: 'Malyka',
-        start_url: '/',
+        start_url: '/malyka-frontend/',
         display: 'standalone',
         background_color: '#ffffff',
         theme_color: '#42b983',
