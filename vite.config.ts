@@ -11,8 +11,8 @@ export default defineConfig({
       
       includeAssets: ['favicon.svg'],
       manifest: {
-        name: 'Hotel Booking App',
-        short_name: 'Booking',
+        name: 'Malyka',
+        short_name: 'Malyka',
         start_url: '/',
         display: 'standalone',
         background_color: '#ffffff',
