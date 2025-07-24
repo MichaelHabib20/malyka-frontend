@@ -1,5 +1,5 @@
 // router/index.js
-import { createRouter, createWebHistory } from 'vue-router'
+import { createRouter, createWebHashHistory, createWebHistory } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import signIn from './components/modules/Auth/signIn.vue'
 import DashboardLayout from './components/layout/DashboardLayout.vue'
@@ -294,7 +294,8 @@ const routes = [
 ]
 
 const router = createRouter({
-  history: createWebHistory(), // use createWebHashHistory() if you prefer hash mode
+  history: createWebHashHistory(), // use createWebHashHistory() if you prefer hash mode
+  
   routes,
 })
 
