@@ -9,12 +9,12 @@
     "scope": "/malyka-frontend/",
     "icons": [
         {
-            "src": "pwa-icon-192.png",
+            "src": "pwa-icon-42.png",
             "sizes": "42x42",
             "type": "image/png"
         },
         {
-            "src": "pwa-icon-512.png",
+            "src": "pwa-icon-42.png",
             "sizes": "42x42",
             "type": "image/png"
         }
