@@ -1,1 +1,0 @@
-if('serviceWorker' in navigator) {window.addEventListener('load', () => {navigator.serviceWorker.register('/malyka-frontend/sw.js', { scope: '/malyka-frontend/' })})}
