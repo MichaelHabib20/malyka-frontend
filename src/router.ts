@@ -1,5 +1,5 @@
 // router/index.js
-import { createRouter, createWebHashHistory, createWebHistory } from 'vue-router'
+import { createRouter, createWebHashHistory } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import signIn from './components/modules/Auth/signIn.vue'
 import DashboardLayout from './components/layout/DashboardLayout.vue'
