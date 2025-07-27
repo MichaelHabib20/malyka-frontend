@@ -154,7 +154,6 @@ import DatePicker from '../components/shared/datePicker.vue'
 import DataTable from '../components/shared/DataTable.vue'
 import type { Column } from '../interfaces/column'
 import { dataService } from '../services/dataContext';
-import { createButtonsWithPermissions } from '../utils/simplePermissions';
 
 const { t } = useI18n();
 
@@ -199,20 +198,17 @@ const searchQuery = ref('')
 
 // Custom buttons
 const tableButtons = computed(() => {
-  // Only add "Export Data" button if user has permission
-  return createButtonsWithPermissions([
+  // Export button available for everyone without permission check
+  return [
     {
       id: 'export-attendance',
-      permission: 'Export attendance',
-      config: {
-        label: isExporting.value ? t('attendanceHistory.exporting') : t('attendanceHistory.exportAttendance'),
-        icon: isExporting.value ? 'fa-spinner fa-spin' : 'fa-download',
-        variant: 'btn-primary',
-        // onClick: exportAttendance,
-        disabled: isExporting.value || !hasValidDateSelection()
-      }
+      label: isExporting.value ? t('attendanceHistory.exporting') : t('attendanceHistory.exportAttendance'),
+      icon: isExporting.value ? 'fa-spinner fa-spin' : 'fa-download',
+      variant: 'btn-primary' as const,
+      onClick: handleButtonClick,
+      disabled: isExporting.value || !hasValidDateSelection()
     }
-  ]);
+  ];
 });
 
 // Grade filter options computed property
