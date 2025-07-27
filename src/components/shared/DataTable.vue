@@ -427,15 +427,70 @@ const getGradeChipClass = (gradeText: string) => {
 </script>
 
 <template>
-  <div class="table-scroll-container">
-    <div class="table-controls-sticky">
-      <!-- Search and Filters Section -->
-      <div class="mb-3 d-flex flex-column">
-        <!-- Desktop Layout -->
-        <div class="d-flex justify-content-between desktop-layout" v-if="!isMobile">
-          <div class="search-section">
+  <div class="data-table-container">
+    <!-- Search and Filters Section -->
+    <div class="mb-3 d-flex flex-column">
+      <!-- Desktop Layout -->
+      <div class="d-flex justify-content-between desktop-layout" v-if="!isMobile">
+        <div class="search-section">
+        <Input
+          id="table-search"
+          leadingIcon="fa-solid fa-magnifying-glass"
+          v-model="localSearchQuery"
+          :placeholder="searchPlaceholder"
+          @update:modelValue="handleSearchChange"
+          @keydown="handleSearchKeydown"
+          :removeLeadingZero="true"
+          class="search-input"
+          ref="searchInputRef"
+        />
+      </div>
+
+      <div class="d-flex gap-2 flex-wrap">
+        <button 
+          v-for="button in visibleButtons"
+          :key="button.id"
+          :class="['btn', button.variant || 'btn-primary']"
+          @click="handleButtonClick(button.id, button)"
+          :disabled="button.disabled || button.loading"
+        >
+          <i :class="['fa-solid', button.icon]"></i>
+          {{ button.loading ? button.loadingText : t(button.label) }}
+        </button>
+        
+        <!-- More dropdown for desktop -->
+        <div v-if="hasHiddenButtons" class="dropdown">
+          <button 
+            class="btn btn-secondary more-button"
+            @click="showMoreDropdown = !showMoreDropdown"
+            type="button"
+          >
+            <i class="fa-solid fa-ellipsis"></i>
+           
+          </button>
+          <div v-if="showMoreDropdown" class="dropdown-menu show">
+            <button 
+              v-for="button in hiddenButtons"
+              :key="button.id"
+              class="mb-2"
+              :class="['dropdown-item', button.variant || 'btn-primary']"
+              @click="handleButtonClick(button.id, button); showMoreDropdown = false"
+              :disabled="button.disabled || button.loading"
+            >
+              <i :class="['fa-solid', button.icon]"></i>
+              {{ button.loading ? button.loadingText : t(button.label) }}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      </div>
+
+      <!-- Mobile Layout -->
+      <div class="mobile-layout" v-if="isMobile">
+        <div class="search-section">
           <Input
-            id="table-search"
+            id="table-search-mobile"
             leadingIcon="fa-solid fa-magnifying-glass"
             v-model="localSearchQuery"
             :placeholder="searchPlaceholder"
@@ -447,31 +502,31 @@ const getGradeChipClass = (gradeText: string) => {
           />
         </div>
 
-        <div class="d-flex gap-2 flex-wrap">
+        <div class="mobile-buttons">
+          <!-- Show first button if available -->
           <button 
-            v-for="button in visibleButtons"
-            :key="button.id"
-            :class="['btn', button.variant || 'btn-primary']"
-            @click="handleButtonClick(button.id, button)"
-            :disabled="button.disabled || button.loading"
+            v-if="customButtons.length > 0"
+            :key="customButtons[0].id"
+            :class="['btn', customButtons[0].variant || 'btn-primary']"
+            @click="handleButtonClick(customButtons[0].id, customButtons[0])"
+            :disabled="customButtons[0].disabled || customButtons[0].loading"
           >
-            <i :class="['fa-solid', button.icon]"></i>
-            {{ button.loading ? button.loadingText : t(button.label) }}
+            <i :class="['fa-solid', customButtons[0].icon]"></i>
+            {{ customButtons[0].loading ? customButtons[0].loadingText : t(customButtons[0].label) }}
           </button>
-          
-          <!-- More dropdown for desktop -->
-          <div v-if="hasHiddenButtons" class="dropdown">
+
+          <!-- More dropdown for mobile -->
+          <div v-if="customButtons.length > 1" class="dropdown">
             <button 
               class="btn btn-secondary more-button"
               @click="showMoreDropdown = !showMoreDropdown"
               type="button"
             >
               <i class="fa-solid fa-ellipsis"></i>
-             
             </button>
             <div v-if="showMoreDropdown" class="dropdown-menu show">
               <button 
-                v-for="button in hiddenButtons"
+                v-for="button in customButtons.slice(1)"
                 :key="button.id"
                 class="mb-2"
                 :class="['dropdown-item', button.variant || 'btn-primary']"
@@ -484,102 +539,46 @@ const getGradeChipClass = (gradeText: string) => {
             </div>
           </div>
         </div>
+      </div>
 
-        </div>
-
-        <!-- Mobile Layout -->
-        <div class="mobile-layout" v-if="isMobile">
-          <div class="search-section">
-            <Input
-              id="table-search-mobile"
-              leadingIcon="fa-solid fa-magnifying-glass"
-              v-model="localSearchQuery"
-              :placeholder="searchPlaceholder"
-              @update:modelValue="handleSearchChange"
-              @keydown="handleSearchKeydown"
-              :removeLeadingZero="true"
-              class="search-input"
-              ref="searchInputRef"
+      <div class="d-flex flex-wrap gap-3 align-items-start mt-4">
+        <div v-for="column in columns.filter(col => col.filterable)" :key="column.key" class="filter-item">
+          <template v-if="column.filterType === 'select'">
+            <Select
+              v-model="localFilters[column.key]"
+              :compact="true"
+              :options="column.filterOptions || []"
+              :placeholder="t('datatable.filterBy', { label: column.label })"
+              @update:modelValue="(val) => handleFilterChange(column.key, val)"
             />
-          </div>
-
-          <div class="mobile-buttons">
-            <!-- Show first button if available -->
-            <button 
-              v-if="customButtons.length > 0"
-              :key="customButtons[0].id"
-              :class="['btn', customButtons[0].variant || 'btn-primary']"
-              @click="handleButtonClick(customButtons[0].id, customButtons[0])"
-              :disabled="customButtons[0].disabled || customButtons[0].loading"
-            >
-              <i :class="['fa-solid', customButtons[0].icon]"></i>
-              {{ customButtons[0].loading ? customButtons[0].loadingText : t(customButtons[0].label) }}
-            </button>
-
-            <!-- More dropdown for mobile -->
-            <div v-if="customButtons.length > 1" class="dropdown">
-              <button 
-                class="btn btn-secondary more-button"
-                @click="showMoreDropdown = !showMoreDropdown"
-                type="button"
-              >
-                <i class="fa-solid fa-ellipsis"></i>
-              </button>
-              <div v-if="showMoreDropdown" class="dropdown-menu show">
-                <button 
-                  v-for="button in customButtons.slice(1)"
-                  :key="button.id"
-                  class="mb-2"
-                  :class="['dropdown-item', button.variant || 'btn-primary']"
-                  @click="handleButtonClick(button.id, button); showMoreDropdown = false"
-                  :disabled="button.disabled || button.loading"
-                >
-                  <i :class="['fa-solid', button.icon]"></i>
-                  {{ button.loading ? button.loadingText : t(button.label) }}
-                </button>
-              </div>
-            </div>
-          </div>
+          </template>
+          <template v-else-if="column.filterType === 'date'">
+            <Input
+              :id="`filter-${column.key}-date`"
+              v-model="localFilters[column.key]"
+              type="date"
+              :compact="true"
+              :placeholder="t('datatable.filterBy', { label: column.label })"
+              @update:modelValue="(val: any) => handleFilterChange(column.key, val)"
+            />
+          </template>
+          <template v-else>
+            <Input
+              :id="`filter-${column.key}`"
+              v-model="localFilters[column.key]"
+              :type="column.filterType || 'text'"
+              :compact="true"
+              :placeholder="t('datatable.filterBy', { label: column.label })"
+              @update:modelValue="(val: any) => handleFilterChange(column.key, val)"
+            />
+          </template>
         </div>
-
-        <div class="d-flex flex-wrap gap-3 align-items-start mt-4">
-          <div v-for="column in columns.filter(col => col.filterable)" :key="column.key" class="filter-item">
-            <template v-if="column.filterType === 'select'">
-              <Select
-                v-model="localFilters[column.key]"
-                :compact="true"
-                :options="column.filterOptions || []"
-                :placeholder="t('datatable.filterBy', { label: column.label })"
-                @update:modelValue="(val) => handleFilterChange(column.key, val)"
-              />
-            </template>
-            <template v-else-if="column.filterType === 'date'">
-              <Input
-                :id="`filter-${column.key}-date`"
-                v-model="localFilters[column.key]"
-                type="date"
-                :compact="true"
-                :placeholder="t('datatable.filterBy', { label: column.label })"
-                @update:modelValue="(val: any) => handleFilterChange(column.key, val)"
-              />
-            </template>
-            <template v-else>
-              <Input
-                :id="`filter-${column.key}`"
-                v-model="localFilters[column.key]"
-                :type="column.filterType || 'text'"
-                :compact="true"
-                :placeholder="t('datatable.filterBy', { label: column.label })"
-                @update:modelValue="(val: any) => handleFilterChange(column.key, val)"
-              />
-            </template>
-          </div>
-          <button v-if="hasActiveFilters" class="reset-filters" @click="resetFilters">
-            {{ t('datatable.resetFilters') }}
-          </button>
-        </div>
+        <button v-if="hasActiveFilters" class="reset-filters" @click="resetFilters">
+          {{ t('datatable.resetFilters') }}
+        </button>
       </div>
     </div>
+
     <!-- Pagination at top -->
     <div class="pagination-top" v-if="totalPages > 1">
       <div class="pagination-info">
@@ -610,6 +609,7 @@ const getGradeChipClass = (gradeText: string) => {
         </button>
       </div>
     </div>
+
     <!-- Table -->
     <div class="table-responsive">
       <table class="data-table table">
@@ -1865,20 +1865,5 @@ const getGradeChipClass = (gradeText: string) => {
     min-width: 44px;
     min-height: 44px;
   }
-}
-
-/* Sticky search bar and filters */
-.table-scroll-container {
-  max-height: 80vh;
-  overflow-y: auto;
-  position: relative;
-}
-
-.table-controls-sticky {
-  position: sticky;
-  top: 0;
-  z-index: 10;
-  /* background: white; */
-  box-shadow: 0 2px 4px rgba(0,0,0,0.04);
 }
 </style> 
