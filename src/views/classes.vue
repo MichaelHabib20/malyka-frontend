@@ -184,7 +184,7 @@ const handleButtonClick = ({ buttonId }: { buttonId: string }) => {
 
 const handleAction = async ({ action, row }: { action: string; row: any }) => {
   if (action === t('common.edit')) {
-    router.push(`/grade-levels/classes/edit/${row.class.id}`);
+    router.push(`/grade-levels/classes/edit/${row.id ? row.id : row.class.id}`);
   } else if (action === t('common.delete')) {
     try {
       // Show confirmation dialog

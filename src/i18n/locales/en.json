@@ -498,6 +498,8 @@
     "signUp": "Sign up"
   },
   "common": {
+    "saving": "Saving...",
+    "cancel": "Cancel",
     "no": "No",
     "loading": "Loading...",
     "noData": "No data available",

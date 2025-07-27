@@ -114,7 +114,7 @@ const handleAction = async ({ action, row }: { action: string; row: any }) => {
       // Show confirmation dialog
       await ElMessageBox.confirm(
         t('roles.deleteConfirmation', { name: row.name }),
-        t('common.confirmDelete'),
+        t('classes.confirmDelete'),
         {
           confirmButtonText: t('common.delete'),
           cancelButtonText: t('common.cancel'),

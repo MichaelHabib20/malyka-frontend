@@ -69,6 +69,42 @@ onMounted(() => {
 onUnmounted(() => {
   window.removeEventListener('resize', handleResize);
 });
+
+const navbarStyle = computed(() => {
+  if (isMobile.value) {
+    return {
+      position: 'fixed',
+      top: '0',
+      left: '0',
+      right: '0',
+      width: '100%',
+      zIndex: 100,
+      maxWidth: '100%',
+    };
+  }
+  const sidebarWidth = isSidebarCollapsed.value ? 80 : 220;
+  if (isRTL.value) {
+    return {
+      position: 'fixed',
+      top: '0',
+      right: `${sidebarWidth}px`,
+      left: '0',
+      width: `calc(100% - ${sidebarWidth}px)`,
+      zIndex: 100,
+      maxWidth: '100%'
+    };
+  } else {
+    return {
+      position: 'fixed',
+      top: '0',
+      left: `${sidebarWidth}px`,
+      right: '0',
+      width: `calc(100% - ${sidebarWidth}px)`,
+      zIndex: 100,
+      maxWidth: '100%'
+    };
+  }
+});
 </script>
 
 <template>
@@ -85,7 +121,7 @@ onUnmounted(() => {
     <div class="main-content" :class="{ 'sidebar-collapsed': isSidebarCollapsed }">
       <Navbar 
         @toggle-sidebar="toggleSidebar"
-        class="navbar"
+        :style="navbarStyle"
       />
       <main class="content">
         <router-view />
@@ -179,6 +215,7 @@ onUnmounted(() => {
   padding-top: 1.5rem;
   /* padding: 1.5rem; */
   overflow-y: auto;
+  margin-top: 70px;
 }
 
 /* Mobile overlay */
@@ -225,6 +262,13 @@ onUnmounted(() => {
   
   .content {
     padding: 1rem;
+  }
+
+  .navbar {
+    left: 0 !important;
+    right: 0 !important;
+    width: 100% !important;
+    margin: 0 !important;
   }
 }
 

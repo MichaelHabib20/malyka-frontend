@@ -171,7 +171,7 @@ const handleEnterKey = async (_value: boolean) => {
 const handleBarcodeScanned = async (scannedCode: string) => {
   // Find the student by code
   const student = tableData.value.find((item: any) => item.code.toString() === scannedCode);
-  
+  console.log('student', student)
   if (student) {
     // Toggle the attendance for this student
     const newValue = !student.isAdded;
