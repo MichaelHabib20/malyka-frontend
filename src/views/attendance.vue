@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { dataService } from '../services/dataContext';
 import { computed, onMounted } from 'vue';
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import DataTable from '../components/shared/DataTable.vue';
 import DatePicker from '../components/shared/datePicker.vue';
@@ -14,6 +14,42 @@ const { t } = useI18n();
 
 // Sample data
 const tableData : any = ref([]);
+
+// Create search indexes for better performance
+const createSearchIndexes = (data: any[]) => {
+  const codeIndex = new Map();
+  const nameIndex = new Map();
+  
+  data.forEach((item, index) => {
+    // Index by code (exact match)
+    const code = item.code?.toString();
+    if (code) {
+      codeIndex.set(code, index);
+    }
+    
+    // Index by name (for partial matching anywhere in the name)
+    const name = item.name?.toLowerCase();
+    if (name) {
+      // Create all possible substrings for partial matching
+      for (let start = 0; start < name.length; start++) {
+        for (let end = start + 1; end <= name.length; end++) {
+          const substring = name.substring(start, end);
+          if (!nameIndex.has(substring)) {
+            nameIndex.set(substring, []);
+          }
+          // Avoid duplicate indices
+          if (!nameIndex.get(substring).includes(index)) {
+            nameIndex.get(substring).push(index);
+          }
+        }
+      }
+    }
+  });
+  
+  return { codeIndex, nameIndex };
+};
+
+let searchIndexes = { codeIndex: new Map(), nameIndex: new Map() };
 
 // Define columns
 const columns: Column[] = [
@@ -63,22 +99,42 @@ const sortBy = ref('');
 const sortDirection = ref('asc' as 'asc' | 'desc');
 const filters = ref({});
 const searchQuery = ref('');
+const debouncedSearchQuery = ref('');
 const selectedDate = ref(new Date());
 const isOnline = ref(statusService.isOnline());
 const endpointWithParams = ref('');
+
+// Debounce search query
+let searchTimeout: number;
+watch(searchQuery, (newQuery) => {
+  clearTimeout(searchTimeout);
+  searchTimeout = setTimeout(() => {
+    debouncedSearchQuery.value = newQuery;
+  }, 300); // 300ms delay
+});
 // Computed property to filter and sort data
 const filteredData = computed(() => {
   let result = [...tableData.value];
 
-  // Apply search filter
-  if (searchQuery.value) {
-    const query = searchQuery.value.toLowerCase();
-    result = result.filter((item: any) => {
-      const codeMatch = item.code.toString().includes(searchQuery.value);
-      const fullName = item.name.toLowerCase();
-      const fullNameMatch = fullName.includes(query);
-      return codeMatch || fullNameMatch;
-    });
+  // Apply search filter using indexes for better performance
+  if (debouncedSearchQuery.value) {
+    const query = debouncedSearchQuery.value.toLowerCase();
+    const matchedIndices = new Set();
+    
+    // Check code index (exact match)
+    const codeMatchIndex = searchIndexes.codeIndex.get(debouncedSearchQuery.value);
+    if (codeMatchIndex !== undefined) {
+      matchedIndices.add(codeMatchIndex);
+    }
+    
+    // Check name index (partial match)
+    const nameMatches = searchIndexes.nameIndex.get(query);
+    if (nameMatches) {
+      nameMatches.forEach((index: number) => matchedIndices.add(index));
+    }
+    
+    // Filter results using matched indices
+    result = result.filter((_, index) => matchedIndices.has(index));
   }
 
   // Apply sorting
@@ -240,7 +296,9 @@ const getKidsData = async () => {
         endpointWithParams.value = `/api/TestKidsAtt/GetKidsData?SpecificDate=${formattedDate}`;
         const result : any = await dataService.get(endpointWithParams.value)
         if(result.httpStatus === 200 || result.status){
-            tableData.value = result.data.kids ? result.data.kids : result.data
+            tableData.value = result.data.kids ? result.data.kids : result.data;
+            // Rebuild search indexes when data changes
+            searchIndexes = createSearchIndexes(tableData.value);
         }
     } catch (error) {
         console.error(t('attendance.errors.fetchDataError'), error)
