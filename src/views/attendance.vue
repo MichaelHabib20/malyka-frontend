@@ -51,8 +51,8 @@ const createSearchIndexes = (data: any[]) => {
 
 let searchIndexes = { codeIndex: new Map(), nameIndex: new Map() };
 
-// Define columns
-const columns: Column[] = [
+// Define columns as reactive computed property
+const columns = computed<Column[]>(() => [
   {     
     key: 'code', 
     label: t('attendance.columns.code'), 
@@ -68,20 +68,26 @@ const columns: Column[] = [
     isMainColumn: true
   },
   {
-  key: 'gradeName',
-  label: t('attendance.columns.grade'),
-  type: 'grade-chip',
-  sortable: false,
-  align: 'center',
-  isMainColumn: false
+    key: 'gradeName',
+    label: t('attendance.columns.grade'),
+    type: 'grade-chip',
+    sortable: false,
+    align: 'center',
+    filterable: true,
+    filterType: 'select',
+    filterOptions: gradeFilterOptions.value,
+    isMainColumn: false
   },
   {
-  key: 'className',
-  label: t('attendance.columns.class'),
-  type: 'text',
-  sortable: false,
-  align: 'center',
-  isMainColumn: false
+    key: 'className',
+    label: t('attendance.columns.class'),
+    type: 'text',
+    sortable: false,
+    align: 'center',
+    filterable: true,
+    filterType: 'select',
+    filterOptions: classFilterOptions.value,
+    isMainColumn: false
   },
   { 
     key: 'isAdded', 
@@ -89,15 +95,16 @@ const columns: Column[] = [
     type: 'checkbox',
     sortable: false
   },
-];
+]);
 
 // State management
-const currentPage = ref(1);
-const itemsPerPage = ref(10);
-const totalItems = ref(tableData.value.length);
 const sortBy = ref('');
 const sortDirection = ref('asc' as 'asc' | 'desc');
-const filters = ref({});
+const filters = ref<Record<string, any>>({})
+// Grade data for filtering
+const grades = ref<{ id: number; name: string }[]>([])
+// Class data for filtering (dependent on selected grade)
+const classes = ref<{ id: number; name: string; gradeName: string }[]>([])
 const searchQuery = ref('');
 const debouncedSearchQuery = ref('');
 const selectedDate = ref(new Date());
@@ -112,6 +119,18 @@ watch(searchQuery, (newQuery) => {
     debouncedSearchQuery.value = newQuery;
   }, 300); // 300ms delay
 });
+
+// Watch for grade filter changes to clear class filter
+watch(() => filters.value.gradeName, (newGrade) => {
+  if (newGrade !== undefined && newGrade !== null) {
+    // Clear class filter when grade changes
+    if (filters.value.className) {
+      filters.value.className = null;
+    }
+  }
+});
+
+
 // Computed property to filter and sort data
 const filteredData = computed(() => {
   let result = [...tableData.value];
@@ -137,6 +156,19 @@ const filteredData = computed(() => {
     result = result.filter((_, index) => matchedIndices.has(index));
   }
 
+  // Apply grade filter
+  if (filters.value.gradeName) {
+    result = result.filter((item: any) => {
+      return item.gradeName === filters.value.gradeName;
+    });
+  }
+
+  // Apply class filter
+  if (filters.value.className) {
+    result = result.filter((item: any) => {
+      return item.className === filters.value.className;
+    });
+  }
   // Apply sorting
   if (sortBy.value) {
     result.sort((a: any, b: any) => {
@@ -173,8 +205,8 @@ const formattedDate = computed(() => {
 
 // Attendance statistics computed properties
 const attendanceStats = computed(() => {
-  const total = tableData.value.length;
-  const present = tableData.value.filter((item: any) => item.isAdded).length;
+  const total = filteredData.value.length;
+  const present = filteredData.value.filter((item: any) => item.isAdded).length;
   const absent = total - present;
   const percentage = total > 0 ? Math.round((present / total) * 100) : 0;
   
@@ -185,6 +217,52 @@ const attendanceStats = computed(() => {
     percentage
   };
 });
+// Grade filter options computed property
+const gradeFilterOptions = computed(() => {
+  try {
+    if (!Array.isArray(grades.value)) {
+      return []
+    }
+    const options = grades.value.map(grade => ({
+      label: grade.name,
+      value: grade.name
+    }))
+    return options
+  } catch (error) {
+    console.error('Error creating grade filter options:', error)
+    return []
+  }
+})
+
+// Class filter options computed property (dependent on selected grade)
+const classFilterOptions = computed(() => {
+  try {
+    if (!Array.isArray(classes.value)) {
+      return []
+    }
+    
+    // If no grade is selected, show all classes
+    if (!filters.value.gradeName) {
+      const options = classes.value.map(cls => ({
+        label: cls.name,
+        value: cls.name
+      }))
+      return options
+    }
+    
+    // Filter classes based on selected grade
+    const filteredClasses = classes.value.filter(cls => cls.gradeName === filters.value.gradeName)
+    const options = filteredClasses.map(cls => ({
+      label: cls.name,
+      value: cls.name
+    }))
+    return options
+  } catch (error) {
+    console.error('Error creating class filter options:', error)
+    return []
+  }
+})
+
 
 // Event handlers
 const handleSortBy = (newSortBy: string) => {
@@ -200,7 +278,7 @@ const handleSearch = (query: string) => {
 };
 
 const handleEnterKey = async (_value: boolean) => {
-  
+  setTimeout(async () => {
   // Get the first row from filtered data
   const firstRow = filteredData.value[0];
   
@@ -221,6 +299,7 @@ const handleEnterKey = async (_value: boolean) => {
       row: firstRow
     });
   }
+  }, 700);
 };
 
 // Handle barcode scanned code
@@ -299,11 +378,51 @@ const getKidsData = async () => {
             tableData.value = result.data.kids ? result.data.kids : result.data;
             // Rebuild search indexes when data changes
             searchIndexes = createSearchIndexes(tableData.value);
+            // Collect filter data after data is fetched
+            collectFilterData(tableData.value);
         }
     } catch (error) {
         console.error(t('attendance.errors.fetchDataError'), error)
     }
 }
+// Function to collect grade and class data from kids
+const collectFilterData = (kidsData: any[]) => {
+  const gradeMap = new Map<string, string>();
+  const classMap = new Map<string, { name: string; gradeName: string }>();
+  
+  kidsData.forEach(kid => {
+    // Collect grade data
+    if (kid.gradeName) {
+      const key = kid.gradeId ? kid.gradeId.toString() : kid.gradeName;
+      gradeMap.set(key, kid.gradeName);
+    }
+    
+    // Collect class data
+    if (kid.className && kid.gradeName) {
+      const classKey = `${kid.className}-${kid.gradeName}`;
+      classMap.set(classKey, {
+        name: kid.className,
+        gradeName: kid.gradeName
+      });
+    }
+  });
+  
+  // Convert maps to arrays
+  grades.value = Array.from(gradeMap.entries()).map(([id, name]) => ({
+    id: parseInt(id) || 0,
+    name
+  }));
+  
+  classes.value = Array.from(classMap.values()).map((cls, index) => ({
+    id: index + 1,
+    name: cls.name,
+    gradeName: cls.gradeName
+  }));
+}
+const handleFilters = (newFilters: Record<string, any>) => {
+  filters.value = newFilters;
+};
+
 
 onMounted(async () => {
     await getKidsData()
@@ -341,9 +460,6 @@ onMounted(async () => {
         :removeLeadingZero="true"
         :columns="columns"
         :data="filteredData"
-        :total-items="totalItems"
-        :items-per-page="itemsPerPage"
-        :current-page="currentPage"
         :sort-by="sortBy"
         :sort-direction="sortDirection"
         :filters="filters"
@@ -354,6 +470,7 @@ onMounted(async () => {
         @update:search-query="handleSearch"
         @update:enterKey="handleEnterKey"
         @checkbox-change="handleCheckboxChange"
+        @update:filters="handleFilters"
       />
     </div>
   </div>
@@ -445,13 +562,6 @@ onMounted(async () => {
   outline: none;
   border-color: #4299e1;
   box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.1);
-}
-
-.table-section {
-  background: #ffffff;
-  border-radius: 12px;
-  padding: 1.5rem;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 /* Attendance Statistics Styles */

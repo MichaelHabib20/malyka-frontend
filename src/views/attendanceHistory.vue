@@ -43,7 +43,7 @@
               </span>
               <span
                 class="d-flex align-items-center gap-1 px-2 py-1 rounded-pill bg-primary bg-opacity-10 text-primary fw-semibold">
-                <i class="fa-solid fa-users"></i> {{ kids.length }} <span class="d-none d-md-inline">{{
+                <i class="fa-solid fa-users"></i> {{ getFilteredDataWithoutSearch.length }} <span class="d-none d-md-inline">{{
                   t('attendanceHistory.total') }}</span>
               </span>
               <span
@@ -221,7 +221,6 @@ const gradeFilterOptions = computed(() => {
       label: grade.name,
       value: grade.name
     }))
-    console.log('Grade filter options:', options)
     return options
   } catch (error) {
     console.error('Error creating grade filter options:', error)
@@ -242,7 +241,6 @@ const classFilterOptions = computed(() => {
         label: cls.name,
         value: cls.name
       }))
-      console.log('All class filter options:', options)
       return options
     }
     
@@ -252,7 +250,6 @@ const classFilterOptions = computed(() => {
       label: cls.name,
       value: cls.name
     }))
-    console.log('Filtered class options for grade', filters.value.gradeName, ':', options)
     return options
   } catch (error) {
     console.error('Error creating class filter options:', error)
@@ -266,7 +263,6 @@ const attendanceFilterOptions = computed(() => {
     { label: t('attendanceHistory.present'), value: true },
     { label: t('attendanceHistory.absent'), value: false }
   ]
-  console.log('Attendance filter options:', options)
   return options
 })
 
@@ -490,14 +486,64 @@ const filteredData = computed(() => {
   return result;
 });
 
+// Helper function to get filtered data without search query
+const getFilteredDataWithoutSearch = computed(() => {
+  let result = [...kids.value];
+
+  // Apply grade filter
+  if (filters.value.gradeName) {
+    result = result.filter((item: any) => {
+      return item.gradeName === filters.value.gradeName;
+    });
+  }
+
+  // Apply class filter
+  if (filters.value.className) {
+    result = result.filter((item: any) => {
+      return item.className === filters.value.className;
+    });
+  }
+
+  // Apply attendance filter
+  if (filters.value.isAdded !== undefined && filters.value.isAdded !== '') {
+    result = result.filter((item: any) => {
+      return item.isAdded === filters.value.isAdded;
+    });
+  }
+
+  // Apply date-specific attendance filters (for date range view)
+  if (dateType.value === 'range') {
+    const dateKeys = Object.keys(filters.value).filter(key => 
+      key !== 'gradeName' && 
+      key !== 'className' && 
+      key !== 'isAdded' && 
+      key !== 'code' && 
+      key !== 'name' &&
+      key !== 'percentage'
+    );
+    
+    dateKeys.forEach(dateKey => {
+      if (filters.value[dateKey] !== undefined && filters.value[dateKey] !== '') {
+        result = result.filter((item: any) => {
+          return item[dateKey] === filters.value[dateKey];
+        });
+      }
+    });
+  }
+
+  return result;
+});
+
 const presentCount = computed(() => {
+  const dataToUse = getFilteredDataWithoutSearch.value;
+  
   if (dateType.value === 'single') {
-    return kids.value.filter(kid => kid.isAdded).length;
+    return dataToUse.filter(kid => kid.isAdded).length;
   } else {
     // For date range, count total present across all dates
-    return kids.value.reduce((total: any, kid: any) => {
+    return dataToUse.reduce((total: any, kid: any) => {
       const presentDays = Object.keys(kid).filter((key: any) =>
-        key !== 'code' && key !== 'name' && key !== 'id' && kid[key] === true
+        key !== 'code' && key !== 'name' && key !== 'id' && key !== 'percentage' && key !== 'gradeName' && key !== 'className' && kid[key] === true
       ).length;
       return total + presentDays;
     }, 0);
@@ -505,13 +551,15 @@ const presentCount = computed(() => {
 });
 
 const absentCount = computed(() => {
+  const dataToUse = getFilteredDataWithoutSearch.value;
+  
   if (dateType.value === 'single') {
-    return kids.value.filter(kid => !kid.isAdded).length;
+    return dataToUse.filter(kid => !kid.isAdded).length;
   } else {
     // For date range, count total absent across all dates
-    return kids.value.reduce((total: any, kid: any) => {
+    return dataToUse.reduce((total: any, kid: any) => {
       const absentDays = Object.keys(kid).filter((key: any) =>
-        key !== 'code' && key !== 'name' && key !== 'id' && kid[key] === false
+        key !== 'code' && key !== 'name' && key !== 'id' && key !== 'percentage' && key !== 'gradeName' && key !== 'className' && kid[key] === false
       ).length;
       return total + absentDays;
     }, 0);
@@ -519,15 +567,17 @@ const absentCount = computed(() => {
 });
 
 const attendanceRate = computed(() => {
-  if (kids.value.length === 0) return 0;
+  const dataToUse = getFilteredDataWithoutSearch.value;
+  
+  if (dataToUse.length === 0) return 0;
 
   if (dateType.value === 'single') {
-    return Math.round((presentCount.value / kids.value.length) * 100);
+    return Math.round((presentCount.value / dataToUse.length) * 100);
   } else {
     // For date range, calculate rate based on total possible attendance
-    const totalPossibleAttendance = kids.value.reduce((total, kid) => {
+    const totalPossibleAttendance = dataToUse.reduce((total, kid) => {
       const dateKeys = Object.keys(kid).filter(key =>
-        key !== 'code' && key !== 'name' && key !== 'id'
+        key !== 'code' && key !== 'name' && key !== 'id' && key !== 'percentage' && key !== 'gradeName' && key !== 'className'
       );
       return total + dateKeys.length;
     }, 0);
@@ -614,9 +664,6 @@ const collectFilterData = (kidsData: any[]) => {
     name: cls.name,
     gradeName: cls.gradeName
   }));
-  
-  console.log('Collected grades:', grades.value);
-  console.log('Collected classes:', classes.value);
 }
 
 const getKidsData = async (localDateType: 'single' | 'start' | 'end') => {
@@ -726,7 +773,7 @@ const handleDateRangeData = (data: any[], attendancePercentages: any[]) => {
   // Collect grade and class data from processed kids
   collectFilterData(processedKids);
   
-  console.log(kids.value);
+
 };
 
 const formatDateForColumn = (dateString: string): string => {
@@ -834,7 +881,7 @@ watch(kids, () => {
 
 // Watch for grades changes to debug
 watch(grades, (newGrades) => {
-  console.log('Grades changed:', newGrades)
+  // Grades changed
 }, { deep: true })
 
 // Watch for grade filter changes to reset class filter
@@ -842,14 +889,13 @@ watch(() => filters.value.gradeName, (newGrade, oldGrade) => {
   if (newGrade !== oldGrade) {
     // Reset class filter when grade changes
     filters.value.className = ''
-    console.log('Grade filter changed to:', newGrade, '- Class filter reset')
   }
 })
 
 // Watch for attendance filter changes to debug
 watch(() => filters.value.isAdded, (newAttendance, oldAttendance) => {
   if (newAttendance !== oldAttendance) {
-    console.log('Attendance filter changed to:', newAttendance)
+    // Attendance filter changed
   }
 })
 

@@ -1,9 +1,9 @@
 <template>
   <div class="language-switcher">
     <button
-      v-for="lang in languages"
+      v-for="lang in inactiveLanguages"
       :key="lang.code"
-      :class="['lang-btn', { active: currentLang === lang.code }]"
+      :class="['lang-btn']"
       @click="changeLanguage(lang.code)"
     >
       {{ lang.label }}
@@ -24,6 +24,11 @@ const languages = [
 ]
 
 const currentLang = computed(() => locale.value)
+
+// Show only inactive languages
+const inactiveLanguages = computed(() => {
+  return languages.filter(lang => lang.code !== currentLang.value)
+})
 
 function changeLanguage(lang: any) {
   if (lang !== locale.value) {
@@ -51,5 +56,19 @@ function changeLanguage(lang: any) {
 .lang-btn:hover {
   background: #2563eb;
   color: #fff;
+}
+
+@media (max-width: 600px) {
+  .language-switcher {
+    gap: 0.25rem;
+    flex-shrink: 0;
+  }
+  
+  .lang-btn {
+    padding: 0.2em 0.5em;
+    font-size: 0.75rem;
+    font-weight: 500;
+    min-width: 0;
+  }
 }
 </style> 

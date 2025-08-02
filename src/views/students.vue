@@ -232,7 +232,6 @@ const handleSearch = (query: string) => {
 };
 
 const handleButtonClick = ({ buttonId, button }: { buttonId: string; button: CustomButton }) => {
-  console.log(button)
   if (buttonId === 'new-student') {
     router.push('/students/create');
   }
@@ -347,7 +346,6 @@ const handlePrintCards = async () => {
       doc.addFileToVFS('LamaSans-Regular.otf', LamaSansFont);
       doc.addFont('LamaSans-Regular.otf', 'LamaSans', 'normal');
       doc.setFont('LamaSans');
-      console.log('hna')
     } catch (fontError) {
       try {
         // Fallback to Amiri if Lama Sans fails
@@ -356,11 +354,9 @@ const handlePrintCards = async () => {
         doc.addFileToVFS('Amiri-Regular.ttf', AmiriFont);
         doc.addFont('Amiri-Regular.ttf', 'Amiri', 'normal');
         doc.setFont('Amiri');
-        console.log('hna')
       } catch (amiriError) {
         console.warn('Both Lama Sans and Amiri font loading failed, using default font:', amiriError);
         doc.setFont('helvetica');
-        console.log('hna')
       }
     }
 
@@ -484,10 +480,7 @@ const handlePrintCards = async () => {
 
 const handleGetStudentById = async (id: string) => {
   const response : any = await dataService.fetchOnline(`/api/KidsRegistration/GetKidById/${id}`)
-  console.log(response)
   students.value = [response.data]
-  console.log(students.value)
-  console.log(filteredData.value)
 }
 
 const getStudents = async () => {

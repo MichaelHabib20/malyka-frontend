@@ -277,9 +277,15 @@ const navbarStyle = computed(() => {
   .content {
     padding: 0.75rem;
 
+
   }
   .dashboard-layout {
     max-width: 100% !important;
   } 
+  @media (max-width: 996px) {
+    .content {
+      margin-top: 115px;
+    }
+  }
 }
 </style> 

@@ -269,6 +269,7 @@ const handleClickOutside = (event: Event) => {
 
 onMounted(() => {
   document.addEventListener('click', handleClickOutside);
+  console.log('props.columns', props.columns)
 });
 
 onUnmounted(() => {
