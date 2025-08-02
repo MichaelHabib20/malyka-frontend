@@ -233,6 +233,7 @@ const handleSearch = (query: string) => {
 
 const handleButtonClick = ({ buttonId, button }: { buttonId: string; button: CustomButton }) => {
   if (buttonId === 'new-student') {
+    console.log('button', button);
     router.push('/students/create');
   }
 };

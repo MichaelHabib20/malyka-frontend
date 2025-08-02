@@ -1,5 +1,5 @@
 import { ref, onMounted } from 'vue';
-import { signInWithPopup, signOut, onAuthStateChanged, type User } from 'firebase/auth';
+import { signInWithPopup, signOut, onAuthStateChanged } from 'firebase/auth';
 import { auth, provider } from '../firebase';
 
 interface GoogleUser {

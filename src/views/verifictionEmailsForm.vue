@@ -67,7 +67,7 @@
                 
                 <div class="emails-container">
                   <div
-                    v-for="(email, index) in formData.emails"
+                    v-for="(_email, index) in formData.emails"
                     :key="index"
                     class="email-item mb-3"
                   >
@@ -188,25 +188,25 @@ const isFormValid = computed(() => {
   return hasValidEmails && hasValidGrade
 })
 
-const emailValidationErrors = computed(() => {
-  const errors: string[] = []
+// const emailValidationErrors = computed(() => {
+//   const errors: string[] = []
   
-  if (formData.value.emails.length === 0) {
-    errors.push(t('verificationEmails.errors.atLeastOneEmail'))
-  }
+//   if (formData.value.emails.length === 0) {
+//     errors.push(t('verificationEmails.errors.atLeastOneEmail'))
+//   }
   
-  if (formData.value.emails.some(email => email.trim() === '')) {
-    errors.push(t('verificationEmails.errors.emptyEmails'))
-  }
+//   if (formData.value.emails.some(email => email.trim() === '')) {
+//     errors.push(t('verificationEmails.errors.emptyEmails'))
+//   }
   
-  emailValidations.value.forEach((validation, index) => {
-    if (!validation.isValid) {
-      errors.push(`${t('verificationEmails.errors.email')} ${index + 1}: ${validation.errors.join(', ')}`)
-    }
-  })
+//   emailValidations.value.forEach((validation, index) => {
+//     if (!validation.isValid) {
+//       errors.push(`${t('verificationEmails.errors.email')} ${index + 1}: ${validation.errors.join(', ')}`)
+//     }
+//   })
   
-  return errors
-})
+//   return errors
+// })
 
 // Validation rules
 const emailValidationRules = [
