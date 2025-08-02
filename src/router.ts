@@ -23,7 +23,8 @@ import studentForm from './views/studentForm.vue'
 import StudentView from './views/studentView.vue'
 import eventEnrollments from './views/eventEnrollments.vue'
 import registerKids from './views/registerKids.vue'
-
+import verifictionEmails from './views/verifictionEmails.vue'
+import VerificationEmailForm from './views/verifictionEmailsForm.vue'
 const routes = [
   { 
     path: '/sign-in', 
@@ -74,6 +75,42 @@ const routes = [
              rolesId : [1]
             },
         component: AttendanceHistory
+      },
+      {
+        path : 'verification-emails',
+        name : 'VerificationEmails',
+        meta : { title : 'Verification Emails',
+                title_ar: 'البريد الإلكتروني للتحقق',
+                requiresAuth : true,
+                requiredNetwork : true,
+                permissions : [],
+                rolesId : [1]
+        },
+        component : verifictionEmails
+      },
+      {
+        path : 'verification-emails/create',
+        name : 'CreateVerificationEmail',
+        meta : { title : 'Create Verification Email',
+                title_ar: 'إضافة البريد الإلكتروني للتحقق',
+                requiresAuth : true,
+                requiredNetwork : true, 
+                permissions : [],
+                rolesId : [1]
+        },
+        component : VerificationEmailForm
+      },
+      {
+        path : 'verification-emails/edit/:id',
+        name : 'EditVerificationEmail',
+        meta : { title : 'Edit Verification Email',
+                title_ar: 'تعديل البريد الإلكتروني للتحقق',
+                requiresAuth : true,
+                requiredNetwork : true, 
+                permissions : [],
+                rolesId : [1]
+        },
+        component : VerificationEmailForm
       },
       {
         path : 'adminstrations',
@@ -157,7 +194,11 @@ const routes = [
                     rolesId : [1]
             },
             component : adminForm
-          }
+          },
+
+
+
+
         ]
       },
       {

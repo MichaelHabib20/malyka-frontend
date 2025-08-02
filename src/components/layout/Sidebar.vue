@@ -181,7 +181,17 @@ const navItems = computed(() => [
         isReady: () => {
           return isOnline.value;
         }
-      }
+      },
+      {
+        title: t('navigation.verificationEmails'),
+        icon: 'fa-solid fa-user-shield',
+        path: '/verification-emails',
+        permissions :[],
+        rolesId : [1],
+        isReady: () => {
+          return isOnline.value;
+        }
+      },
 
     ]
   },

@@ -880,7 +880,7 @@ watch(kids, () => {
 }, { deep: true })
 
 // Watch for grades changes to debug
-watch(grades, (newGrades) => {
+watch(grades, (_newGrades) => {
   // Grades changed
 }, { deep: true })
 
